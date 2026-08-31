@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BrandAIReadinessAuditReport",
+  "type": "object",
+  "required": [
+    "site",
+    "audited_at",
+    "summary",
+    "findings"
+  ],
+  "properties": {
+    "site": {
+      "type": "string",
+      "description": "The target domain or URL audited."
+    },
+    "audited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 UTC timestamp of when the audit was executed."
+    },
+    "summary": {
+      "type": "object",
+      "required": [
+        "total_findings",
+        "critical",
+        "high",
+        "medium"
+      ],
+      "properties": {
+        "total_findings": { "type": "integer", "minimum": 0 },
+        "critical": { "type": "integer", "minimum": 0 },
+        "high": { "type": "integer", "minimum": 0 },
+        "medium": { "type": "integer", "minimum": 0 },
+        "low": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "properties": {
+        "acpi_score": { "type": "number", "minimum": 0, "maximum": 100 },
+        "crs_score": { "type": "number", "minimum": 0, "maximum": 100 }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "severity",
+          "evidence",
+          "suggested_action"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "category": { "type": "string" },
+          "evidence": { "type": "string" },
+          "suggested_action": {
+            "type": "object",
+            "required": ["summary", "priority"],
+            "properties": {
+              "summary": { "type": "string" },
+              "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+              "implementation_code": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

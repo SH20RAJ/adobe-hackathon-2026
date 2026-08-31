@@ -1,0 +1,40 @@
+{
+  "name": "brand-ai-readiness-audit",
+  "version": "1.0.0",
+  "description": "Enterprise Agent Skill Marketplace for auditing website AI Discoverability (GEO/AEO) and On-site Visitor Engagement.",
+  "author": "Shaswat Raj (@sh20raj)",
+  "license": "Apache-2.0",
+  "skills": [
+    {
+      "id": "audit-orchestrator",
+      "path": "skills/audit-orchestrator",
+      "entrypoint": true,
+      "description": "Master orchestrator that composes all sub-skills, aggregates findings, and emits the standardized JSON audit report."
+    },
+    {
+      "id": "crawl-render-audit",
+      "path": "skills/crawl-render-audit",
+      "description": "Audits robots.txt AI bot policies (GPTBot, ClaudeBot, PerplexityBot), sitemaps, headers, and JS hydration content gaps."
+    },
+    {
+      "id": "structured-entity-audit",
+      "path": "skills/structured-entity-audit",
+      "description": "Validates Schema.org JSON-LD structured data and entity disambiguation links (sameAs)."
+    },
+    {
+      "id": "aeo-quotability-audit",
+      "path": "skills/aeo-quotability-audit",
+      "description": "Audits atomic fact quotability for LLMs, content-to-noise ratio, and facts locked in non-text assets."
+    },
+    {
+      "id": "freshness-corroboration-audit",
+      "path": "skills/freshness-corroboration-audit",
+      "description": "Audits temporal freshness signals, trust markers, and cross-web claim corroboration."
+    },
+    {
+      "id": "on-site-engagement-audit",
+      "path": "skills/on-site-engagement-audit",
+      "description": "Audits above-the-fold value prop clarity, cognitive load (Flesch-Kincaid), and search scent retention."
+    }
+  ]
+}
