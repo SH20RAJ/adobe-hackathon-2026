@@ -2,7 +2,8 @@
 
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Winner Submission**  
 > **Candidate:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj))  
-> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
+> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
+> **Live Interactive Showcase & Pitch:** [sh20raj.github.io/adobe-hackathon-2026](https://sh20raj.github.io/adobe-hackathon-2026/)
 
 ---
 
@@ -15,6 +16,12 @@
 
 ---
 
+## 🌟 Interactive Live Pitch & Playground
+Access the live interactive pitch, animated audit engine, and architecture explorer at:  
+👉 **[https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)**
+
+---
+
 ## 🏗️ Architecture at a Glance
 
 ```
@@ -22,6 +29,8 @@ adobe-hackathon-2026/
 ├── marketplace.json                    <- Top-level Marketplace Manifest
 ├── README.md                           <- Documentation & Quickstart
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory
+├── index.html                          <- Interactive Pitch & Showcase Dashboard
+├── .github/workflows/deploy-pages.yml  <- Automated GitHub Pages Deployment CI/CD
 ├── docs/                               <- Master Architecture, Pitch & Defense Guides
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Engine
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Choices
@@ -31,6 +40,7 @@ adobe-hackathon-2026/
     ├── audit-orchestrator/             <- [ENTRYPOINT] Composes all sub-skills & emits JSON
     │   ├── SKILL.md
     │   ├── scripts/audit_runner.py     <- Deterministic sub-second audit runner
+    │   ├── scripts/mcp_server.py      <- Model Context Protocol (MCP) JSON-RPC Adapter
     │   └── references/audit_schema.json
     ├── crawl-render-audit/             <- AI Bot Permissions (robots.txt) & Hydration Gaps
     ├── structured-entity-audit/        <- Schema.org JSON-LD & Entity Disambiguation (sameAs)
@@ -51,6 +61,11 @@ python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example
 
 # Save output to file:
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
+```
+
+### Run as a Model Context Protocol (MCP) Server
+```bash
+python3 skills/audit-orchestrator/scripts/mcp_server.py
 ```
 
 ---
