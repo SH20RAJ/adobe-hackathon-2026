@@ -18,7 +18,7 @@ The goal is to build a multi-skill **Agent Skills Marketplace** adhering to the 
 
 ## 📚 Comprehensive Documentation Suite
 
-All in-depth research, architectural blueprints, competitive benchmarks, and candidate profile analysis are available in the [`docs/`](./docs/) directory:
+All in-depth research, architectural blueprints, competitive benchmarks, candidate profile analysis, and winning project ideas are available in the [`docs/`](./docs/) directory:
 
 1. **[01. Round 3 Deep Dive & Problem Breakdown](./docs/01_ADOBE_HACKATHON_2026_ROUND3_DEEP_DIVE.md)** — Analysis of prompt constraints, evaluation rubric, and mathematical criteria.
 2. **[02. Previous Winners & Benchmark Analysis](./docs/02_PREVIOUS_WINNERS_AND_BENCHMARK_ANALYSIS.md)** — What separates 1st place Adobe hackathon winners from runners-up.
@@ -26,10 +26,11 @@ All in-depth research, architectural blueprints, competitive benchmarks, and can
 4. **[04. Master Winning Strategy & System Architecture](./docs/04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md)** — Architectural design, 5-skill decomposition, and dataflow.
 5. **[05. Skill Specifications & Prompt Engineering](./docs/05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md)** — `agentskills.io` compliant specifications for all marketplace skills.
 6. **[06. Execution Timeline & Milestone Roadmap](./docs/06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md)** — Day-by-day roadmap leading to the September 13 submission.
+7. **[07. Winning Project Ideas & Master Architectures](./docs/07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md)** — 4 top-tier winning project ideas with comparative matrix, architecture diagrams, and recommended choice.
 
 ---
 
-## 🏗️ Architecture at a Glance
+## 🏗️ Architecture at a Glance (OmniAudit-GEO)
 
 ```
 brand-ai-readiness-audit/

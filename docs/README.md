@@ -14,6 +14,7 @@ Welcome to the comprehensive strategy, architecture, and research documentation 
 | **[04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md](./04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md)** | Complete technical blueprint, 5-skill decomposition, and dataflow. | System Design & Architecture |
 | **[05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md](./05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md)** | `agentskills.io` compliant `SKILL.md` specifications, schemas, and progressive disclosure rules. | Skill Specifications & Prompts |
 | **[06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md](./06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md)** | Phased implementation schedule, testing matrix across 20+ sites, and submission checklist. | Project Management & Submission Roadmap |
+| **[07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md](./07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md)** | 4 top-tier winning project ideas with comparative matrix, architecture diagrams, and recommended choice. | Ideation & Architecture Designs |
 
 ---
 
