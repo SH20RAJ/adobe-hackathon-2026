@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --spectrum-bg: #0f1115;
+    --spectrum-card: #181b22;
+    --spectrum-card-hover: #222631;
+    --spectrum-border: rgba(255, 255, 255, 0.08);
+    --spectrum-border-active: #eb1000;
+    
+    /* Adobe Brand Accents */
+    --adobe-red: #eb1000;
+    --adobe-red-hover: #c90d00;
+    --spectrum-blue: #1473e6;
+    --spectrum-cyan: #0265dc;
+    --spectrum-green: #2d9d78;
+    --spectrum-yellow: #e68619;
+    --spectrum-red: #e34850;
+    
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1aa;
+    --text-tertiary: #71717a;
+  }
+
+  body {
+    background-color: var(--spectrum-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+.adobe-glow {
+  box-shadow: 0 0 25px rgba(235, 16, 0, 0.25);
+}
+
+.spectrum-card {
+  background: var(--spectrum-card);
+  border: 1px solid var(--spectrum-border);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.spectrum-card:hover {
+  background: var(--spectrum-card-hover);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.code-block {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

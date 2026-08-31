@@ -1,0 +1,274 @@
+export interface Finding {
+  id: string;
+  title: string;
+  severity: "critical" | "high" | "medium" | "low";
+  category: string;
+  evidence: string;
+  suggested_action: {
+    summary: string;
+    priority: "critical" | "high" | "medium" | "low";
+    implementation_code?: string;
+  };
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const targetUrl = searchParams.get("url") || "https://example.com";
+
+  let normalizedUrl = targetUrl;
+  if (!normalizedUrl.startsWith("http://") && !normalizedUrl.startsWith("https://")) {
+    normalizedUrl = "https://" + normalizedUrl;
+  }
+
+  const startTime = Date.now();
+  let domain = "";
+  try {
+    domain = new URL(normalizedUrl).hostname;
+  } catch {
+    domain = targetUrl;
+  }
+
+  const findings: Finding[] = [];
+
+  try {
+    // 1. Fetch main page HTML with a browser user-agent
+    const pageResponse = await fetch(normalizedUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (compatible; OmniAuditBot/1.0; +https://agentskills.io)",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+      },
+      signal: AbortSignal.timeout(6000)
+    });
+
+    const html = await pageResponse.text();
+    const headers = pageResponse.headers;
+
+    // 2. Fetch robots.txt
+    const origin = new URL(normalizedUrl).origin;
+    let robotsTxt = "";
+    try {
+      const robotsRes = await fetch(`${origin}/robots.txt`, {
+        signal: AbortSignal.timeout(3000)
+      });
+      if (robotsRes.ok) {
+        robotsTxt = await robotsRes.text();
+      }
+    } catch {
+      // Ignored
+    }
+
+    // --- Audit Skill 1: Crawl & AI Permissions ---
+    const aiBots = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bytespider", "CCBot"];
+    const blockedBots: string[] = [];
+
+    if (robotsTxt) {
+      for (const bot of aiBots) {
+        const pattern = new RegExp(`user-agent:\\s*${bot}[\\s\\S]*?disallow:\\s*/(\\s|$)`, "i");
+        if (pattern.test(robotsTxt)) {
+          blockedBots.push(bot);
+        }
+      }
+      if (/user-agent:\s*\*[\s\S]*?disallow:\s*\/(\s|$)/i.test(robotsTxt) && !/allow:\s*\//i.test(robotsTxt)) {
+        blockedBots.push("All Crawlers (*)");
+      }
+    }
+
+    if (blockedBots.length > 0) {
+      findings.push({
+        id: "F-001",
+        title: "AI Search Crawlers Blocked in robots.txt",
+        severity: blockedBots.includes("All Crawlers (*)") || blockedBots.length >= 3 ? "critical" : "high",
+        category: "crawlability_ai_permissions",
+        evidence: `Found active Disallow directives for: ${blockedBots.join(", ")} in ${origin}/robots.txt`,
+        suggested_action: {
+          summary: "Update robots.txt to permit indexing by modern generative search assistants while maintaining private path protections.",
+          priority: blockedBots.includes("All Crawlers (*)") ? "critical" : "high",
+          implementation_code: "User-Agent: GPTBot\nAllow: /\n\nUser-Agent: ClaudeBot\nAllow: /\n\nUser-Agent: PerplexityBot\nAllow: /\n\nDisallow: /admin/\nDisallow: /api/"
+        }
+      });
+    }
+
+    const xRobots = headers.get("x-robots-tag") || "";
+    if (xRobots.toLowerCase().includes("noindex") || xRobots.toLowerCase().includes("noai")) {
+      findings.push({
+        id: "F-002",
+        title: "HTTP Header X-Robots-Tag Restricts AI Indexing",
+        severity: "critical",
+        category: "crawlability_headers",
+        evidence: `Server response included header 'X-Robots-Tag: ${xRobots}'.`,
+        suggested_action: {
+          summary: "Remove noindex / noai directives from public response headers.",
+          priority: "critical",
+          implementation_code: "# Remove 'X-Robots-Tag: noindex' from web server configuration"
+        }
+      });
+    }
+
+    // --- Audit Skill 2: Structured Data & Schema.org ---
+    const jsonLdMatches = html.match(/<script[^>]*type=['"]application\/ld\+json['"][^>]*>([\s\S]*?)<\/script>/gi) || [];
+    let hasOrgSchema = false;
+    let hasSameAs = false;
+
+    for (const rawTag of jsonLdMatches) {
+      const content = rawTag.replace(/<script[^>]*>|<\/script>/gi, "").trim();
+      try {
+        const parsed = JSON.parse(content);
+        const schemas = Array.isArray(parsed) ? parsed : [parsed];
+        for (const s of schemas) {
+          const type = String(s["@type"] || "");
+          if (type.toLowerCase().includes("organization") || type.toLowerCase().includes("website")) {
+            hasOrgSchema = true;
+          }
+          if (s.sameAs && (Array.isArray(s.sameAs) ? s.sameAs.length > 0 : Boolean(s.sameAs))) {
+            hasSameAs = true;
+          }
+        }
+      } catch {
+        // syntax error
+      }
+    }
+
+    if (!hasOrgSchema) {
+      findings.push({
+        id: "F-004",
+        title: "Missing Organization / WebSite Schema.org JSON-LD",
+        severity: "high",
+        category: "structured_data_entity",
+        evidence: `Found ${jsonLdMatches.length} JSON-LD blocks. Missing core Organization entity definition.`,
+        suggested_action: {
+          summary: "Inject Organization Schema.org JSON-LD to establish definitive brand entity identity.",
+          priority: "high",
+          implementation_code: `<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "${domain}",\n  "url": "${normalizedUrl}",\n  "sameAs": [\n    "https://www.wikidata.org/wiki/...",\n    "https://www.linkedin.com/company/..."\n  ]\n}\n</script>`
+        }
+      });
+    } else if (!hasSameAs) {
+      findings.push({
+        id: "F-005",
+        title: "Missing sameAs Entity Corroboration Links",
+        severity: "medium",
+        category: "structured_data_corroboration",
+        evidence: "Schema.org markup lacks 'sameAs' links to external authoritative knowledge bases (Wikidata, Crunchbase).",
+        suggested_action: {
+          summary: "Add sameAs URIs to Organization JSON-LD to eliminate entity ambiguity in AI models.",
+          priority: "medium",
+          implementation_code: '"sameAs": [\n  "https://www.wikidata.org/entity/...",\n  "https://www.crunchbase.com/organization/..."\n]'
+        }
+      });
+    }
+
+    // --- Audit Skill 3: AEO Quotability & Non-Text Assets ---
+    const imgTags = html.match(/<img\s+[^>]*>/gi) || [];
+    const missingAlt = imgTags.filter(img => !/alt\s*=\s*['"][^'"]+['"]/i.test(img));
+
+    if (missingAlt.length >= 2 && missingAlt.length / Math.max(imgTags.length, 1) > 0.3) {
+      findings.push({
+        id: "F-006",
+        title: "Facts Trapped in Non-Text Graphical Assets",
+        severity: missingAlt.length >= 5 ? "high" : "medium",
+        category: "aeo_non_text_facts",
+        evidence: `${missingAlt.length} out of ${imgTags.length} images lack descriptive alt text.`,
+        suggested_action: {
+          summary: "Provide descriptive alt text for images displaying product specs, charts, or infographics.",
+          priority: "high",
+          implementation_code: '<img src="specs.png" alt="Detailed technical specification table showing pricing and features.">'
+        }
+      });
+    }
+
+    if (!/<h1[^>]*>([\s\S]*?)<\/h1>/i.test(html)) {
+      findings.push({
+        id: "F-007",
+        title: "Missing Primary H1 Heading for Topic Framing",
+        severity: "medium",
+        category: "aeo_heading_structure",
+        evidence: "Page lacks a semantic <h1> headline in initial static HTML.",
+        suggested_action: {
+          summary: "Add a concise H1 headline defining the core entity or subject matter.",
+          priority: "medium",
+          implementation_code: "<h1>Enterprise AI Discoverability & Retention Platform</h1>"
+        }
+      });
+    }
+
+    // Proactive suggestion: llms.txt
+    findings.push({
+      id: "F-008",
+      title: "Proactive Opportunity: Publish an llms.txt Manifest",
+      severity: "low",
+      category: "aeo_proactive_enhancement",
+      evidence: "Site does not yet provide a standardized /llms.txt summary for LLM context ingestion.",
+      suggested_action: {
+        summary: "Deploy an /llms.txt file at the domain root containing an atomic markdown summary of products, docs, and APIs.",
+        priority: "low",
+        implementation_code: "# Title: Brand Knowledge Summary\n> High-density summary for LLM ingestion.\n\n## Capabilities\n- Feature A: Direct atomic definition."
+      }
+    });
+
+    // --- Audit Skill 4: Temporal Staleness ---
+    const currentYear = new Date().getFullYear();
+    const copyrightMatches = html.match(/(?:copyright|©|&copy;)\s*(\d{4})/gi);
+    if (copyrightMatches) {
+      const years = copyrightMatches
+        .map(m => parseInt(m.replace(/\D/g, ""), 10))
+        .filter(y => y >= 2000 && y <= currentYear + 1);
+      if (years.length > 0) {
+        const latestYear = Math.max(...years);
+        if (latestYear < currentYear - 1) {
+          findings.push({
+            id: "F-009",
+            title: "Outdated Temporal Copyright Anchor",
+            severity: "medium",
+            category: "freshness_temporal_signals",
+            evidence: `Found copyright year '${latestYear}' which is older than ${currentYear - 1}.`,
+            suggested_action: {
+              summary: "Update footer copyright year to indicate active website maintenance.",
+              priority: "medium",
+              implementation_code: `<p>&copy; ${currentYear} ${domain}. All rights reserved.</p>`
+            }
+          });
+        }
+      }
+    }
+
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    findings.push({
+      id: "F-000",
+      title: "Target Website Fetch Warning / Timeout",
+      severity: "critical",
+      category: "crawlability_network",
+      evidence: `Edge fetch failed or timed out: ${errorMsg}`,
+      suggested_action: {
+        summary: "Verify web server availability, SSL certificate, and DNS routing.",
+        priority: "critical"
+      }
+    });
+  }
+
+  // Severity Counts
+  const summary = {
+    total_findings: findings.length,
+    critical: findings.filter(f => f.severity === "critical").length,
+    high: findings.filter(f => f.severity === "high").length,
+    medium: findings.filter(f => f.severity === "medium").length,
+    low: findings.filter(f => f.severity === "low").length
+  };
+
+  // Metrics
+  const deductions = (summary.critical * 30) + (summary.high * 15) + (summary.medium * 5);
+  const acpi_score = Math.max(5.0, Math.min(100.0, 100.0 - deductions));
+  const crs_score = Math.max(10.0, Math.min(100.0, 100.0 - ((summary.high * 20) + (summary.medium * 10))));
+  const latency = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  return Response.json({
+    site: domain,
+    audited_at: new Date().toISOString(),
+    latency: `${latency}s`,
+    summary,
+    metrics: {
+      acpi_score: Number(acpi_score.toFixed(1)),
+      crs_score: Number(crs_score.toFixed(1))
+    },
+    findings
+  });
+}

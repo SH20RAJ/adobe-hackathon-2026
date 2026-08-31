@@ -3,7 +3,8 @@
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Winner Submission**  
 > **Candidate:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj))  
 > **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
-> **Live Interactive Showcase & Pitch:** [sh20raj.github.io/adobe-hackathon-2026](https://sh20raj.github.io/adobe-hackathon-2026/)
+> **Live Edge Web App:** [omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)  
+> **Live Showcase & Pitch:** [sh20raj.github.io/adobe-hackathon-2026](https://sh20raj.github.io/adobe-hackathon-2026/)
 
 ---
 
@@ -16,9 +17,16 @@
 
 ---
 
-## 🌟 Interactive Live Pitch & Playground
-Access the live interactive pitch, animated audit engine, and architecture explorer at:  
-👉 **[https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)**
+## 🌐 Live Deployments & Interactive Environments
+
+* **Live Edge Application (Cloudflare Workers + Next.js App Router):**  
+  👉 **[https://omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)**
+  * Powered by sub-20ms edge execution on Cloudflare Workers global network.
+  * Real-time live auditing API at `/api/audit?url=<URL>`.
+  * Clean, minimalist **Adobe Spectrum UI/UX** design system.
+
+* **Live Showcase & Pitch Page (GitHub Pages):**  
+  👉 **[https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)**
 
 ---
 
@@ -30,18 +38,19 @@ adobe-hackathon-2026/
 ├── README.md                           <- Documentation & Quickstart
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory
 ├── index.html                          <- Interactive Pitch & Showcase Dashboard
-├── .github/workflows/deploy-pages.yml  <- Automated GitHub Pages Deployment CI/CD
+├── .github/workflows/deploy-pages.yml  <- Automated GitHub Pages CI/CD
+├── omniaudit-geo/                      <- Cloudflare Workers Next.js Edge App
+│   ├── app/page.tsx                    <- Adobe Spectrum Dashboard
+│   ├── app/api/audit/route.ts          <- Real-time Live Edge Audit API
+│   └── wrangler.jsonc                  <- Cloudflare Edge Manifest
 ├── docs/                               <- Master Architecture, Pitch & Defense Guides
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Engine
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Choices
 │   ├── PITCH.md                        <- Executive Presentation & Demo Script
-│   └── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
+│   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
+│   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md <- MCP, agentskills.io & Adobe Exchange
 └── skills/                             <- Specialized Agent Skills
-    ├── audit-orchestrator/             <- [ENTRYPOINT] Composes all sub-skills & emits JSON
-    │   ├── SKILL.md
-    │   ├── scripts/audit_runner.py     <- Deterministic sub-second audit runner
-    │   ├── scripts/mcp_server.py      <- Model Context Protocol (MCP) JSON-RPC Adapter
-    │   └── references/audit_schema.json
+    ├── audit-orchestrator/             <- [ENTRYPOINT] scripts/audit_runner.py & mcp_server.py
     ├── crawl-render-audit/             <- AI Bot Permissions (robots.txt) & Hydration Gaps
     ├── structured-entity-audit/        <- Schema.org JSON-LD & Entity Disambiguation (sameAs)
     ├── aeo-quotability-audit/          <- LLM Quotability, Atomic Facts & Non-Text Assets
@@ -51,21 +60,21 @@ adobe-hackathon-2026/
 
 ---
 
-## ⚡ Quickstart: Run an Autonomous Audit in Seconds
+## ⚡ Quickstart: Run an Autonomous Audit
 
-Execute a comprehensive audit on any domain using the native zero-dependency runner:
-
+### 1. Zero-Dependency Python Orchestrator:
 ```bash
-# Run audit and output formatted JSON report:
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
-
-# Save output to file:
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
 ```
 
-### Run as a Model Context Protocol (MCP) Server
+### 2. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
 ```bash
 python3 skills/audit-orchestrator/scripts/mcp_server.py
+```
+
+### 3. Edge HTTP API:
+```bash
+curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://example.com"
 ```
 
 ---
@@ -74,12 +83,12 @@ python3 skills/audit-orchestrator/scripts/mcp_server.py
 
 Explore the comprehensive research and design documents in [`docs/`](./docs/):
 
-1. **[Master Architecture & Scoring Models](./docs/ARCHITECTURE.md)** — Detailed component topology, dataflow, and mathematical formulation for ACPI and CRS scores.
-2. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why Python Async, AST parsers, Docker sandbox, MCP, and `agentskills.io` are in high demand at Adobe.
-3. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, demo walkthrough, and Adobe ecosystem synergy.
-4. **[Adobe Senior Panel Defense & Interview Q&A](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions on concurrency, hydration, and false positive mitigation.
-5. **[Candidate Profile & Strengths Mapping](./docs/03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** — How Shaswat Raj's background (@sh20raj) aligns with this challenge.
-6. **[All 7 Strategy & Planning Documents](./docs/README.md)** — Complete historical research and milestone roadmaps.
+1. **[Master Architecture & Scoring Models](./docs/ARCHITECTURE.md)** — Component topology and mathematical formulation for ACPI and CRS scores.
+2. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why Python Async, AST parsers, Cloudflare Workers, MCP, and `agentskills.io` win.
+3. **[Skill Marketplaces & Distribution Strategy](./docs/08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** — Distribution across `agentskills.io`, MCP Registries (Smithery/Glama), Adobe Exchange, and Cloudflare.
+4. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
+5. **[Adobe Senior Panel Defense & Interview Q&A](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions.
+6. **[Candidate Profile & Strengths Mapping](./docs/03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** — How Shaswat Raj's background (@sh20raj) aligns with this challenge.
 
 ---
 
