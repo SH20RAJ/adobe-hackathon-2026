@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, any>;
     const { id, method, params } = body;
 
     // JSON-RPC 2.0 Handling
@@ -102,7 +102,7 @@ export async function POST(request: Request) {
       // Call our internal audit API
       const origin = new URL(request.url).origin;
       const auditRes = await fetch(`${origin}/api/audit?url=${encodeURIComponent(targetUrl)}`);
-      const report = await auditRes.json();
+      const report = (await auditRes.json()) as any;
 
       const summaryText = `## OmniAudit-GEO Report for ${report.site}
 - **ACPI Score (AI Citation Probability):** ${report.summary.acpi_score} / 100

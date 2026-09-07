@@ -16,7 +16,8 @@
     "types": [
         "./worker-configuration.d.ts",
         "node",
-        "vinext/types"
+        "vinext/types",
+        "bun"
     ],
     "paths": {
       "@/*": ["./*"]

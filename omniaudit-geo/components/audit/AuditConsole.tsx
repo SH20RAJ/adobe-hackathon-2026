@@ -58,7 +58,7 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
       const cleanUrl = url.trim();
       const res = await fetch(`/api/audit?url=${encodeURIComponent(cleanUrl)}`);
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as AuditReport;
         setReport(data);
         setStatus("complete");
       } else {
