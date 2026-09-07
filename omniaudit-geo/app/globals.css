@@ -1,51 +1,106 @@
 @import "tailwindcss";
 
-@layer base {
-  :root {
-    --spectrum-bg: #0f1115;
-    --spectrum-card: #181b22;
-    --spectrum-card-hover: #222631;
-    --spectrum-border: rgba(255, 255, 255, 0.08);
-    --spectrum-border-active: #eb1000;
-    
-    /* Adobe Brand Accents */
-    --adobe-red: #eb1000;
-    --adobe-red-hover: #c90d00;
-    --spectrum-blue: #1473e6;
-    --spectrum-cyan: #0265dc;
-    --spectrum-green: #2d9d78;
-    --spectrum-yellow: #e68619;
-    --spectrum-red: #e34850;
-    
-    --text-primary: #ffffff;
-    --text-secondary: #a1a1aa;
-    --text-tertiary: #71717a;
-  }
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius: var(--radius);
+  --font-sans: "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", Menlo, Monaco, Consolas, monospace;
+}
 
+:root {
+  /* tweakcn twitter.json light variables */
+  --background: oklch(1.0000 0 0);
+  --foreground: oklch(0.1884 0.0128 248.5103);
+  --card: oklch(0.9784 0.0011 197.1387);
+  --card-foreground: oklch(0.1884 0.0128 248.5103);
+  --popover: oklch(1.0000 0 0);
+  --popover-foreground: oklch(0.1884 0.0128 248.5103);
+  --primary: oklch(0.6723 0.1606 244.9955);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.1884 0.0128 248.5103);
+  --secondary-foreground: oklch(1.0000 0 0);
+  --muted: oklch(0.9222 0.0013 286.3737);
+  --muted-foreground: oklch(0.45 0.01 248);
+  --accent: oklch(0.9392 0.0166 250.8453);
+  --accent-foreground: oklch(0.6723 0.1606 244.9955);
+  --destructive: oklch(0.6188 0.2376 25.7658);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.9317 0.0118 231.6594);
+  --input: oklch(0.9809 0.0025 228.7836);
+  --ring: oklch(0.6818 0.1584 243.3540);
+  --radius: 0.85rem;
+}
+
+/* Default to dark mode (Twitter Dark Pitch Black) */
+:root, .dark {
+  /* tweakcn twitter.json dark variables */
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.9328 0.0025 228.7857);
+  --card: oklch(0.14 0.006 270);
+  --card-foreground: oklch(0.92 0 0);
+  --popover: oklch(0.1 0 0);
+  --popover-foreground: oklch(0.9328 0.0025 228.7857);
+  --primary: oklch(0.6692 0.1607 245.0110);
+  --primary-foreground: oklch(1.0000 0 0);
+  --secondary: oklch(0.22 0.005 250);
+  --secondary-foreground: oklch(0.92 0 0);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.62 0.008 248);
+  --accent: oklch(0.1928 0.0331 242.5459);
+  --accent-foreground: oklch(0.6692 0.1607 245.0110);
+  --destructive: oklch(0.6188 0.2376 25.7658);
+  --destructive-foreground: oklch(1.0000 0 0);
+  --border: oklch(0.24 0.005 248);
+  --input: oklch(0.22 0.01 245);
+  --ring: oklch(0.6818 0.1584 243.3540);
+  --radius: 0.85rem;
+}
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
   body {
-    background-color: var(--spectrum-bg);
-    color: var(--text-primary);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    letter-spacing: -0.011em;
     -webkit-font-smoothing: antialiased;
   }
 }
 
-.adobe-glow {
-  box-shadow: 0 0 25px rgba(235, 16, 0, 0.25);
+.twitter-glow {
+  box-shadow: 0 0 35px rgba(29, 161, 242, 0.18);
 }
 
-.spectrum-card {
-  background: var(--spectrum-card);
-  border: 1px solid var(--spectrum-border);
-  border-radius: 12px;
-  transition: all 0.2s ease;
+.subtle-border {
+  border: 1px solid var(--border);
 }
 
-.spectrum-card:hover {
-  background: var(--spectrum-card-hover);
-  border-color: rgba(255, 255, 255, 0.15);
+.glass-panel {
+  background: rgba(20, 24, 33, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
 }
 
-.code-block {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+.code-mono {
+  font-family: var(--font-mono);
 }
