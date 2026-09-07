@@ -55,6 +55,12 @@ class HTMLContentExtractor(HTMLParser):
         self.table_blocks = 0
         self.faq_pairs = 0
         self.hidden_text_words = 0
+        self.action_stacks = []
+        self.action_candidates = []
+        self.form_stacks = []
+        self.forms = []
+        self._region_depths = {"header": 0, "nav": 0, "footer": 0}
+        self.has_article_region = False
 
     def handle_starttag(self, tag, attrs):
         self.current_tag = tag
@@ -71,6 +77,10 @@ class HTMLContentExtractor(HTMLParser):
             self._hidden_tags.append(tag)
         if tag == "nav":
             self._navigation_depth += 1
+        if tag in self._region_depths:
+            self._region_depths[tag] += 1
+        if tag in {"article", "main"}:
+            self.has_article_region = True
         
         if tag == "script":
             self.in_script = True
@@ -100,6 +110,35 @@ class HTMLContentExtractor(HTMLParser):
             self.list_blocks += 1
         elif tag == "table":
             self.table_blocks += 1
+        if tag in {"a", "button"}:
+            self.action_stacks.append({
+                "tag": tag,
+                "href": attr_dict.get("href", ""),
+                "label": attr_dict.get("aria-label", attr_dict.get("title", "")),
+                "region": self._current_action_region(),
+                "hidden": self._hidden_depth > 0,
+            })
+        if tag == "form":
+            self.form_stacks.append({
+                "controls": 0,
+                "submit_controls": 0,
+                "labels": 0,
+                "action": attr_dict.get("action", ""),
+            })
+        elif self.form_stacks and tag in {"input", "select", "textarea"}:
+            self.form_stacks[-1]["controls"] += 1
+            if tag == "input" and attr_dict.get("type", "").lower() in {"submit", "button"}:
+                self.form_stacks[-1]["submit_controls"] += 1
+        elif self.form_stacks and tag == "button":
+            self.form_stacks[-1]["submit_controls"] += 1
+        elif self.form_stacks and tag == "label":
+            self.form_stacks[-1]["labels"] += 1
+
+    def _current_action_region(self):
+        for region in ("nav", "footer", "header"):
+            if self._region_depths[region]:
+                return region
+        return "content"
 
     def handle_endtag(self, tag):
         if tag == "script":
@@ -117,8 +156,19 @@ class HTMLContentExtractor(HTMLParser):
                     self.faq_pairs += 1
             self._block_tag = None
             self._block_buffer = []
+        if tag in {"a", "button"} and self.action_stacks:
+            action = self.action_stacks.pop()
+            action["label"] = " ".join(
+                part for part in [action["label"], " ".join(action.pop("text", []))]
+                if part
+            ).strip()
+            self.action_candidates.append(action)
+        if tag == "form" and self.form_stacks:
+            self.forms.append(self.form_stacks.pop())
         if tag == "nav" and self._navigation_depth:
             self._navigation_depth -= 1
+        if tag in self._region_depths and self._region_depths[tag]:
+            self._region_depths[tag] -= 1
         if tag in self._hidden_tags:
             self._hidden_depth -= 1
             self._hidden_tags.remove(tag)
@@ -130,11 +180,13 @@ class HTMLContentExtractor(HTMLParser):
         elif (
             self.current_tag not in ["style", "noscript", "svg"]
             and self._hidden_depth == 0
-            and self._navigation_depth == 0
         ):
             cleaned = data.strip()
             if cleaned:
-                self.text_chunks.append(cleaned)
+                for action in self.action_stacks:
+                    action.setdefault("text", []).append(cleaned)
+                if self._navigation_depth == 0:
+                    self.text_chunks.append(cleaned)
                 if self._block_tag:
                     self._block_buffer.append(cleaned)
                 if self.headings and self.current_tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
@@ -767,7 +819,115 @@ def audit_on_site_engagement(parsed_content):
     text_chunks = parsed_content.text_chunks
     full_text = " ".join(text_chunks)
     words = full_text.split()
-    
+    strong_terms = (
+        "contact", "demo", "get started", "sign up", "signup", "register",
+        "trial", "buy", "purchase", "pricing", "book", "schedule", "download",
+        "subscribe", "apply", "request", "talk to sales",
+    )
+    weak_terms = ("click here", "learn more", "submit", "go", "continue", "more")
+    categories = {
+        "contact": ("contact", "talk to sales"),
+        "demo": ("demo", "request demo"),
+        "signup_trial": ("sign up", "signup", "register", "trial", "get started"),
+        "pricing_purchase": ("pricing", "buy", "purchase"),
+        "booking": ("book", "schedule"),
+        "download": ("download",),
+        "subscription_application": ("subscribe", "apply"),
+    }
+    meaningful = []
+    ignored_navigation = 0
+    ignored_footer = 0
+    for candidate in parsed_content.action_candidates:
+        label = re.sub(r"\s+", " ", candidate.get("label", "")).strip()
+        href = candidate.get("href", "").strip().lower()
+        if (
+            candidate.get("hidden")
+            or not label
+            or href in {"#", "javascript:void(0)", "javascript:void(0);"}
+        ):
+            continue
+        if candidate["region"] == "nav":
+            ignored_navigation += 1
+            continue
+        if candidate["region"] == "footer":
+            ignored_footer += 1
+            continue
+        if re.search(r"(facebook|twitter|x\.com|instagram|youtube|linkedin)", href):
+            continue
+        normalized = label.lower()
+        strength = "strong" if any(term in normalized for term in strong_terms) else (
+            "weak" if any(term == normalized for term in weak_terms) else "neutral"
+        )
+        if strength != "neutral":
+            meaningful.append({
+                "label": label,
+                "kind": candidate["tag"],
+                "strength": strength,
+                "category": next(
+                    (name for name, terms in categories.items()
+                     if any(term in normalized for term in terms)),
+                    "other",
+                ),
+            })
+    forms = [
+        form for form in parsed_content.forms
+        if form["controls"] > 0 and form["submit_controls"] > 0
+    ]
+    strong_ctas = [item for item in meaningful if item["strength"] == "strong"]
+    weak_ctas = [item for item in meaningful if item["strength"] == "weak"]
+    action_categories = sorted({item["category"] for item in strong_ctas})
+    contact_or_conversion_path = bool(strong_ctas or forms)
+    engagement_score = min(
+        100,
+        len(strong_ctas) * 25
+        + len(forms) * 20
+        + len(action_categories) * 10
+        + len(weak_ctas) * 5,
+    )
+    engagement_evidence = {
+        "cta_count": len(meaningful),
+        "strong_cta_count": len(strong_ctas),
+        "weak_cta_count": len(weak_ctas),
+        "form_count": len(parsed_content.forms),
+        "usable_form_count": len(forms),
+        "action_categories": action_categories,
+        "contact_or_conversion_path": contact_or_conversion_path,
+        "ignored_navigation_links": ignored_navigation,
+        "ignored_footer_links": ignored_footer,
+        "engagement_readiness_score": engagement_score,
+        "action_labels": [item["label"] for item in meaningful],
+        "content_region_detected": parsed_content.has_article_region,
+    }
+    if weak_ctas and not strong_ctas and not forms:
+        findings.append({
+            "id": "F-019",
+            "title": "Vague On-Site Engagement Actions",
+            "severity": "low",
+            "category": "engagement_actionability",
+            "evidence": json.dumps(engagement_evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Replace vague labels such as 'Click here' or 'More' with specific actions that describe the visitor's next useful step.",
+                "priority": "low",
+            },
+        })
+    elif (
+        len(words) >= 40
+        and not parsed_content.has_article_region
+        and not contact_or_conversion_path
+        and not strong_ctas
+    ):
+        findings.append({
+            "id": "F-019",
+            "title": "Weak or Missing Clear On-Site Engagement Path",
+            "severity": "medium",
+            "category": "engagement_actionability",
+            "evidence": json.dumps(engagement_evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Add one clear primary action matching the page purpose, such as contacting sales, viewing pricing, starting a trial, or downloading a resource.",
+                "priority": "medium",
+                "implementation_code": "<a href=\"/contact\" class=\"primary-cta\">Contact sales</a>",
+            },
+        })
     # Hero / Above-the-fold value prop length
     first_100_words = " ".join(words[:100])
     if len(words) > 50 and len(first_100_words.strip()) < 80:

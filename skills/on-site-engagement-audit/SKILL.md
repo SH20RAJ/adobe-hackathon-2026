@@ -15,11 +15,15 @@ Use to diagnose why visitors referred from AI search engines immediately bounce 
 * `url` (string, required): The target website URL.
 
 ## Procedure
-1. Run `python3 skills/on-site-engagement-audit/scripts/engagement_evaluator.py --url "<URL>"`.
-2. Evaluate hero section text for 5-second value proposition clarity.
-3. Compute readability scores (Flesch-Kincaid) and sentence length distribution.
-4. Assess Call to Action (CTA) discoverability and cognitive friction.
-5. Return findings array with suggestions for hero headline and CTA refinement.
+1. Analyze the already-fetched page HTML in the normal audit path; the standalone
+   `scripts/engagement_evaluator.py` adapter uses the same bounded fetch and analyzer.
+2. Detect meaningful buttons, links, forms, and action categories while excluding
+   navigation, footer, social, policy, empty, and decorative links.
+3. Evaluate CTA specificity, usable form controls, and whether a contact or conversion
+   path exists. Produce a transparent deterministic readiness score.
+4. Return structured evidence and targeted remediation. This is a static, read-only
+   heuristic and is not a conversion-rate, usability, click-success, or satisfaction
+   predictor.
 
 ## Output
 JSON array of engagement and cognitive retention findings.
