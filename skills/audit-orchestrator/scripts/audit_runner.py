@@ -32,6 +32,11 @@ from safe_fetch import (
 USER_AGENT = "Mozilla/5.0 (compatible; BrandAIAuditBot/1.0; +https://agentskills.io)"
 
 class HTMLContentExtractor(HTMLParser):
+    _VOID_TAGS = {
+        "area", "base", "br", "col", "embed", "hr", "img", "input",
+        "link", "meta", "param", "source", "track", "wbr",
+    }
+
     def __init__(self):
         super().__init__()
         self.text_chunks = []
@@ -46,7 +51,8 @@ class HTMLContentExtractor(HTMLParser):
         self.script_type = ""
         self.script_buffer = []
         self._hidden_depth = 0
-        self._hidden_tags = []
+        self._hidden_interface_depth = 0
+        self._element_stack = []
         self._navigation_depth = 0
         self._block_tag = None
         self._block_buffer = []
@@ -55,6 +61,8 @@ class HTMLContentExtractor(HTMLParser):
         self.table_blocks = 0
         self.faq_pairs = 0
         self.hidden_text_words = 0
+        self.hidden_content_words = 0
+        self.hidden_interface_words = 0
         self.action_stacks = []
         self.action_candidates = []
         self.form_stacks = []
@@ -66,15 +74,41 @@ class HTMLContentExtractor(HTMLParser):
         self.current_tag = tag
         attr_dict = dict(attrs)
         style = attr_dict.get("style", "").replace(" ", "").lower()
+        aria_hidden = (
+            attr_dict.get("aria-hidden", "").lower() == "true"
+            and tag not in {"i", "svg"}
+        )
         is_hidden = (
             "hidden" in attr_dict
-            or attr_dict.get("aria-hidden", "").lower() == "true"
+            or aria_hidden
             or "display:none" in style
             or "visibility:hidden" in style
         )
+        if tag in self._VOID_TAGS:
+            is_hidden = False
         if is_hidden:
             self._hidden_depth += 1
-            self._hidden_tags.append(tag)
+            tokens = " ".join(
+                attr_dict.get(name, "")
+                for name in ("id", "class", "role", "aria-label", "title")
+            ).lower()
+            is_interface = (
+                self._hidden_interface_depth > 0
+                or self._navigation_depth > 0
+                or any(
+                    marker in tokens
+                    for marker in (
+                        "nav", "menu", "mobile", "modal", "dialog", "drawer",
+                        "accordion", "tab-panel", "tabpanel", "cookie", "banner",
+                    )
+                )
+            )
+            if is_interface:
+                self._hidden_interface_depth += 1
+        else:
+            is_interface = False
+        if tag not in self._VOID_TAGS:
+            self._element_stack.append((tag, is_hidden, is_interface))
         if tag == "nav":
             self._navigation_depth += 1
         if tag in self._region_depths:
@@ -169,9 +203,15 @@ class HTMLContentExtractor(HTMLParser):
             self._navigation_depth -= 1
         if tag in self._region_depths and self._region_depths[tag]:
             self._region_depths[tag] -= 1
-        if tag in self._hidden_tags:
-            self._hidden_depth -= 1
-            self._hidden_tags.remove(tag)
+        if self._element_stack and self._element_stack[-1][0] == tag:
+            _, is_hidden, is_interface = self._element_stack.pop()
+        else:
+            is_hidden = False
+            is_interface = False
+            if is_hidden:
+                self._hidden_depth -= 1
+                if is_interface:
+                    self._hidden_interface_depth -= 1
         self.current_tag = None
 
     def handle_data(self, data):
@@ -193,7 +233,12 @@ class HTMLContentExtractor(HTMLParser):
                     if not self.headings[-1]["text"]:
                         self.headings[-1]["text"] = cleaned
         elif data.strip():
-            self.hidden_text_words += len(data.split())
+            word_count = len(data.split())
+            self.hidden_text_words += word_count
+            if self._hidden_interface_depth == 0:
+                self.hidden_content_words = getattr(self, "hidden_content_words", 0) + word_count
+            else:
+                self.hidden_interface_words += word_count
 
 def fetch_url(url, timeout=10):
     result = safe_fetch(
@@ -289,7 +334,12 @@ def audit_structured_data(base_url, parsed_content):
 
     recognized_types = {
         "Organization", "WebSite", "WebPage", "Article",
-        "Product", "Person", "LocalBusiness",
+        "Product", "Person", "LocalBusiness", "EducationalOrganization",
+        "CollegeOrUniversity",
+    }
+    organization_types = {
+        "Organization", "LocalBusiness", "EducationalOrganization",
+        "CollegeOrUniversity",
     }
     entity_fields = {
         "Organization": ["name", "url", "logo", "sameAs", "description"],
@@ -299,6 +349,8 @@ def audit_structured_data(base_url, parsed_content):
         "Product": ["name", "description", "image", "brand", "offers"],
         "Person": ["name", "url", "sameAs"],
         "LocalBusiness": ["name", "url", "address", "telephone"],
+        "EducationalOrganization": ["name", "url", "sameAs", "description"],
+        "CollegeOrUniversity": ["name", "url", "sameAs", "description"],
     }
 
     types_found = set()
@@ -362,11 +414,17 @@ def audit_structured_data(base_url, parsed_content):
 
     has_same_as = bool(same_as_urls or malformed_same_as)
     recognized_type_names = sorted(types_found & recognized_types)
+    organization_identity_types = sorted(types_found & organization_types)
+    organization_identity_present = bool(organization_identity_types)
+    website_present = "WebSite" in types_found
     graph_detected = any("@graph" in raw for raw in json_lds)
     entity_evidence = {
         "json_ld_blocks": len(json_lds),
         "parsed_node_count": len(parsed_schemas),
         "recognized_entity_types": recognized_type_names,
+        "organization_identity_present": organization_identity_present,
+        "organization_identity_types": organization_identity_types,
+        "website_present": website_present,
         "entity_summaries": entity_summaries,
         "graph_detected": graph_detected,
         "sameAs_urls": same_as_urls,
@@ -375,20 +433,36 @@ def audit_structured_data(base_url, parsed_content):
         "@id_references": sorted(set(id_references)),
     }
 
-    if not parsed_schemas or ("Organization" not in types_found and "WebSite" not in types_found):
+    if not organization_identity_present or not website_present:
+        if not parsed_schemas:
+            missing_core_types = ["Organization", "WebSite"]
+            title = "Missing Organization / WebSite Schema.org JSON-LD"
+            summary = "Add Organization and WebSite Schema.org JSON-LD to establish machine-readable identity."
+        elif not organization_identity_present:
+            missing_core_types = ["Organization"]
+            title = "Missing Organization Identity in Schema.org JSON-LD"
+            summary = "Add an Organization or recognized organization subtype with explicit name and URL."
+            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
+        else:
+            missing_core_types = ["WebSite"]
+            title = "Incomplete Structured Identity: WebSite Entity Missing"
+            summary = "Add a WebSite JSON-LD entity alongside the existing organization identity."
+            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"WebSite\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
+        if not parsed_schemas:
+            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
         findings.append({
             "id": "F-004",
-            "title": "Missing Organization / WebSite Schema.org JSON-LD",
+            "title": title,
             "severity": "high",
             "category": "structured_data_entity",
             "evidence": json.dumps({
                 **entity_evidence,
-                "missing_core_types": ["Organization", "WebSite"],
+                "missing_core_types": missing_core_types,
             }, sort_keys=True),
             "suggested_action": {
-                "summary": "Inject Organization Schema.org JSON-LD to establish definitive brand entity identity.",
+                "summary": summary,
                 "priority": "high",
-                "implementation_code": f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\",\n  \"sameAs\": [\n    \"https://www.wikidata.org/wiki/...\",\n    \"https://www.linkedin.com/company/...\"\n  ]\n}}\n</script>"
+                "implementation_code": implementation_code
             }
         })
 
@@ -517,6 +591,8 @@ def audit_aeo_quotability(parsed_content):
         "informative_images": len(informative_images),
         "informative_images_missing_alt": len(missing_alt),
         "hidden_text_words": parsed_content.hidden_text_words,
+        "hidden_content_words": parsed_content.hidden_content_words,
+        "hidden_interface_words": parsed_content.hidden_interface_words,
         "quotability_score": quotability_score,
         "score_components": {
             "heading_clarity": meaningful_heading_score,
@@ -583,7 +659,10 @@ def audit_aeo_quotability(parsed_content):
                 "implementation_code": "<h2>Pricing</h2>\n<p>The Pro plan costs $49 per month and includes...</p>",
             },
         })
-    if parsed_content.hidden_text_words >= 20:
+    if (
+        parsed_content.hidden_content_words >= 20
+        and parsed_content.hidden_interface_words == 0
+    ):
         findings.append({
             "id": "F-016",
             "title": "Important Content Appears Hidden in Initial HTML",

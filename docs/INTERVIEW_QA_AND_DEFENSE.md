@@ -6,11 +6,11 @@ This guide analyzes historical evaluation patterns and jury questions from past 
 
 ## 🏛️ Section 1: System Architecture & Marketplace Design
 
-### Q1: Why did you decompose your solution into 5 separate skills instead of authoring one comprehensive single skill?
+### Q1: Why did you decompose your solution into five diagnostic skills plus an orchestrator instead of authoring one comprehensive single skill?
 > **Model Answer:**  
-> *"We adhered strictly to the **Single Responsibility Principle (SRP)** and the `agentskills.io` specification. A monolithic skill creates a massive cognitive token load for the LLM, increasing inference latency and hallucination risk.*  
+> *"Our team adhered strictly to the **Single Responsibility Principle (SRP)** and the `agentskills.io` specification. A monolithic skill creates a massive cognitive token load for the LLM, increasing inference latency and hallucination risk.*
 > 
-> *By decoupling into 5 specialized domains (`crawl-render-audit`, `structured-entity-audit`, `aeo-quotability-audit`, `freshness-corroboration-audit`, and `on-site-engagement-audit`), each skill maintains a lean instruction footprint with isolated reference catalogs. Our `audit-orchestrator` can execute these skills in parallel, deduplicate findings, and produce a normalized audit report in seconds. This architecture is directly extensible: if Adobe wants to add a new 'Accessibility & WCAG' or 'Security Header' audit skill tomorrow, it plugs into `marketplace.json` without modifying existing code."*
+> *By decoupling into five diagnostic domains (`crawl-render-audit`, `structured-entity-audit`, `aeo-quotability-audit`, `freshness-corroboration-audit`, and `on-site-engagement-audit`), each skill maintains a lean instruction footprint. The `audit-orchestrator` composes them into a normalized report from one bounded fetch and parsed document. This architecture is directly extensible: if Adobe wants to add a new 'Accessibility & WCAG' or 'Security Header' audit skill tomorrow, it plugs into `marketplace.json` without modifying existing code."*
 
 ---
 

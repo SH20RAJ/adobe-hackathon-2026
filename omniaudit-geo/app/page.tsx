@@ -411,10 +411,10 @@ export default function Home() {
       <footer className="border-t border-zinc-800 bg-zinc-950 py-6 text-center text-xs text-zinc-500">
         <div className="mx-auto max-w-7xl px-6">
           <p>
-            <strong>OmniAudit-GEO</strong> · Adobe University Hackathon 2026 (CRP) — Round 3 Candidate Submission
+            <strong>OmniAudit-GEO</strong> · Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission
           </p>
           <p className="mt-1 text-[11px] text-zinc-600">
-            Engineered by <a href="https://github.com/sh20raj" target="_blank" className="text-zinc-400 hover:text-white underline">Shaswat Raj (@sh20raj)</a> · BIT Mesra · AICTE Top 500 Innovation Fellow
+            Built by <a href="https://github.com/sh20raj" target="_blank" className="text-zinc-400 hover:text-white underline">Shaswat Raj (@sh20raj)</a> &amp; <a href="https://github.com/chikolavosaki-sys" target="_blank" className="text-zinc-400 hover:text-white underline">Prithvi (@chikolavosaki-sys)</a>
           </p>
         </div>
       </footer>

@@ -33,6 +33,40 @@ class StructuredDataTests(unittest.TestCase):
         self.assertIn("Organization", details["recognized_entity_types"])
         self.assertFalse(any(item["id"] == "F-012" for item in findings))
 
+    def test_organization_subtypes_count_as_identity_but_still_report_missing_website(self):
+        for organization_type in ("CollegeOrUniversity", "EducationalOrganization", "LocalBusiness"):
+            with self.subTest(organization_type=organization_type):
+                findings = findings_for(json.dumps({
+                    "@type": organization_type,
+                    "name": "Example Institution",
+                    "url": "https://example.test",
+                }))
+                details = evidence(findings, "F-004")
+                self.assertTrue(details["organization_identity_present"])
+                self.assertEqual(details["organization_identity_types"], [organization_type])
+                self.assertFalse(details["website_present"])
+                self.assertEqual(details["missing_core_types"], ["WebSite"])
+                self.assertIn("WebSite Entity Missing", next(item for item in findings if item["id"] == "F-004")["title"])
+
+    def test_missing_organization_identity_still_reports_f004(self):
+        findings = findings_for(json.dumps({
+            "@type": "WebPage",
+            "name": "Example",
+            "url": "https://example.test",
+        }))
+        details = evidence(findings, "F-004")
+        self.assertFalse(details["organization_identity_present"])
+        self.assertEqual(details["missing_core_types"], ["Organization"])
+
+    def test_graph_organization_subtype_and_website_are_complete(self):
+        findings = findings_for(json.dumps({
+            "@graph": [
+                {"@type": "CollegeOrUniversity", "name": "Example", "url": "https://example.test"},
+                {"@type": "WebSite", "name": "Example", "url": "https://example.test"},
+            ]
+        }))
+        self.assertFalse(any(item["id"] == "F-004" for item in findings))
+
     def test_graph_flattens_organization_and_website(self):
         findings = findings_for(json.dumps({
             "@graph": [

@@ -1,8 +1,10 @@
 # OmniAudit-GEO: Executive Pitch & Presentation Script
 
 > **The Brand AI-Readiness Marketplace for the Generative Search Era**  
-> **Adobe University Hackathon 2026 — Round 3 Submission**  
-> **Presenter:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj))
+> **Adobe University Hackathon 2026 — Round 3 Team Submission**
+> **Presenters:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
+
+> **Ownership:** Shaswat leads the original product, marketplace, showcase, and presentation foundation. Prithvi leads audit-engine hardening, security, generalization, benchmarks, and quality validation.
 
 ---
 
@@ -41,7 +43,7 @@
 
 ## 💡 3. The Solution: OmniAudit-GEO Agent Skill Marketplace
 
-OmniAudit-GEO decomposes the audit process into **5 specialized, autonomous agent skills** governed by a master **`audit-orchestrator`** entrypoint, fully adhering to the `agentskills.io` standard:
+OmniAudit-GEO composes **five diagnostic skills** governed by a master **`audit-orchestrator`** entrypoint, for a six-skill marketplace fully adhering to the `agentskills.io` standard:
 
 1. **`crawl-render-audit`:** Analyzes `robots.txt` AI user-agent policies (`GPTBot`, `ClaudeBot`, `PerplexityBot`), HTTP headers, and detects JavaScript hydration content gaps.
 2. **`structured-entity-audit`:** Validates Schema.org JSON-LD markup and resolves entity identity networks (`sameAs` links to Wikidata and Crunchbase).
@@ -55,14 +57,14 @@ OmniAudit-GEO decomposes the audit process into **5 specialized, autonomous agen
 
 ### Innovation 1: Quantitative Indices (ACPI & CRS)
 We don't just output qualitative complaints; we calculate two empirical indices:
-* **AI Citation Probability Index (ACPI, 0–100):** Predicting the likelihood of an AI assistant discovering and quoting the brand.
+* **AI Citation Probability Index (ACPI, 0–100):** A deterministic severity-weighted heuristic for AI discoverability findings, not a prediction of model behavior.
 * **Cognitive Retention Score (CRS, 0–100):** Measuring on-page orientation clarity and bounce resilience.
 
-### Innovation 2: Sub-30 Second Deterministic Hybrid Execution
-* Unlike brittle LLM-only scanners that take minutes and hallucinate, our core analyzers run on pure Python standard library parsers with bounded fetching and **zero external API dependency**.
+### Innovation 2: Bounded Deterministic Execution
+* Unlike brittle LLM-only scanners, our core analyzers use pure Python standard-library parsers with bounded fetching and **zero external API dependency**.
 
-### Innovation 3: Proactive Auto-Remediation Payloads
-* We don't just report defects — we fix them. Every finding includes **ready-to-paste implementation code** (`llms.txt`, valid Schema.org JSON-LD, and optimized `robots.txt` directives).
+### Innovation 3: Actionable Remediation Guidance
+* We don't just report defects — we provide actionable remediation guidance and implementation snippets (`llms.txt`, Schema.org JSON-LD, and `robots.txt` examples). The audit remains read-only and does not modify the target website.
 
 ---
 

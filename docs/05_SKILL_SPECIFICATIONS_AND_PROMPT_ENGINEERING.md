@@ -17,7 +17,7 @@ skills/<skill-name>/
 ### Progressive Disclosure Architecture:
 * **The `SKILL.md` must remain lean (< 200 lines):** It provides high-level intent, inputs, numbered deterministic procedure steps, tool invocations, and output schema.
 * **Heavy data is pushed to `references/`:** Large rule tables, regex catalogs, and schema standards live in reference documents.
-* **Fast execution is pushed to `scripts/`:** Deterministic checks (HTML parsing, JSON-LD validation, regex matching) are executed via bundled Python scripts rather than LLM token generation, guaranteeing zero hallucination and sub-second execution.
+* **Fast execution is pushed to `scripts/`:** Deterministic checks (HTML parsing, JSON-LD validation, regex matching) are executed via bundled Python scripts rather than LLM token generation, with bounded fetching and no external API dependency.
 
 ---
 
@@ -30,7 +30,7 @@ The marketplace root must contain a `marketplace.json` that defines the marketpl
   "name": "brand-ai-readiness-audit",
   "version": "1.0.0",
   "description": "Comprehensive Agent Skill Marketplace for auditing website AI Discoverability (GEO/AEO) and On-site Visitor Engagement.",
-  "author": "Shaswat Raj (@sh20raj)",
+  "author": "Shaswat Raj (@sh20raj) & Prithvi (@chikolavosaki-sys)",
   "license": "Apache-2.0",
   "skills": [
     {
@@ -262,7 +262,7 @@ Use to diagnose why visitors referred from AI search engines immediately bounce 
 
 ## Procedure
 1. Analyze the first viewport / hero section: verify if the headline clearly states the core value proposition within 5 seconds of reading.
-2. Measure readability grade level (Flesch-Kincaid) to identify unnecessarily complex jargon.
+2. Evaluate concise headings, substantive blocks, direct-answer signals, lists/tables, and image accessibility as deterministic quotability evidence.
 3. Evaluate Call to Action (CTA) prominence and clarity.
 4. Detect high-friction barriers (e.g., intrusive modals, missing navigation orientation, broken search bars).
 5. Generate actionable recommendations for hero copy refactoring and conversion funnel streamlining.

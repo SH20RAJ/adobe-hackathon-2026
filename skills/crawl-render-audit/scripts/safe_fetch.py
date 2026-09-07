@@ -142,7 +142,12 @@ def safe_fetch(
             if exc.code in _REDIRECT_STATUSES:
                 response = exc
             else:
-                return _failure("http_status", f"HTTP status {exc.code}")
+                return _failure(
+                    "http_status",
+                    f"HTTP status {exc.code}",
+                    exc.code,
+                    dict(exc.headers or {}),
+                )
         except (urllib.error.URLError, TimeoutError, socket.timeout):
             return _failure("network_error", "network request failed or timed out")
         except FetchValidationError as exc:
@@ -162,7 +167,11 @@ def safe_fetch(
             continue
 
         headers = dict(response.info())
-        content_type = headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        content_type_header = next(
+            (value for key, value in headers.items() if key.lower() == "content-type"),
+            "",
+        )
+        content_type = content_type_header.split(";", 1)[0].strip().lower()
         if require_html and content_type not in {"text/html", "application/xhtml+xml"}:
             return _failure("content_type", "response is not an HTML document", status, headers)
         try:

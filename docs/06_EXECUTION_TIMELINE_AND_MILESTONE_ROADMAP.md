@@ -20,7 +20,7 @@ gantt
     Python Crawl & Schema Parsers        :2026-09-03, 2026-09-06
     AEO & Trust & Engagement Analyzers   :2026-09-06, 2026-09-08
     section Phase 3: Agent Skills & Prompts
-    Author SKILL.md for all 5 Skills     :2026-09-08, 2026-09-09
+    Author SKILL.md for all 5 Diagnostic Skills :2026-09-08, 2026-09-09
     Author References & Fix Blueprints   :2026-09-09, 2026-09-10
     section Phase 4: Test Harness & Validation
     Benchmark on 20+ Real-World Sites    :2026-09-10, 2026-09-12
@@ -49,7 +49,7 @@ gantt
 
 ### Milestone 2: Deterministic Python Engine & Fast Analyzers (Sep 3 – Sep 8)
 * [ ] Build `scripts/crawl_inspector.py`:
-  * Fast async fetching (`httpx` / `urllib`), robots.txt parser for AI bots (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`, `Bytespider`).
+  * Bounded fetching (`urllib`), robots.txt parser for AI bots (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`, `Bytespider`).
   * Response header inspection (`X-Robots-Tag`, caching).
 * [ ] Build `scripts/schema_validator.py`:
   * JSON-LD AST extractor and Schema.org compliance checker.
@@ -59,14 +59,14 @@ gantt
 * [ ] Build `scripts/trust_corroborator.py`:
   * Temporal date detector, NAP consistency checker, trust policy verifier.
 * [ ] Build `scripts/engagement_evaluator.py`:
-  * Above-the-fold value prop extractor, Flesch-Kincaid readability scoring.
+  * Above-the-fold value proposition, CTA specificity, and usable-form signals.
 * [ ] Build `scripts/audit_runner.py`:
-  * Master orchestrator CLI that runs all sub-analyzers in parallel, aggregates findings, and exports the JSON report.
+  * Master orchestrator CLI that composes all diagnostic analyzers sequentially from one parsed document, aggregates findings, and exports the JSON report.
 
 ---
 
 ### Milestone 3: Agent Skills Authoring & Progressive Disclosure (Sep 8 – Sep 10)
-* [ ] Write `SKILL.md` for `audit-orchestrator` and all 5 sub-skills per `agentskills.io` specification.
+* [ ] Write `SKILL.md` for `audit-orchestrator` and all 5 diagnostic sub-skills per `agentskills.io` specification.
 * [ ] Populate all `references/` directories:
   * `references/audit_schema.json` (Strict output validator)
   * `references/ai_user_agents.md` (Known AI bot user-agent signatures)

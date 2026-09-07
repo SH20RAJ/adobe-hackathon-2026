@@ -83,6 +83,33 @@ class AEOQuotabilityTests(unittest.TestCase):
         self.assertIn("F-016", evidence)
         self.assertGreaterEqual(evidence["F-016"]["hidden_text_words"], 20)
 
+    def test_large_hidden_navigation_does_not_trigger_hidden_content_finding(self):
+        findings, evidence = analyze(
+            "<h1>Example</h1><nav style='display:none' id='mobile-menu'>"
+            + ("Navigation item " * 30)
+            + "</nav>"
+        )
+        self.assertNotIn("F-016", evidence)
+
+    def test_hidden_ui_menu_with_substantial_visible_content_is_ignored(self):
+        findings, evidence = analyze(
+            "<h1>Example</h1><p>" + ("Visible page information " * 30) + "</p>"
+            "<div style='display:none' class='modal-menu'>"
+            + ("Menu control " * 30)
+            + "</div>"
+        )
+        self.assertNotIn("F-016", evidence)
+
+    def test_important_hidden_content_still_triggers_f016(self):
+        findings, evidence = analyze(
+            "<h1>Example</h1><p>Visible summary.</p>"
+            "<section style='display:none'><h2>Pricing details</h2>"
+            + ("Important product pricing information " * 12)
+            + "</section>"
+        )
+        self.assertIn("F-016", evidence)
+        self.assertGreaterEqual(evidence["F-016"]["hidden_content_words"], 20)
+
     def test_small_page_does_not_create_low_score_noise(self):
         findings, evidence = analyze("<title>Example</title>")
         self.assertNotIn("F-015", evidence)

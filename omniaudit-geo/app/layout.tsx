@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "OmniAudit-GEO | Adobe University Hackathon 2026",
-  description: "Enterprise Brand AI-Readiness & GEO Audit Marketplace on Cloudflare Workers Edge. Built by Shaswat Raj (@sh20raj).",
+  description: "Enterprise Brand AI-Readiness & GEO Audit Marketplace on Cloudflare Workers Edge. Team submission by Shaswat Raj (@sh20raj) and Prithvi (@chikolavosaki-sys).",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

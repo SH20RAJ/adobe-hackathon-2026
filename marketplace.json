@@ -2,7 +2,7 @@
   "name": "brand-ai-readiness-audit",
   "version": "1.0.0",
   "description": "Enterprise Agent Skill Marketplace for auditing website AI Discoverability (GEO/AEO) and On-site Visitor Engagement.",
-  "author": "Shaswat Raj (@sh20raj)",
+  "author": "Shaswat Raj (@sh20raj) & Prithvi (@chikolavosaki-sys)",
   "license": "Apache-2.0",
   "skills": [
     {

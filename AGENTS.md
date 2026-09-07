@@ -3,7 +3,9 @@
 ## Project Identity & Mission
 * **Project Name:** OmniAudit-GEO (`brand-ai-readiness-audit`)
 * **Context:** Adobe University Hackathon 2026 (Campus Recruitment Program) — Round 3
-* **Lead Engineer:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj))
+* **Engineering Team:**
+  * **Shaswat Raj** ([@sh20raj](https://github.com/sh20raj)) — product/showcase/marketplace foundation
+  * **Prithvi** ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys)) — audit-engine hardening, security, and generalization
 * **Objective:** Win #1 place by building the most modular, high-performance, and standard-compliant Agent Skill Marketplace (`agentskills.io` spec) for auditing website AI Discoverability and On-site Visitor Engagement.
 
 ---

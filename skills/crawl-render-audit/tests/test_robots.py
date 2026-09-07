@@ -105,6 +105,32 @@ class RobotsParserTests(unittest.TestCase):
             [],
         )
 
+    def test_valid_robots_response_is_evaluated(self):
+        findings = robots_response_findings(
+            "https://fixture.test/robots.txt",
+            {
+                "status": 200,
+                "html": "User-agent: GPTBot\nDisallow: /\n",
+                "error": None,
+            },
+        )
+        self.assertEqual([item["id"] for item in findings], ["F-001-GPTBot"])
+
+    def test_http_failure_is_reported_as_controlled_evaluation_failure(self):
+        findings = robots_response_findings(
+            "https://fixture.test/robots.txt",
+            {"status": 500, "error": "HTTP status 500", "error_code": "http_status"},
+        )
+        self.assertEqual(findings[0]["id"], "F-001-ROBOTS")
+        self.assertEqual(json.loads(findings[0]["evidence"])["error_code"], "http_status")
+
+    def test_network_failure_is_reported_as_controlled_evaluation_failure(self):
+        findings = robots_response_findings(
+            "https://fixture.test/robots.txt",
+            {"status": 0, "error": "network request failed", "error_code": "network_error"},
+        )
+        self.assertEqual(findings[0]["id"], "F-001-ROBOTS")
+
 
 if __name__ == "__main__":
     unittest.main()

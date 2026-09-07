@@ -58,7 +58,7 @@ brand-ai-readiness-audit/               <- Marketplace Root (Submittable ZIP Pac
 │   └── on-site-engagement-audit/       <- Skill 5: Value Prop Orientation, Scents & Cognitive Friction
 │       ├── SKILL.md
 │       ├── scripts/
-│       │   └── engagement_evaluator.py <- Hero fold analysis, Flesch-Kincaid readability, CTA clarity
+│       │   └── engagement_evaluator.py <- Value proposition, CTA, form, and action-path signals
 │       └── references/
 │           └── ux_heuristic_checklist.md
 ```
@@ -117,7 +117,7 @@ brand-ai-readiness-audit/               <- Marketplace Root (Submittable ZIP Pac
   1. **Weak Above-the-Fold Orientation:** Unclear value proposition in the hero section; visitors arriving from an AI referral cannot immediately confirm they are in the right place.
   2. **Information Scent Gaps:** Disconnect between user search intent and landing page content, leading to immediate bounce.
   3. **High Cognitive Load & Reading Difficulty:** Excessively dense paragraphs, low text contrast, or buried Call to Action (CTA) buttons.
-* **Deterministic Script:** `scripts/engagement_evaluator.py` analyzes hero readability (Flesch-Kincaid), CTA visibility, navigation hierarchy, and layout clarity.
+* **Deterministic Script:** `scripts/engagement_evaluator.py` analyzes value-proposition signals, CTA visibility, usable forms, navigation noise, and action-path clarity.
 
 ---
 

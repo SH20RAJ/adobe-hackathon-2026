@@ -2,6 +2,7 @@ import pathlib
 import socket
 import sys
 import unittest
+import urllib.error
 from unittest import mock
 
 
@@ -142,6 +143,47 @@ class SafeFetchTests(unittest.TestCase):
         build_opener.return_value = FakeOpener([socket.timeout()])
         result = safe_fetch.safe_fetch("https://example.com")
         self.assertEqual(result["error_code"], "network_error")
+
+    @mock.patch.object(safe_fetch.socket, "getaddrinfo", return_value=PUBLIC_DNS)
+    @mock.patch.object(safe_fetch.urllib.request, "build_opener")
+    def test_http_error_preserves_status_and_headers(self, build_opener, _getaddrinfo):
+        build_opener.return_value = FakeOpener([
+            urllib.error.HTTPError(
+                "https://example.com/robots.txt",
+                404,
+                "Not Found",
+                {"Content-Type": "text/plain"},
+                None,
+            )
+        ])
+        result = safe_fetch.safe_fetch("https://example.com/robots.txt")
+        self.assertEqual(result["error_code"], "http_status")
+        self.assertEqual(result["status"], 404)
+        self.assertEqual(result["headers"]["Content-Type"], "text/plain")
+
+    @mock.patch.object(safe_fetch.socket, "getaddrinfo", return_value=PUBLIC_DNS)
+    @mock.patch.object(safe_fetch.urllib.request, "build_opener")
+    def test_html_content_type_is_case_insensitive(self, build_opener, _getaddrinfo):
+        header_names = (
+            "Content-Type",
+            "content-type",
+            "CONTENT-TYPE",
+            "CoNtEnT-TyPe",
+        )
+        content_types = (
+            "text/html",
+            "text/html; charset=utf-8",
+            "application/xhtml+xml",
+        )
+        for header_name in header_names:
+            for content_type in content_types:
+                with self.subTest(header_name=header_name, content_type=content_type):
+                    build_opener.return_value = FakeOpener([
+                        FakeResponse(headers={header_name: content_type})
+                    ])
+                    result = safe_fetch.safe_fetch("https://example.com", require_html=True)
+                    self.assertIsNone(result["error"])
+                    self.assertEqual(result["status"], 200)
 
     @mock.patch.object(safe_fetch.socket, "getaddrinfo", return_value=PUBLIC_DNS)
     @mock.patch.object(safe_fetch.urllib.request, "build_opener")
