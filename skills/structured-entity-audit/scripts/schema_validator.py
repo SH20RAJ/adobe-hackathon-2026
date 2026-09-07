@@ -1,38 +1,46 @@
 #!/usr/bin/env python3
-"""
-Schema Validator Script.
-Extracts and validates Schema.org JSON-LD and sameAs entity links.
-"""
+"""Standalone adapter for the audit runner's shared JSON-LD analyzer."""
 import sys
 import json
-import urllib.request
-import re
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parents[2]
+CRAWL_SCRIPT_DIR = SCRIPT_DIR / "crawl-render-audit" / "scripts"
+ORCHESTRATOR_SCRIPT_DIR = SCRIPT_DIR / "audit-orchestrator" / "scripts"
+sys.path.insert(0, str(CRAWL_SCRIPT_DIR))
+sys.path.insert(0, str(ORCHESTRATOR_SCRIPT_DIR))
+
+from audit_runner import HTMLContentExtractor, audit_structured_data
+from safe_fetch import DEFAULT_MAX_RESPONSE_BYTES, DEFAULT_TIMEOUT_SECONDS, safe_fetch
+
 
 def validate_schema(url):
-    if not url.startswith("http"):
+    if not url.startswith(("http://", "https://")):
         url = "https://" + url
-    findings = []
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; AIAuditBot/1.0)"})
-        with urllib.request.urlopen(req, timeout=8) as res:
-            html = res.read().decode("utf-8", errors="ignore")
-            scripts = re.findall(r'<script[^>]*type=[\'"]application/ld\+json[\'"][^>]*>(.*?)</script>', html, re.DOTALL | re.IGNORECASE)
-            
-            if not scripts:
-                findings.append({
-                    "id": "F-SCHEMA-01",
-                    "title": "Missing Schema.org JSON-LD Markup",
-                    "severity": "high",
-                    "evidence": f"Zero JSON-LD structured data blocks found in {url}.",
-                    "suggested_action": {
-                        "summary": "Inject Organization and WebSite Schema.org JSON-LD.",
-                        "priority": "high",
-                        "implementation_code": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"Brand Name\"\n}"
-                    }
-                })
-    except Exception as e:
-        pass
-    return findings
+    result = safe_fetch(
+        url,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        max_bytes=DEFAULT_MAX_RESPONSE_BYTES,
+        require_html=True,
+    )
+    if result["error"]:
+        return [{
+            "id": "F-SCHEMA-02",
+            "title": "Structured Data Page Could Not Be Fetched",
+            "severity": "medium",
+            "evidence": json.dumps({
+                "url": url,
+                "status": "FETCH_ERROR",
+                "error_code": result.get("error_code") or "fetch_failed",
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Make the target page reachable over HTTP or HTTPS before auditing its structured data.",
+                "priority": "medium",
+            },
+        }]
+    parsed_content = HTMLContentExtractor()
+    parsed_content.feed(result["html"])
+    return audit_structured_data(url, parsed_content)
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"

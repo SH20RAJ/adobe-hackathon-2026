@@ -142,42 +142,136 @@ def audit_structured_data(base_url, parsed_content):
     findings = []
     json_lds = parsed_content.json_ld_blocks
     parsed_schemas = []
-    
-    for raw in json_lds:
+    malformed_blocks = []
+
+    def flatten_json_ld(value):
+        if isinstance(value, list):
+            nodes = []
+            for item in value:
+                nodes.extend(flatten_json_ld(item))
+            return nodes
+        if not isinstance(value, dict):
+            return []
+        graph = value.get("@graph")
+        if isinstance(graph, list):
+            graph_nodes = []
+            for item in graph:
+                graph_nodes.extend(flatten_json_ld(item))
+            node = {key: item for key, item in value.items() if key != "@graph"}
+            return ([node] if node.get("@type") else []) + graph_nodes
+        return [value]
+
+    for index, raw in enumerate(json_lds, start=1):
         try:
-            cleaned = raw.strip()
-            data = json.loads(cleaned)
-            if isinstance(data, list):
-                parsed_schemas.extend(data)
-            else:
-                parsed_schemas.append(data)
-        except Exception:
-            findings.append({
-                "id": "F-003",
-                "title": "Syntax Error in Embedded JSON-LD Script Block",
-                "severity": "high",
-                "category": "structured_data_syntax",
-                "evidence": "Found a <script type='application/ld+json'> with invalid JSON syntax.",
-                "suggested_action": {
-                    "summary": "Fix JSON syntax in the embedded script tag to ensure machine parsability.",
-                    "priority": "high",
-                    "implementation_code": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"Brand Name\"\n}"
-                }
-            })
+            parsed_schemas.extend(flatten_json_ld(json.loads(raw.strip())))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            malformed_blocks.append(index)
+
+    if malformed_blocks:
+        findings.append({
+            "id": "F-003",
+            "title": "Syntax Error in Embedded JSON-LD Script Block",
+            "severity": "high",
+            "category": "structured_data_syntax",
+            "evidence": json.dumps({
+                "json_ld_blocks": len(json_lds),
+                "malformed_block_indexes": malformed_blocks,
+                "parsed_node_count": len(parsed_schemas),
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Fix JSON syntax in each malformed JSON-LD script so machines can parse the entity graph.",
+                "priority": "high",
+                "implementation_code": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"Brand Name\"\n}"
+            }
+        })
+
+    recognized_types = {
+        "Organization", "WebSite", "WebPage", "Article",
+        "Product", "Person", "LocalBusiness",
+    }
+    entity_fields = {
+        "Organization": ["name", "url", "logo", "sameAs", "description"],
+        "WebSite": ["name", "url", "potentialAction"],
+        "WebPage": ["name", "url", "description"],
+        "Article": ["headline", "author", "datePublished", "dateModified", "image"],
+        "Product": ["name", "description", "image", "brand", "offers"],
+        "Person": ["name", "url", "sameAs"],
+        "LocalBusiness": ["name", "url", "address", "telephone"],
+    }
 
     types_found = set()
-    has_same_as = False
-    for schema in parsed_schemas:
-        stype = schema.get("@type", "")
-        if isinstance(stype, list):
-            types_found.update(stype)
-        elif stype:
-            types_found.add(stype)
-        if "sameAs" in schema and schema["sameAs"]:
-            has_same_as = True
+    entity_summaries = []
+    same_as_urls = []
+    malformed_same_as = []
+    ids = []
+    id_references = []
+    for node_index, schema in enumerate(parsed_schemas, start=1):
+        if not isinstance(schema, dict):
+            continue
+        raw_types = schema.get("@type", [])
+        node_types = raw_types if isinstance(raw_types, list) else [raw_types]
+        node_types = [item for item in node_types if isinstance(item, str) and item]
+        types_found.update(node_types)
+        node_id = schema.get("@id")
+        if isinstance(node_id, str) and node_id:
+            ids.append(node_id)
+        def collect_id_references(value):
+            if isinstance(value, dict):
+                if isinstance(value.get("@id"), str):
+                    id_references.append(value["@id"])
+                for nested in value.values():
+                    collect_id_references(nested)
+            elif isinstance(value, list):
+                for nested in value:
+                    collect_id_references(nested)
 
-    essential_schemas = ["Organization", "WebSite", "Product", "Service", "FAQPage", "Article"]
-    missing_essential = [s for s in ["Organization", "WebSite"] if s not in types_found]
+        for key, value in schema.items():
+            if key != "@id":
+                collect_id_references(value)
+
+        recognized_node_types = [item for item in node_types if item in recognized_types]
+        if recognized_node_types:
+            present = sorted({
+                field for field in {
+                    field for entity_type in recognized_node_types
+                    for field in entity_fields[entity_type]
+                } if schema.get(field)
+            })
+            missing = sorted({
+                field for entity_type in recognized_node_types
+                for field in entity_fields[entity_type]
+                if not schema.get(field)
+            })
+            entity_summaries.append({
+                "node_index": node_index,
+                "types": recognized_node_types,
+                "id": node_id,
+                "fields_present": present,
+                "fields_missing": missing,
+            })
+        same_as = schema.get("sameAs")
+        if same_as:
+            values = same_as if isinstance(same_as, list) else [same_as]
+            for value in values:
+                if isinstance(value, str) and re.match(r"^https?://[^\s]+$", value):
+                    same_as_urls.append(value)
+                else:
+                    malformed_same_as.append(value)
+
+    has_same_as = bool(same_as_urls or malformed_same_as)
+    recognized_type_names = sorted(types_found & recognized_types)
+    graph_detected = any("@graph" in raw for raw in json_lds)
+    entity_evidence = {
+        "json_ld_blocks": len(json_lds),
+        "parsed_node_count": len(parsed_schemas),
+        "recognized_entity_types": recognized_type_names,
+        "entity_summaries": entity_summaries,
+        "graph_detected": graph_detected,
+        "sameAs_urls": same_as_urls,
+        "malformed_sameAs_values": malformed_same_as,
+        "@id_values": ids,
+        "@id_references": sorted(set(id_references)),
+    }
 
     if not parsed_schemas or ("Organization" not in types_found and "WebSite" not in types_found):
         findings.append({
@@ -185,7 +279,10 @@ def audit_structured_data(base_url, parsed_content):
             "title": "Missing Organization / WebSite Schema.org JSON-LD",
             "severity": "high",
             "category": "structured_data_entity",
-            "evidence": f"Found {len(parsed_schemas)} Schema.org objects. Missing core Organization entity definition.",
+            "evidence": json.dumps({
+                **entity_evidence,
+                "missing_core_types": ["Organization", "WebSite"],
+            }, sort_keys=True),
             "suggested_action": {
                 "summary": "Inject Organization Schema.org JSON-LD to establish definitive brand entity identity.",
                 "priority": "high",
@@ -199,12 +296,54 @@ def audit_structured_data(base_url, parsed_content):
             "title": "Missing sameAs Entity Corroboration Links",
             "severity": "medium",
             "category": "structured_data_corroboration",
-            "evidence": "Schema.org markup lacks 'sameAs' links to external authoritative knowledge bases (Wikidata, Wikipedia, Crunchbase).",
+            "evidence": json.dumps({
+                **entity_evidence,
+                "sameAs_status": "missing",
+            }, sort_keys=True),
             "suggested_action": {
                 "summary": "Add sameAs URIs to Organization JSON-LD to eliminate entity ambiguity in AI models.",
                 "priority": "medium",
                 "implementation_code": "\"sameAs\": [\n  \"https://www.wikidata.org/entity/...\",\n  \"https://www.crunchbase.com/organization/...\"\n]"
             }
+        })
+
+    if malformed_same_as:
+        findings.append({
+            "id": "F-013",
+            "title": "Malformed sameAs Entity References",
+            "severity": "low",
+            "category": "structured_data_corroboration",
+            "evidence": json.dumps({
+                **entity_evidence,
+                "sameAs_status": "malformed_values_present",
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Replace malformed sameAs values with complete external HTTP or HTTPS entity URLs.",
+                "priority": "low",
+                "implementation_code": "\"sameAs\": [\"https://www.wikidata.org/entity/Q...\"]",
+            },
+        })
+
+    incomplete_identity = [
+        summary for summary in entity_summaries
+        if "Organization" in summary["types"]
+        and ("name" in summary["fields_missing"] or "url" in summary["fields_missing"])
+    ]
+    if incomplete_identity:
+        findings.append({
+            "id": "F-012",
+            "title": "Incomplete Organization Identity Signals",
+            "severity": "medium",
+            "category": "structured_data_entity",
+            "evidence": json.dumps({
+                **entity_evidence,
+                "incomplete_identity_nodes": incomplete_identity,
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Add the missing Organization name and URL properties so machine-readable identity is explicit.",
+                "priority": "medium",
+                "implementation_code": "\"name\": \"Brand Name\",\n\"url\": \"https://example.com\""
+            },
         })
 
     return findings
