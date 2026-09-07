@@ -15,10 +15,14 @@ Use to detect stale content, outdated temporal signals, or uncorroborated claims
 * `url` (string, required): The target website URL.
 
 ## Procedure
-1. Run `python3 skills/freshness-corroboration-audit/scripts/trust_corroborator.py --url "<URL>"`.
-2. Scan for temporal staleness markers (copyright years, `article:modified_time`).
-3. Verify contact transparency (verifiable Name, Address, Phone, Privacy Policy).
-4. Return findings array with suggestions for updating freshness anchors.
+1. Analyze the already-fetched page HTML in the normal audit path; the standalone
+   `scripts/trust_corroborator.py` adapter uses the same bounded fetch and analyzer.
+2. Normalize explicit JSON-LD, meta, `<time>`, and labelled visible dates while
+   treating copyright years as context rather than proof of staleness.
+3. Detect structural corroboration signals such as external references, citation
+   blocks, author/byline, organization identity, `sameAs`, and contact/about signals.
+4. Return transparent evidence and conservative freshness/trust findings. These are
+   observed signals, not factual truth or authority verification.
 
 ## Output
 JSON array of freshness and trust findings with remediation priority.

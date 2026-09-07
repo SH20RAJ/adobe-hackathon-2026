@@ -560,29 +560,206 @@ def audit_aeo_quotability(parsed_content):
 
     return findings
 
-def audit_freshness_trust(parsed_content, full_html):
+def audit_freshness_trust(parsed_content, full_html, base_url=""):
     findings = []
-    current_year = datetime.now().year
-    
-    # Check copyright year
-    copyright_matches = re.findall(r"(?:copyright|©|\&copy;)\s*(\d{4})", full_html, re.IGNORECASE)
-    if copyright_matches:
-        years = [int(y) for y in copyright_matches if 2000 <= int(y) <= current_year + 1]
-        if years:
-            latest_year = max(years)
-            if latest_year < (current_year - 1):
-                findings.append({
-                    "id": "F-009",
-                    "title": "Outdated Temporal Copyright Anchor",
-                    "severity": "medium",
-                    "category": "freshness_temporal_signals",
-                    "evidence": f"Found copyright date '{latest_year}' which is older than {current_year - 1}. AI assistants may classify content as unmaintained.",
-                    "suggested_action": {
-                        "summary": "Update copyright year and inject dynamic 'last-modified' metadata tags.",
-                        "priority": "medium",
-                        "implementation_code": f"<p>&copy; {current_year} All rights reserved.</p>\n<meta property=\"article:modified_time\" content=\"{datetime.now().isoformat()}\">"
-                    }
-                })
+    today = datetime.now(timezone.utc).date()
+    date_values = []
+
+    def parse_date(value):
+        if not isinstance(value, str):
+            return None
+        candidate = value.strip()
+        for parser in (
+            lambda item: datetime.fromisoformat(item.replace("Z", "+00:00")).date(),
+            lambda item: datetime.strptime(item, "%B %d, %Y").date(),
+            lambda item: datetime.strptime(item, "%b %d, %Y").date(),
+            lambda item: datetime.strptime(item, "%Y-%m").date().replace(day=1),
+            lambda item: datetime.strptime(item, "%Y").date().replace(month=1, day=1),
+        ):
+            try:
+                return parser(candidate)
+            except ValueError:
+                continue
+        return None
+
+    def add_date(value, source, field):
+        parsed = parse_date(value)
+        if parsed:
+            date_values.append({
+                "date": parsed.isoformat(),
+                "source": source,
+                "field": field,
+            })
+
+    def scan_json_dates(value, source="article_jsonld"):
+        if isinstance(value, dict):
+            for field in ("datePublished", "dateModified", "dateCreated"):
+                if field in value:
+                    add_date(value[field], source, field)
+            for nested in value.values():
+                scan_json_dates(nested, source)
+        elif isinstance(value, list):
+            for nested in value:
+                scan_json_dates(nested, source)
+
+    for raw in parsed_content.json_ld_blocks:
+        try:
+            scan_json_dates(json.loads(raw))
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+
+    for field, source in (
+        ("article:modified_time", "meta_modified"),
+        ("article:published_time", "meta_published"),
+        ("dateModified", "meta_modified"),
+        ("datePublished", "meta_published"),
+        ("last-modified", "meta_modified"),
+    ):
+        if field in parsed_content.meta_tags:
+            add_date(parsed_content.meta_tags[field], source, field)
+
+    for value in re.findall(
+        r"<time\b[^>]*\bdatetime=[\"']([^\"']+)[\"'][^>]*>",
+        full_html,
+        re.IGNORECASE,
+    ):
+        add_date(value, "time_element", "datetime")
+
+    visible_date_patterns = (
+        r"(?:published|updated|last updated|revised)\s*[:\-]\s*"
+        r"([A-Za-z]+\s+\d{1,2},\s+\d{4}|\d{4}-\d{2}(?:-\d{2})?)",
+    )
+    for pattern in visible_date_patterns:
+        for value in re.findall(pattern, " ".join(parsed_content.text_chunks), re.IGNORECASE):
+            add_date(value, "visible_text", "labelled_date")
+
+    copyright_years = [
+        int(value) for value in re.findall(
+            r"(?:copyright|©|\&copy;)\s*(\d{4})", full_html, re.IGNORECASE
+        )
+        if 2000 <= int(value) <= today.year + 1
+    ]
+    meaningful_dates = [item for item in date_values if item["date"] <= today.isoformat()]
+    latest = max(meaningful_dates, key=lambda item: item["date"]) if meaningful_dates else None
+    age_days = (
+        (today - datetime.fromisoformat(latest["date"]).date()).days
+        if latest else None
+    )
+    freshness_status = "UNKNOWN"
+    if latest:
+        freshness_status = "CURRENT_SIGNAL" if age_days <= 365 else "AGED_SIGNAL"
+        if age_days > 1095:
+            freshness_status = "STALE_SIGNAL"
+    freshness_evidence = {
+        "published_date": next(
+            (item["date"] for item in date_values if "published" in item["field"].lower()),
+            None,
+        ),
+        "modified_date": next(
+            (item["date"] for item in date_values if "modified" in item["field"].lower()),
+            None,
+        ),
+        "visible_update_date": next(
+            (item["date"] for item in date_values if item["source"] == "visible_text"),
+            None,
+        ),
+        "latest_meaningful_date": latest["date"] if latest else None,
+        "age_days": age_days,
+        "date_sources": sorted({item["source"] for item in meaningful_dates}),
+        "copyright_years": copyright_years,
+        "freshness_status": freshness_status,
+        "date_signal_count": len(meaningful_dates),
+    }
+    if freshness_status == "STALE_SIGNAL":
+        findings.append({
+            "id": "F-009",
+            "title": "Aged Explicit Content Date Signal",
+            "severity": "medium",
+            "category": "freshness_temporal_signals",
+            "evidence": json.dumps(freshness_evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Add or maintain an explicit dateModified value when the page content is materially updated.",
+                "priority": "medium",
+                "implementation_code": "<meta property=\"article:modified_time\" content=\"2026-09-07T00:00:00Z\">",
+            },
+        })
+
+    lower_text = " ".join(parsed_content.text_chunks).lower()
+    external_links = []
+    page_host = urllib.parse.urlparse(base_url).netloc.lower()
+    for href in parsed_content.links:
+        if href.startswith(("http://", "https://")):
+            if urllib.parse.urlparse(href).netloc.lower() != page_host:
+                external_links.append(href)
+    reference_links = [
+        href for href in external_links
+        if not re.search(r"(facebook|twitter|x\.com|instagram|youtube|privacy|terms|cookie)", href, re.IGNORECASE)
+    ]
+    references_section = bool(re.search(
+        r"\b(references|sources|citations|bibliography)\b", lower_text
+    ))
+    citation_blocks = len(re.findall(
+        r"\[(?:\d{1,3})\]|\b(?:source|citation|according to)\s*[:\-]",
+        lower_text,
+        re.IGNORECASE,
+    ))
+    author_signal = bool(
+        parsed_content.meta_tags.get("author")
+        or re.search(r"\b(?:by|author)\s+[A-Z][A-Za-z .'-]{2,}", " ".join(parsed_content.text_chunks))
+    )
+    organization_signal = False
+    for raw in parsed_content.json_ld_blocks:
+        try:
+            organization_signal = organization_signal or "Organization" in json.dumps(
+                json.loads(raw), ensure_ascii=False
+            )
+        except (json.JSONDecodeError, TypeError, ValueError):
+            continue
+    same_as_signal = any('"sameAs"' in raw for raw in parsed_content.json_ld_blocks)
+    contact_signal = bool(re.search(r"\b(contact|about us|address|phone|email)\b", lower_text))
+    trust_signal_count = sum([
+        bool(reference_links),
+        references_section,
+        citation_blocks > 0,
+        author_signal,
+        organization_signal,
+        same_as_signal,
+        contact_signal,
+    ])
+    corroboration_factual_count = len(re.findall(
+        r"(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
+        r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))",
+        lower_text,
+        re.IGNORECASE,
+    ))
+    corroboration_status = (
+        "SUPPORTED" if trust_signal_count >= 3 or reference_links else
+        "LIMITED" if corroboration_factual_count >= 3
+        else "UNKNOWN"
+    )
+    corroboration_evidence = {
+        "factual_signal_count": corroboration_factual_count,
+        "external_reference_links": len(reference_links),
+        "citation_blocks": citation_blocks,
+        "author_signal": author_signal,
+        "organization_signal": organization_signal,
+        "sameAs_signal": same_as_signal,
+        "references_section": references_section,
+        "contact_or_about_signal": contact_signal,
+        "corroboration_status": corroboration_status,
+    }
+    if corroboration_status == "LIMITED":
+        findings.append({
+            "id": "F-018",
+            "title": "Limited Corroboration and Trust Signals",
+            "severity": "medium",
+            "category": "freshness_corroboration",
+            "evidence": json.dumps(corroboration_evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Associate important factual claims with visible sources, author information, or a references section without implying that links prove factual accuracy.",
+                "priority": "medium",
+            },
+        })
     return findings
 
 def audit_on_site_engagement(parsed_content):
@@ -658,7 +835,7 @@ def run_full_audit(target_url):
         all_findings.extend(audit_crawl_render(target_url, html, headers))
         all_findings.extend(audit_structured_data(target_url, parsed_content))
         all_findings.extend(audit_aeo_quotability(parsed_content))
-        all_findings.extend(audit_freshness_trust(parsed_content, html))
+        all_findings.extend(audit_freshness_trust(parsed_content, html, target_url))
         all_findings.extend(audit_on_site_engagement(parsed_content))
 
     # Step 4: Calculate Summary Counts

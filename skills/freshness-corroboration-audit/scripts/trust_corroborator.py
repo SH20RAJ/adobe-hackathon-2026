@@ -1,43 +1,46 @@
 #!/usr/bin/env python3
-"""
-Trust Corroborator Script.
-Scans for temporal staleness and authority signals.
-"""
+"""Standalone adapter for the audit runner's freshness/trust analyzer."""
 import sys
 import json
-import urllib.request
-import re
-from datetime import datetime
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parents[2]
+CRAWL_SCRIPT_DIR = SCRIPT_DIR / "crawl-render-audit" / "scripts"
+ORCHESTRATOR_SCRIPT_DIR = SCRIPT_DIR / "audit-orchestrator" / "scripts"
+sys.path.insert(0, str(CRAWL_SCRIPT_DIR))
+sys.path.insert(0, str(ORCHESTRATOR_SCRIPT_DIR))
+
+from audit_runner import HTMLContentExtractor, audit_freshness_trust
+from safe_fetch import DEFAULT_MAX_RESPONSE_BYTES, DEFAULT_TIMEOUT_SECONDS, safe_fetch
+
 
 def check_trust(url):
-    if not url.startswith("http"):
+    if not url.startswith(("http://", "https://")):
         url = "https://" + url
-    findings = []
-    current_year = datetime.now().year
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; AIAuditBot/1.0)"})
-        with urllib.request.urlopen(req, timeout=8) as res:
-            html = res.read().decode("utf-8", errors="ignore")
-            
-            # Check copyright year
-            years = re.findall(r'(?:copyright|©|\&copy;)\s*(\d{4})', html, re.IGNORECASE)
-            if years:
-                latest = max([int(y) for y in years if 2000 <= int(y) <= current_year + 1] or [current_year])
-                if latest < current_year - 1:
-                    findings.append({
-                        "id": "F-TRUST-01",
-                        "title": "Stale Temporal Copyright Year Detected",
-                        "severity": "medium",
-                        "evidence": f"Found outdated copyright year '{latest}'.",
-                        "suggested_action": {
-                            "summary": "Update copyright year to indicate active site maintenance.",
-                            "priority": "medium",
-                            "implementation_code": f"&copy; {current_year} All rights reserved."
-                        }
-                    })
-    except Exception:
-        pass
-    return findings
+    result = safe_fetch(
+        url,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        max_bytes=DEFAULT_MAX_RESPONSE_BYTES,
+        require_html=True,
+    )
+    if result["error"]:
+        return [{
+            "id": "F-TRUST-02",
+            "title": "Freshness and Trust Page Could Not Be Fetched",
+            "severity": "medium",
+            "evidence": json.dumps({
+                "url": url,
+                "status": "FETCH_ERROR",
+                "error_code": result.get("error_code") or "fetch_failed",
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Make the target page reachable over HTTP or HTTPS before auditing freshness signals.",
+                "priority": "medium",
+            },
+        }]
+    parsed_content = HTMLContentExtractor()
+    parsed_content.feed(result["html"])
+    return audit_freshness_trust(parsed_content, result["html"], url)
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"
