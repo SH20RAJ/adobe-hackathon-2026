@@ -21,7 +21,7 @@ CRAWL_SCRIPT_DIR = os.path.abspath(
 )
 if CRAWL_SCRIPT_DIR not in sys.path:
     sys.path.insert(0, CRAWL_SCRIPT_DIR)
-from crawl_inspector import detect_hydration_gap
+from crawl_inspector import detect_hydration_gap, robots_response_findings
 from safe_fetch import (
     DEFAULT_MAX_RESPONSE_BYTES,
     DEFAULT_MAX_ROBOTS_BYTES,
@@ -114,32 +114,7 @@ def audit_crawl_render(base_url, html, headers):
         max_bytes=DEFAULT_MAX_ROBOTS_BYTES,
         require_html=False,
     )
-    ai_bots = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bytespider", "CCBot"]
-    blocked_bots = []
-    
-    if robots_res["status"] == 200 and robots_res["html"]:
-        robots_text = robots_res["html"]
-        for bot in ai_bots:
-            pattern = rf"(?i)user-agent:\s*{bot}[\s\S]*?disallow:\s*/(\s|$)"
-            if re.search(pattern, robots_text):
-                blocked_bots.append(bot)
-        if re.search(r"(?i)user-agent:\s*\*[\s\S]*?disallow:\s*/(\s|$)", robots_text):
-            if not re.search(r"(?i)allow:\s*/", robots_text):
-                blocked_bots.append("All Crawlers (*)")
-    
-    if blocked_bots:
-        findings.append({
-            "id": "F-001",
-            "title": "AI Search Crawlers Blocked in robots.txt",
-            "severity": "critical" if "All Crawlers (*)" in blocked_bots or len(blocked_bots) >= 3 else "high",
-            "category": "crawlability_ai_permissions",
-            "evidence": f"Found active Disallow directives targeting AI user-agents: {', '.join(blocked_bots)} in {robots_url}",
-            "suggested_action": {
-                "summary": "Update robots.txt to permit indexing by modern generative search assistants while maintaining private path protections.",
-                "priority": "critical" if "All Crawlers (*)" in blocked_bots else "high",
-                "implementation_code": "User-Agent: GPTBot\nAllow: /\n\nUser-Agent: ClaudeBot\nAllow: /\n\nUser-Agent: PerplexityBot\nAllow: /\n\nDisallow: /admin/\nDisallow: /api/"
-            }
-        })
+    findings.extend(robots_response_findings(robots_url, robots_res))
 
     # 2. Inspect X-Robots-Tag headers
     x_robots = headers.get("X-Robots-Tag", headers.get("x-robots-tag", ""))
