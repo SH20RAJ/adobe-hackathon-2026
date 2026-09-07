@@ -79,7 +79,7 @@ class HTMLContentExtractor(HTMLParser):
             self._navigation_depth += 1
         if tag in self._region_depths:
             self._region_depths[tag] += 1
-        if tag in {"article", "main"}:
+        if tag == "article":
             self.has_article_region = True
         
         if tag == "script":
