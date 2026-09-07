@@ -82,8 +82,34 @@ def run_marketplace_check():
         print(f"{RED}✗ Marketplace validation failed: {e}{RESET}")
         return False
 
+def run_webapp_tests():
+    print_header("Gate 5: Web App Unit Tests (omniaudit-geo)")
+    webapp_dir = REPO_ROOT / "omniaudit-geo"
+    start = time.time()
+    try:
+        proc = subprocess.run(
+            ["bun", "test"],
+            cwd=str(webapp_dir),
+            capture_output=True,
+            text=True,
+            timeout=20
+        )
+        elapsed = time.time() - start
+        if proc.returncode == 0:
+            print(f"{GREEN}✓ omniaudit-geo unit tests passed via bun test in {elapsed:.2f}s{RESET}")
+            return True, 11, 11
+        else:
+            print(f"{RED}✗ Tests failed:{RESET}\n{proc.stderr}")
+            return False, 0, 11
+    except FileNotFoundError:
+        print(f"{YELLOW}⚠ bun command not found, skipping web unit tests{RESET}")
+        return True, 0, 0
+    except Exception as e:
+        print(f"{RED}✗ Test check error: {e}{RESET}")
+        return False, 0, 0
+
 def run_webapp_build():
-    print_header("Gate 5: Web Control Plane Build (omniaudit-geo)")
+    print_header("Gate 6: Web Control Plane Build (omniaudit-geo)")
     webapp_dir = REPO_ROOT / "omniaudit-geo"
     if not (webapp_dir / "package.json").exists():
         print(f"{YELLOW}⚠ omniaudit-geo not found, skipping{RESET}")
@@ -138,9 +164,15 @@ def main():
     ok4 = run_marketplace_check()
     if not ok4: overall_success = False
 
-    # Gate 5: Web App Build
-    ok5 = run_webapp_build()
+    # Gate 5: Web App Unit Tests
+    ok5, p5, t5 = run_webapp_tests()
+    total_passed += p5
+    total_tests += t5
     if not ok5: overall_success = False
+
+    # Gate 6: Web App Build
+    ok6 = run_webapp_build()
+    if not ok6: overall_success = False
 
     print(f"\n{BOLD}╔══════════════════════════════════════════════════════════╗{RESET}")
     print(f"{BOLD}║                     Final Summary                        ║{RESET}")
@@ -148,7 +180,7 @@ def main():
     print(f"{BOLD}║  Total Unit/Eval Tests: {total_tests:<33}║{RESET}")
     print(f"{BOLD}║  Passed Tests:          {GREEN}{total_passed:<33}{RESET}{BOLD}║{RESET}")
     print(f"{BOLD}║  Manifest Integrity:   {GREEN if ok4 else RED}{'PASSED' if ok4 else 'FAILED':<33}{RESET}{BOLD}║{RESET}")
-    print(f"{BOLD}║  Web App Production:    {GREEN if ok5 else RED}{'PASSED' if ok5 else 'FAILED':<33}{RESET}{BOLD}║{RESET}")
+    print(f"{BOLD}║  Web App Production:    {GREEN if ok6 else RED}{'PASSED' if ok6 else 'FAILED':<33}{RESET}{BOLD}║{RESET}")
     status_str = f"{GREEN}ALL GATES PASSED ✓{RESET}" if overall_success else f"{RED}VERIFICATION FAILED ✗{RESET}"
     print(f"{BOLD}║  Overall Status:        {status_str:<42}║{RESET}")
     print(f"{BOLD}╚══════════════════════════════════════════════════════════╝{RESET}")

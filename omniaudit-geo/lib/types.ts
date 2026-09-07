@@ -1,22 +1,27 @@
+export interface FindingAction {
+  title?: string;
+  summary?: string;
+  priority?: "critical" | "high" | "medium" | "low" | string;
+  code_patch?: string;
+  implementation_code?: string;
+  explanation?: string;
+}
+
 export interface Finding {
   id: string;
-  category: "crawl_render" | "structured_entity" | "aeo_quotability" | "freshness_trust" | "on_site_engagement";
+  category: string;
   title: string;
-  description: string;
+  description?: string;
   severity: "critical" | "high" | "medium" | "low" | "info";
-  score_impact: number;
-  confidence: "high" | "medium" | "low";
-  evidence?: {
+  score_impact?: number;
+  confidence?: "high" | "medium" | "low" | string;
+  evidence?: string | {
     snippet?: string;
     target?: string;
     selector?: string;
     raw_data?: any;
   };
-  suggested_action: {
-    title: string;
-    code_patch?: string;
-    explanation: string;
-  };
+  suggested_action: FindingAction;
 }
 
 export interface ComponentScores {
@@ -31,18 +36,26 @@ export interface ComponentScores {
   actionability: number;
 }
 
+export interface AuditSummary {
+  acpi_score?: number;
+  crs_score?: number;
+  total_findings: number;
+  critical: number;
+  high: number;
+  medium: number;
+  low: number;
+  component_scores?: ComponentScores;
+}
+
 export interface AuditReport {
   site: string;
   audited_at: string;
-  summary: {
-    acpi_score: number; // 0 - 100 AI Citation Probability Index
-    crs_score: number;  // 0 - 100 Cognitive Retention Score
-    total_findings: number;
-    critical: number;
-    high: number;
-    medium: number;
-    low: number;
-    component_scores: ComponentScores;
+  latency?: string;
+  summary: AuditSummary;
+  metrics?: {
+    acpi_score: number;
+    crs_score: number;
+    component_scores?: ComponentScores;
   };
   findings: Finding[];
 }

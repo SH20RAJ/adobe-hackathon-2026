@@ -30,6 +30,7 @@
 	"scripts": {
 		"dev": "vinext dev",
 		"build": "vinext build",
+		"test": "bun test",
 		"start": "wrangler dev --config dist/server/wrangler.json",
 		"deploy": "vinext-cloudflare deploy --config dist/server/wrangler.json",
 		"preview": "bun run build && bun run start",
