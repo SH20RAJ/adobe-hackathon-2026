@@ -21,7 +21,7 @@
 
 * **Live Edge Application (Cloudflare Workers + Next.js App Router):**  
   👉 **[https://omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)**
-  * Powered by sub-20ms edge execution on Cloudflare Workers global network.
+  * Separate interactive web/API prototype powered by Cloudflare Workers.
   * Real-time live auditing API at `/api/audit?url=<URL>`.
   * Clean, minimalist **Adobe Spectrum UI/UX** design system.
 
@@ -53,9 +53,9 @@ adobe-hackathon-2026/
     ├── audit-orchestrator/             <- [ENTRYPOINT] scripts/audit_runner.py & mcp_server.py
     ├── crawl-render-audit/             <- AI Bot Permissions (robots.txt) & Hydration Gaps
     ├── structured-entity-audit/        <- Schema.org JSON-LD & Entity Disambiguation (sameAs)
-    ├── aeo-quotability-audit/          <- LLM Quotability, Atomic Facts & Non-Text Assets
-    ├── freshness-corroboration-audit/  <- Temporal Staleness & Trust Verification
-    └── on-site-engagement-audit/       <- Hero Value Prop Clarity & Cognitive Retention
+    ├── aeo-quotability-audit/          <- Deterministic Quotability & Non-Text Asset Signals
+    ├── freshness-corroboration-audit/  <- Temporal Signals & On-Page Trust Corroboration
+    └── on-site-engagement-audit/       <- CTA, Form & Action-Path Readiness
 ```
 
 ---
@@ -84,7 +84,7 @@ curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://example.c
 Explore the comprehensive research and design documents in [`docs/`](./docs/):
 
 1. **[Master Architecture & Scoring Models](./docs/ARCHITECTURE.md)** — Component topology and mathematical formulation for ACPI and CRS scores.
-2. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why Python Async, AST parsers, Cloudflare Workers, MCP, and `agentskills.io` win.
+2. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why the Python standard-library engine, AST parsers, Cloudflare Workers, MCP, and `agentskills.io` approach are used.
 3. **[Skill Marketplaces & Distribution Strategy](./docs/08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** — Distribution across `agentskills.io`, MCP Registries (Smithery/Glama), Adobe Exchange, and Cloudflare.
 4. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
 5. **[Adobe Senior Panel Defense & Interview Q&A](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions.
@@ -95,5 +95,5 @@ Explore the comprehensive research and design documents in [`docs/`](./docs/):
 ## 📅 Submission Metadata
 * **Submission Deadline:** September 13, 2026, 11:59 PM IST
 * **Format:** ZIP archive (`≤ 50 MB`) of the marketplace root directory
-* **Performance:** `< 15 seconds` execution time (well below the `< 5 minutes` requirement)
+* **Performance:** bounded HTTP responses, redirects, and timeouts; runtime depends on the target response and network.
 * **License:** Apache-2.0

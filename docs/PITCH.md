@@ -46,8 +46,8 @@ OmniAudit-GEO decomposes the audit process into **5 specialized, autonomous agen
 1. **`crawl-render-audit`:** Analyzes `robots.txt` AI user-agent policies (`GPTBot`, `ClaudeBot`, `PerplexityBot`), HTTP headers, and detects JavaScript hydration content gaps.
 2. **`structured-entity-audit`:** Validates Schema.org JSON-LD markup and resolves entity identity networks (`sameAs` links to Wikidata and Crunchbase).
 3. **`aeo-quotability-audit`:** Measures Answer Engine Optimization (AEO), atomic fact density, and uncovers facts trapped in non-text images or canvas elements.
-4. **`freshness-corroboration-audit`:** Scans temporal freshness markers (copyright years, modified timestamps) and cross-page factual consistency.
-5. **`on-site-engagement-audit`:** Evaluates 5-second hero value proposition clarity, Flesch-Kincaid readability, and call-to-action discoverability.
+4. **`freshness-corroboration-audit`:** Scans explicit temporal freshness markers and on-page corroboration/trust signals.
+5. **`on-site-engagement-audit`:** Evaluates value-proposition signals, CTA specificity, usable forms, and action-path discoverability.
 
 ---
 
@@ -59,7 +59,7 @@ We don't just output qualitative complaints; we calculate two empirical indices:
 * **Cognitive Retention Score (CRS, 0–100):** Measuring on-page orientation clarity and bounce resilience.
 
 ### Innovation 2: Sub-30 Second Deterministic Hybrid Execution
-* Unlike brittle LLM-only scanners that take minutes and hallucinate, our core analyzers run on pure Python standard library AST parsers, executing in **< 15 seconds** with **100% zero external API dependency**.
+* Unlike brittle LLM-only scanners that take minutes and hallucinate, our core analyzers run on pure Python standard library parsers with bounded fetching and **zero external API dependency**.
 
 ### Innovation 3: Proactive Auto-Remediation Payloads
 * We don't just report defects — we fix them. Every finding includes **ready-to-paste implementation code** (`llms.txt`, valid Schema.org JSON-LD, and optimized `robots.txt` directives).

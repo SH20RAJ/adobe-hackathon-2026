@@ -1,6 +1,6 @@
 ---
 name: crawl-render-audit
-description: Audits robots.txt AI crawler rules (GPTBot, ClaudeBot, PerplexityBot), HTTP headers, and JavaScript hydration gaps.
+description: Audits robots.txt AI crawler rules, HTTP headers, and evidence-based JavaScript hydration gaps.
 license: Apache-2.0
 allowed-tools:
   - run_command

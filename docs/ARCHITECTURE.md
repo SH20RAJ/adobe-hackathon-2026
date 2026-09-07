@@ -65,7 +65,7 @@ graph TD
 
     subgraph OnSiteSkills ["On-Site Cognitive Engagement Domain"]
         S4["freshness-corroboration-audit<br/>• Temporal Staleness Scanner<br/>• Cross-Page Claim Consistency<br/>• E-E-A-T Authority & Trust Markers"]
-        S5["on-site-engagement-audit<br/>• 5-Second Hero Value Prop Analyzer<br/>• Cognitive Load (Flesch-Kincaid)<br/>• Search Scent & CTA Friction"]
+        S5["on-site-engagement-audit<br/>• Value Proposition Signals<br/>• CTA & Form Readiness<br/>• Navigation Noise Filtering"]
     end
 
     Orch -->|Dispatches| S1
@@ -80,8 +80,8 @@ graph TD
 ## 3. Detailed Component & Pipeline Breakdown
 
 ### 3.1 `audit-orchestrator` (The Master Controller)
-* **Entrypoint Contract:** Receives the audit target URL, initializes the execution context, executes child analyzers in parallel, standardizes finding IDs (`F-001`, `F-002`, ...), maps severities (`critical`, `high`, `medium`, `low`), synthesizes proactive code patches, and exports the compliant JSON report.
-* **Deterministic Runner:** `scripts/audit_runner.py` orchestrates child analyzers using Python's asynchronous concurrent executor, completing full-site audits in **< 15 seconds**.
+* **Entrypoint Contract:** Receives the audit target URL, initializes the execution context, executes the detector functions, standardizes finding IDs (`F-001`, `F-002`, ...), maps severities (`critical`, `high`, `medium`, `low`), and exports the compliant JSON report.
+* **Deterministic Runner:** `scripts/audit_runner.py` fetches and parses the primary page once, then runs the bounded detector pipeline sequentially. Runtime depends on the target response and network.
 
 ### 3.2 `crawl-render-audit` (AI Bot Permissions & Hydration Gaps)
 * **Problem Solved:** AI crawlers (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`, `Bytespider`) are frequently blocked in `robots.txt`, or critical facts are buried in client-rendered JavaScript hydration trees that lightweight HTTP fetchers cannot execute.
@@ -105,18 +105,18 @@ graph TD
   3. **Content-to-Noise Ratio & ACPI Calculation:** Quantifies information density and quotation probability.
 
 ### 3.5 `freshness-corroboration-audit` (Temporal Signals & Trust Verification)
-* **Problem Solved:** AI assistants downgrade sites with outdated copyright years, unmaintained timestamps, or contradictory claims across subpages.
+* **Problem Solved:** AI assistants downgrade sites with stale explicit dates or limited on-page trust/corroboration signals.
 * **Inspection Logic:**
-  1. Temporal staleness scanner (footer copyright year vs. current year, `article:modified_time`).
-  2. Contact transparency verification (verifiable Name, Address, Phone, Privacy Policy, Terms).
-  3. Cross-page consistency heuristics.
+  1. Temporal staleness scanner for JSON-LD, metadata, `<time>`, and labelled visible dates.
+  2. On-page corroboration signals such as citations, references, author/byline, organization identity, and contact/about links.
+  3. Contextual copyright handling; no factual truth or external-authority verification.
 
 ### 3.6 `on-site-engagement-audit` (Value Prop Clarity & Cognitive Retention)
 * **Problem Solved:** Users referred from an AI assistant bounce within 3 seconds if the landing page lacks clear orientation, high readability, and immediate information scent.
 * **Inspection Logic:**
   1. Above-the-fold hero section text analysis (5-second value proposition clarity).
-  2. **Cognitive Load & Readability:** Flesch-Kincaid reading ease and sentence complexity evaluation.
-  3. CTA discoverability and intrusive modal detection.
+  2. **Action Readiness:** Meaningful CTA, usable form, action-category, and hidden-action signals.
+  3. Navigation/footer/social noise filtering and conservative article-page handling.
 
 ---
 
@@ -125,28 +125,25 @@ graph TD
 To provide quantitative rigor, OmniAudit-GEO implements two proprietary mathematical scoring indices:
 
 ### 4.1 AI Citation Probability Index (ACPI, 0–100)
-$$\text{ACPI} = w_{\text{crawl}} \cdot S_{\text{crawl}} + w_{\text{schema}} \cdot S_{\text{schema}} + w_{\text{aeo}} \cdot S_{\text{aeo}} + w_{\text{entity}} \cdot S_{\text{entity}}$$
+$$\text{ACPI} = \max(5, \min(100, 100 - 30C - 15H - 5M))$$
 
 Where:
-* $S_{\text{crawl}} \in [0, 100]$: Crawler accessibility score (Penalized by AI bot blocks in `robots.txt` and `noindex` directives).
-* $S_{\text{schema}} \in [0, 100]$: Schema completeness score (Evaluates presence of valid `Organization`, `Product`, `FAQPage` JSON-LD).
-* $S_{\text{aeo}} \in [0, 100]$: Quotability & content density score (Fact-to-noise ratio, heading structure).
-* $S_{\text{entity}} \in [0, 100]$: Entity disambiguation score (`sameAs` links to Wikidata/Crunchbase).
-* Weights: $w_{\text{crawl}} = 0.35, w_{\text{schema}} = 0.25, w_{\text{aeo}} = 0.25, w_{\text{entity}} = 0.15$.
+* $C$, $H$, and $M$: counts of critical, high, and medium findings in the report.
+* The score is a deterministic severity-weighted indicator; it is not a probability of citation or a claim about model behavior.
 
 ### 4.2 Cognitive Retention Score (CRS, 0–100)
-$$\text{CRS} = 0.40 \cdot S_{\text{hero}} + 0.30 \cdot S_{\text{readability}} + 0.30 \cdot S_{\text{cta}}$$
+$$\text{CRS} = \max(10, \min(100, 100 - 20H - 10M))$$
 
 Where:
-* $S_{\text{hero}}$: Hero value proposition clarity score based on semantic headline analysis.
-* $S_{\text{readability}}$: Normalized Flesch-Kincaid Reading Ease score ($206.835 - 1.015 \cdot \frac{\text{words}}{\text{sentences}} - 84.6 \cdot \frac{\text{syllables}}{\text{words}}$).
-* $S_{\text{cta}}$: Call-to-action prominence and cognitive friction score.
+* $H$: number of high-severity findings.
+* $M$: number of medium-severity findings.
+* The score is a deterministic report-level indicator, not a conversion or readability prediction.
 
 ---
 
 ## 5. Sandboxing, Security & Guardrails
 
 * **Strict Read-Only Enforcement:** All requests use HTTP `GET` or `HEAD` methods. No form submissions, state modifications, or authenticated area traversals.
-* **Robots.txt & Rate Limiting Compliance:** Implements polite crawler delays (default: 200ms) and respects `Crawl-Delay` directives.
+* **Robots.txt Evaluation:** Applies crawler-specific matching, wildcard fallback, `Allow`/`Disallow` precedence, and bounded robots fetching. It does not crawl beyond the target page.
 * **Isolated Execution Environment:** Zero dependency on external cloud LLM APIs for core AST parsing; runs 100% offline in a self-contained sandbox.
 * **Runtime Budget:** Optimized to complete comprehensive audits in **< 30 seconds** on standard hardware (well below the 5-minute hackathon constraint).

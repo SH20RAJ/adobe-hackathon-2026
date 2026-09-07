@@ -9,7 +9,7 @@ Welcome to the comprehensive strategy, architecture, and research documentation 
 | File | Description | Focus Area |
 | :--- | :--- | :--- |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Master system topology, 5-skill microservices design, and ACPI/CRS mathematical formulas. | Master System Architecture |
-| **[TECH_STACK_JUSTIFICATION.md](./TECH_STACK_JUSTIFICATION.md)** | Why Python Async, AST parsers, Docker sandbox, MCP, and agentskills.io win. | Tech Stack & Industry Justification |
+| **[TECH_STACK_JUSTIFICATION.md](./TECH_STACK_JUSTIFICATION.md)** | Why the Python standard-library engine, AST parsers, MCP, and agentskills.io approach are used. | Tech Stack & Industry Justification |
 | **[PITCH.md](./PITCH.md)** | Executive presentation deck, live demo walkthrough, and Adobe ecosystem synergy. | Pitch & Demo Presentation |
 | **[INTERVIEW_QA_AND_DEFENSE.md](./INTERVIEW_QA_AND_DEFENSE.md)** | Adobe Senior Panel defense guide with 100/100 model answers to technical questions. | Jury Defense & Interview Prep |
 | **[08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md](./08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** | Distribution across agentskills.io, MCP Registries (Smithery/Glama), Adobe Exchange, and Cloudflare. | Skill Stores & Distribution |

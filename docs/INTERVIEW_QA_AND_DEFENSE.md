@@ -28,12 +28,12 @@ This guide analyzes historical evaluation patterns and jury questions from past 
 
 ### Q3: The problem statement mandates a runtime of `< 5 minutes` per site. How do you guarantee sub-30 second execution?
 > **Model Answer:**  
-> *"We avoid the common pitfall of relying on slow, resource-heavy headless browsers (like Selenium/Puppeteer) or chaining multi-turn LLM calls for raw DOM parsing.*  
+> *"We avoid the common pitfall of relying on slow, resource-heavy headless browsers (like Selenium/Puppeteer) or chaining multi-turn LLM calls for raw DOM parsing.*
 > 
 > *Instead, our architecture employs a **hybrid deterministic model**:*  
-> *1. Native Python `asyncio` and standard library parsers (`html.parser`, `urllib`, `re`, `json`) extract HTTP headers, `robots.txt`, DOM trees, and JSON-LD scripts in under **500 milliseconds**.*  
-> *2. Parallel subprocess dispatch evaluates all 5 diagnostic domains concurrently.*  
-> *3. Total end-to-end execution completes in **10 to 25 seconds**, utilizing less than 50MB of memory, and requiring zero external API keys."*
+> *1. The synchronous Python standard-library engine uses bounded fetching and parsers (`html.parser`, `urllib`, `re`, `json`) to extract HTTP headers, `robots.txt`, DOM trees, and JSON-LD scripts without heavyweight dependencies.*
+> *2. The runner fetches the primary page once and evaluates the five diagnostic domains sequentially from the same parsed document.*
+> *3. Runtime depends on the target response and network, while the audit remains bounded and requires zero external API keys."*
 
 ---
 
@@ -52,7 +52,7 @@ This guide analyzes historical evaluation patterns and jury questions from past 
 > *"Many simplistic linters flag a site as blocked if they see any `Disallow` rule. Our `crawl_inspector.py` implements a standards-compliant `robots.txt` path-precedence resolver:*  
 > *1. It maps rules specifically for designated AI user-agents (`GPTBot`, `ClaudeBot`, `PerplexityBot`, `Google-Extended`, `Bytespider`, `CCBot`).*  
 > *2. It respects `Allow` exceptions that override broad `Disallow` directives (e.g., `Disallow: /` followed by `Allow: /products`).*  
-> *3. It evaluates `Crawl-Delay` and `X-Robots-Tag` headers, outputting exact line numbers and matching rules as verifiable evidence."*
+> *3. It evaluates crawler-specific robots rules and `X-Robots-Tag` headers, outputting matching rules as verifiable evidence."*
 
 ---
 

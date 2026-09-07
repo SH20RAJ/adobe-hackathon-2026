@@ -1,6 +1,6 @@
 ---
 name: on-site-engagement-audit
-description: Audits above-the-fold value prop clarity, cognitive load (Flesch-Kincaid), and search scent retention.
+description: Audits static on-site action paths, CTA specificity, usable forms, and navigation noise.
 license: Apache-2.0
 allowed-tools:
   - run_command

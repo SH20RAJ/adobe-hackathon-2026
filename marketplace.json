@@ -14,7 +14,7 @@
     {
       "id": "crawl-render-audit",
       "path": "skills/crawl-render-audit",
-      "description": "Audits robots.txt AI bot policies (GPTBot, ClaudeBot, PerplexityBot), sitemaps, headers, and JS hydration content gaps."
+      "description": "Audits robots.txt AI crawler policies, response headers, and evidence-based JS hydration content gaps."
     },
     {
       "id": "structured-entity-audit",
@@ -24,17 +24,17 @@
     {
       "id": "aeo-quotability-audit",
       "path": "skills/aeo-quotability-audit",
-      "description": "Audits atomic fact quotability for LLMs, content-to-noise ratio, and facts locked in non-text assets."
+      "description": "Audits deterministic content quotability signals, factual text structure, and facts locked in non-text assets."
     },
     {
       "id": "freshness-corroboration-audit",
       "path": "skills/freshness-corroboration-audit",
-      "description": "Audits temporal freshness signals, trust markers, and cross-web claim corroboration."
+      "description": "Audits explicit freshness metadata and on-page corroboration/trust signals without verifying factual truth."
     },
     {
       "id": "on-site-engagement-audit",
       "path": "skills/on-site-engagement-audit",
-      "description": "Audits above-the-fold value prop clarity, cognitive load (Flesch-Kincaid), and search scent retention."
+      "description": "Audits static on-site action paths, CTA specificity, usable forms, and navigation noise."
     }
   ]
 }

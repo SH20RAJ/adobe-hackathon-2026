@@ -1,6 +1,6 @@
 ---
 name: freshness-corroboration-audit
-description: Audits temporal freshness signals, trust markers, and cross-web claim corroboration.
+description: Audits explicit freshness metadata and on-page corroboration/trust signals without verifying factual truth.
 license: Apache-2.0
 allowed-tools:
   - run_command

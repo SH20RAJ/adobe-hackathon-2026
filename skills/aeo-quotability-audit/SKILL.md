@@ -1,6 +1,6 @@
 ---
 name: aeo-quotability-audit
-description: Audits atomic fact quotability for LLMs, content density, and facts locked in non-text assets.
+description: Audits deterministic content quotability signals, factual text structure, and facts locked in non-text assets.
 license: Apache-2.0
 allowed-tools:
   - run_command
