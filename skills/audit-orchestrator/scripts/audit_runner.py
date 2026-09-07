@@ -16,6 +16,19 @@ import urllib.parse
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 
+CRAWL_SCRIPT_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "crawl-render-audit", "scripts")
+)
+if CRAWL_SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, CRAWL_SCRIPT_DIR)
+from crawl_inspector import detect_hydration_gap
+from safe_fetch import (
+    DEFAULT_MAX_RESPONSE_BYTES,
+    DEFAULT_MAX_ROBOTS_BYTES,
+    DEFAULT_TIMEOUT_SECONDS,
+    safe_fetch,
+)
+
 USER_AGENT = "Mozilla/5.0 (compatible; BrandAIAuditBot/1.0; +https://agentskills.io)"
 
 class HTMLContentExtractor(HTMLParser):
@@ -81,19 +94,13 @@ class HTMLContentExtractor(HTMLParser):
                         self.headings[-1]["text"] = cleaned
 
 def fetch_url(url, timeout=10):
-    try:
-        req = urllib.request.Request(
-            url,
-            headers={"User-Agent": USER_AGENT, "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}
-        )
-        with urllib.request.urlopen(req, timeout=timeout) as response:
-            status = response.getcode()
-            headers = dict(response.info())
-            raw_bytes = response.read()
-            html = raw_bytes.decode("utf-8", errors="replace")
-            return {"status": status, "headers": headers, "html": html, "error": None}
-    except Exception as e:
-        return {"status": 0, "headers": {}, "html": "", "error": str(e)}
+    result = safe_fetch(
+        url,
+        timeout=timeout or DEFAULT_TIMEOUT_SECONDS,
+        max_bytes=DEFAULT_MAX_RESPONSE_BYTES,
+        require_html=True,
+    )
+    return result
 
 def audit_crawl_render(base_url, html, headers):
     findings = []
@@ -101,7 +108,12 @@ def audit_crawl_render(base_url, html, headers):
     robots_url = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
     
     # 1. Inspect robots.txt for AI bots
-    robots_res = fetch_url(robots_url, timeout=5)
+    robots_res = safe_fetch(
+        robots_url,
+        timeout=5,
+        max_bytes=DEFAULT_MAX_ROBOTS_BYTES,
+        require_html=False,
+    )
     ai_bots = ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended", "Bytespider", "CCBot"]
     blocked_bots = []
     
@@ -144,6 +156,10 @@ def audit_crawl_render(base_url, html, headers):
                 "implementation_code": "# Remove 'X-Robots-Tag: noindex' from web server configuration (Nginx / Cloudflare / Apache)"
             }
         })
+
+    hydration_finding = detect_hydration_gap(base_url, html)
+    if hydration_finding:
+        findings.append(hydration_finding)
         
     return findings
 
