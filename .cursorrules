@@ -1,0 +1,20 @@
+# Cursor Rules for OmniAudit-GEO (`brand-ai-readiness-audit`)
+
+## Architecture Principles
+1. **Zero External API Dependencies:** The core Python audit engine must run 100% offline using the Python standard library (`urllib.request`, `html.parser`, `re`, `json`, `math`).
+2. **SSRF Protection:** All URL fetches must route through `skills/crawl-render-audit/scripts/safe_fetch.py`. Never fetch private subnets or loopback.
+3. **Read-Only Crawling:** Use only `GET` or `HEAD`. Never mutate state via HTTP.
+4. **Adobe Spectrum UI:** The Next.js / Vinext web app in `omniaudit-geo` must adhere to Adobe Spectrum and React Aria principles: clear contrast, focused views, minimal noise.
+
+## Core Verification Command
+Before finishing any task, run:
+```bash
+python3 scripts/verify.py
+```
+
+## Relevant Files
+- Root marketplace manifest: `marketplace.json`
+- Python audit orchestrator: `skills/audit-orchestrator/scripts/audit_runner.py`
+- Test suites: `skills/audit-orchestrator/tests` and `skills/crawl-render-audit/tests`
+- Web app: `omniaudit-geo/app/page.tsx`
+- Acceptance criteria: `docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`

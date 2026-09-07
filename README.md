@@ -67,24 +67,38 @@ adobe-hackathon-2026/
 
 ---
 
-## ⚡ Quickstart: Run an Autonomous Audit
+## ⚡ Quickstart: Run & Verify
 
-### 1. Zero-Dependency Python Orchestrator:
+### 1. Unified 5-Gate Verification Loop:
+```bash
+python3 scripts/verify.py
+```
+> Runs 106+ unit and benchmark tests, verifies Schema and `marketplace.json` integrity, and validates the Next.js Edge app production build in ~4 seconds.
+
+### 2. Zero-Dependency Python Orchestrator:
 ```bash
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
 ```
 
-### 2. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
+### 3. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
 ```bash
 python3 skills/audit-orchestrator/scripts/mcp_server.py
 ```
 
-### 3. Edge HTTP API:
+### 4. Edge HTTP API:
 ```bash
 curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://example.com"
 ```
 
 ---
+
+## 🤖 Agent Harness & Multi-Environment Compatibility
+
+OmniAudit-GEO incorporates the agent harness engineering standards inspired by **Everything Claude Code (ECC)**:
+* **Claude Code:** Configured with [`CLAUDE.md`](./CLAUDE.md) (commands, boundaries, subagent delegation).
+* **Google Antigravity AI:** Configured with [`AGENTS.md`](./AGENTS.md) and [`.agents/`](./.agents/) rules & skills (`tdd-workflow`, `verification-loop`, `security-review`, `eval-harness`).
+* **Cursor IDE:** Configured with [`.cursorrules`](./.cursorrules).
+* **Evaluation Harness:** 14 Golden Benchmarks and Acceptance Criteria documented in [`docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`](./docs/ACCEPTANCE_CRITERIA_AND_EVALS.md).
 
 ## 📚 Master Documentation Suite
 

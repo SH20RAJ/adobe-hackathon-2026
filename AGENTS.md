@@ -17,24 +17,34 @@ adobe-hackathon-2026/
 ├── marketplace.json                    <- Official Round 3 Marketplace Manifest
 ├── README.md                           <- Root Project Documentation
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory (This file)
-├── .agents/skills/                     <- Workspace-level Agent Customizations
-│   └── brand-ai-auditor/
-│       └── SKILL.md
+├── CLAUDE.md                           <- Claude Code Agent Operational Protocol
+├── .cursorrules                        <- Cursor IDE Operational Protocol
+├── .agents/                            <- Workspace-level Antigravity Agent Customizations
+│   ├── rules/                          <- Always-on and contextual quality rules
+│   │   ├── coding-style.md             <- Python stdlib & TypeScript standards
+│   │   ├── testing.md                  <- 100% pass rate & offline fixture rules
+│   │   ├── security.md                 <- SSRF protection & read-only invariants
+│   │   ├── git-workflow.md             <- Conventional commits protocol
+│   │   ├── agents.md                   <- Subagent persona delegation protocol
+│   │   └── performance.md              <- Sub-second local DOM parsing standards
+│   └── skills/                         <- Workspace skills
+│       ├── brand-ai-auditor/           <- Brand AI Readiness audit runner
+│       ├── tdd-workflow/               <- Red-Green-Refactor test cycle
+│       ├── verification-loop/          <- 5-Gate automated verification runner
+│       ├── security-review/            <- SSRF and ReDoS security reviewer
+│       └── eval-harness/               <- 14 Golden Benchmarks evaluator
+├── scripts/
+│   └── verify.py                       <- Unified 5-gate automated verification runner
 ├── context/                            <- Challenge PDFs & Handouts
 │   ├── 6a8ffdf33590a_round3-handout-updated.pdf
 │   └── Certificate of Participation - Shaswat Raj.pdf
 ├── docs/                               <- Comprehensive Research, Strategy & Architecture Docs
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Models
+│   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria & Golden Benchmarks
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Justification
 │   ├── PITCH.md                        <- Executive Presentation & Pitch Deck
 │   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
-│   ├── 01_ADOBE_HACKATHON_2026_ROUND3_DEEP_DIVE.md
-│   ├── 02_PREVIOUS_WINNERS_AND_BENCHMARK_ANALYSIS.md
-│   ├── 03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md
-│   ├── 04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md
-│   ├── 05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md
-│   ├── 06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md
-│   └── 07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md
+│   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md
 └── skills/                             <- The Submittable Marketplace Skills
     ├── audit-orchestrator/             <- [ENTRYPOINT] Master Dispatcher & Aggregator
     ├── crawl-render-audit/             <- robots.txt AI Bot Permissions & Hydration Gaps
@@ -46,16 +56,26 @@ adobe-hackathon-2026/
 
 ---
 
-## ⚡ Agent Execution Commands
+## ⚡ Agent Execution & Verification Commands
 
-### 1. Run Complete Site Audit via Master Orchestrator:
+### 1. Unified 5-Gate Verification Loop (Pre-commit / Pre-PR):
+```bash
+python3 scripts/verify.py
+```
+
+### 2. Run Complete Site Audit via Master Orchestrator:
 ```bash
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
 ```
 
-### 2. Save Audit Report to JSON File:
+### 3. Save Audit Report to JSON File:
 ```bash
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
+```
+
+### 4. Run Golden Benchmark Eval Suite:
+```bash
+python3 -m unittest skills/audit-orchestrator/tests/test_benchmark.py
 ```
 
 ---
