@@ -45,10 +45,32 @@ class HTMLContentExtractor(HTMLParser):
         self.in_script = False
         self.script_type = ""
         self.script_buffer = []
+        self._hidden_depth = 0
+        self._hidden_tags = []
+        self._navigation_depth = 0
+        self._block_tag = None
+        self._block_buffer = []
+        self.aeo_blocks = []
+        self.list_blocks = 0
+        self.table_blocks = 0
+        self.faq_pairs = 0
+        self.hidden_text_words = 0
 
     def handle_starttag(self, tag, attrs):
         self.current_tag = tag
         attr_dict = dict(attrs)
+        style = attr_dict.get("style", "").replace(" ", "").lower()
+        is_hidden = (
+            "hidden" in attr_dict
+            or attr_dict.get("aria-hidden", "").lower() == "true"
+            or "display:none" in style
+            or "visibility:hidden" in style
+        )
+        if is_hidden:
+            self._hidden_depth += 1
+            self._hidden_tags.append(tag)
+        if tag == "nav":
+            self._navigation_depth += 1
         
         if tag == "script":
             self.in_script = True
@@ -71,6 +93,13 @@ class HTMLContentExtractor(HTMLParser):
                 self.links.append(href)
         elif tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
             self.headings.append({"level": tag, "text": ""})
+        if tag in {"p", "blockquote", "li", "dt", "dd"}:
+            self._block_tag = tag
+            self._block_buffer = []
+        elif tag == "ul" or tag == "ol":
+            self.list_blocks += 1
+        elif tag == "table":
+            self.table_blocks += 1
 
     def handle_endtag(self, tag):
         if tag == "script":
@@ -80,18 +109,39 @@ class HTMLContentExtractor(HTMLParser):
                 self.json_ld_blocks.append(full_script)
             self.scripts.append(full_script)
             self.script_buffer = []
+        if tag == self._block_tag:
+            block_text = " ".join(self._block_buffer).strip()
+            if block_text and self._hidden_depth == 0 and self._navigation_depth == 0:
+                self.aeo_blocks.append({"tag": tag, "text": block_text})
+                if tag == "dt":
+                    self.faq_pairs += 1
+            self._block_tag = None
+            self._block_buffer = []
+        if tag == "nav" and self._navigation_depth:
+            self._navigation_depth -= 1
+        if tag in self._hidden_tags:
+            self._hidden_depth -= 1
+            self._hidden_tags.remove(tag)
         self.current_tag = None
 
     def handle_data(self, data):
         if self.in_script:
             self.script_buffer.append(data)
-        elif self.current_tag not in ["style", "noscript", "svg"]:
+        elif (
+            self.current_tag not in ["style", "noscript", "svg"]
+            and self._hidden_depth == 0
+            and self._navigation_depth == 0
+        ):
             cleaned = data.strip()
             if cleaned:
                 self.text_chunks.append(cleaned)
+                if self._block_tag:
+                    self._block_buffer.append(cleaned)
                 if self.headings and self.current_tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
                     if not self.headings[-1]["text"]:
                         self.headings[-1]["text"] = cleaned
+        elif data.strip():
+            self.hidden_text_words += len(data.split())
 
 def fetch_url(url, timeout=10):
     result = safe_fetch(
@@ -350,42 +400,148 @@ def audit_structured_data(base_url, parsed_content):
 
 def audit_aeo_quotability(parsed_content):
     findings = []
-    text_chunks = parsed_content.text_chunks
-    full_text = " ".join(text_chunks)
+    full_text = " ".join(parsed_content.text_chunks)
     words = full_text.split()
-    total_words = len(words)
-    
-    # 1. Facts locked in non-text (Images without alt text)
-    images = parsed_content.images
-    missing_alt = [img for img in images if not img["has_alt"]]
-    if len(missing_alt) > 0 and (len(missing_alt) / max(len(images), 1)) > 0.3:
+    headings = [heading for heading in parsed_content.headings if heading["text"].strip()]
+    heading_levels = [int(heading["level"][1]) for heading in headings]
+    skipped_heading_jumps = sum(
+        1 for previous, current in zip(heading_levels, heading_levels[1:])
+        if current - previous > 1
+    )
+    substantive_blocks = [
+        block for block in parsed_content.aeo_blocks
+        if len(block["text"].split()) >= 8
+    ]
+    descriptive_headings = sum(
+        1 for heading in headings if heading["level"] in {"h2", "h3"}
+    )
+    answer_paragraphs = sum(
+        1 for block in parsed_content.aeo_blocks
+        if block["tag"] in {"p", "blockquote", "dd"}
+        and len(block["text"].split()) >= 8
+    )
+    direct_answer_blocks = min(descriptive_headings, answer_paragraphs)
+
+    factual_signal_count = len(re.findall(
+        r"\b(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
+        r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))\b",
+        full_text,
+        re.IGNORECASE,
+    ))
+    informative_images = [
+        image for image in parsed_content.images
+        if image["src"] and not re.search(
+            r"(?:icon|logo|avatar|sprite|spacer|pixel|tracking|favicon)",
+            image["src"],
+            re.IGNORECASE,
+        )
+    ]
+    missing_alt = [img for img in informative_images if not img["has_alt"]]
+    meaningful_heading_score = min(20, len(headings) * 4)
+    block_score = min(25, len(substantive_blocks) * 5)
+    answer_score = min(20, direct_answer_blocks * 5)
+    factual_score = min(15, factual_signal_count * 2)
+    list_table_score = min(10, (parsed_content.list_blocks + parsed_content.table_blocks) * 5)
+    image_score = 10 if not informative_images else round(
+        10 * (len(informative_images) - len(missing_alt)) / len(informative_images), 1
+    )
+    quotability_score = round(
+        meaningful_heading_score + block_score + answer_score + factual_score
+        + list_table_score + image_score
+    )
+    evidence = {
+        "visible_words": len(words),
+        "h1_count": sum(1 for h in parsed_content.headings if h["level"] == "h1" and h["text"].strip()),
+        "h2_count": sum(1 for h in parsed_content.headings if h["level"] == "h2" and h["text"].strip()),
+        "h3_count": sum(1 for h in parsed_content.headings if h["level"] == "h3" and h["text"].strip()),
+        "heading_levels": heading_levels,
+        "skipped_heading_jumps": skipped_heading_jumps,
+        "substantive_sections": len(substantive_blocks),
+        "direct_answer_blocks": direct_answer_blocks,
+        "list_blocks": parsed_content.list_blocks,
+        "table_blocks": parsed_content.table_blocks,
+        "faq_like_blocks": parsed_content.faq_pairs,
+        "factual_signal_count": factual_signal_count,
+        "informative_images": len(informative_images),
+        "informative_images_missing_alt": len(missing_alt),
+        "hidden_text_words": parsed_content.hidden_text_words,
+        "quotability_score": quotability_score,
+        "score_components": {
+            "heading_clarity": meaningful_heading_score,
+            "substantive_blocks": block_score,
+            "direct_answers": answer_score,
+            "factual_explicitness": factual_score,
+            "lists_and_tables": list_table_score,
+            "image_accessibility": image_score,
+        },
+    }
+
+    # Facts that appear to depend on meaningful images should have text alternatives.
+    if missing_alt and len(missing_alt) / max(len(informative_images), 1) > 0.3:
         findings.append({
             "id": "F-006",
             "title": "Facts Trapped in Non-Text Graphical Assets",
-            "severity": "high" if len(missing_alt) >= 5 else "medium",
+            "severity": "medium",
             "category": "aeo_non_text_facts",
-            "evidence": f"{len(missing_alt)} out of {len(images)} images lack descriptive alt text attributes.",
+            "evidence": json.dumps(evidence, sort_keys=True),
             "suggested_action": {
-                "summary": "Provide informative, factual alt attributes for all meaningful imagery and diagrams.",
-                "priority": "high",
+                "summary": "Add descriptive alt text to informative images so diagrams, specifications, and product details also exist as extractable text.",
+                "priority": "medium",
                 "implementation_code": "<img src=\"product-specs.png\" alt=\"Detailed technical specification table showing bandwidth, storage, and pricing tiers.\">"
             }
         })
 
-    # 2. Heading hierarchy check
-    h1_count = sum(1 for h in parsed_content.headings if h["level"] == "h1")
+    h1_count = evidence["h1_count"]
     if h1_count == 0:
         findings.append({
             "id": "F-007",
             "title": "Missing Primary H1 Heading for Topic Framing",
             "severity": "medium",
             "category": "aeo_heading_structure",
-            "evidence": "Page lacks an <h1> tag, impeding semantic chunking and topic extraction by AI retrieval models.",
+            "evidence": json.dumps(evidence, sort_keys=True),
             "suggested_action": {
-                "summary": "Add a clear, concise H1 headline defining the core entity or subject matter.",
+                "summary": "Add one clear H1 headline defining the page's core entity or subject.",
                 "priority": "medium",
                 "implementation_code": "<h1>Enterprise AI Discoverability Platform</h1>"
             }
+        })
+    if h1_count > 1:
+        findings.append({
+            "id": "F-014",
+            "title": "Multiple Competing H1 Headings",
+            "severity": "medium",
+            "category": "aeo_heading_structure",
+            "evidence": json.dumps(evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Keep one primary H1 and convert secondary page topics to descriptive H2 headings.",
+                "priority": "medium",
+            },
+        })
+
+    if evidence["visible_words"] >= 40 and quotability_score < 35:
+        findings.append({
+            "id": "F-015",
+            "title": "Low Machine-Readable Quotability Signals",
+            "severity": "medium",
+            "category": "aeo_quotability",
+            "evidence": json.dumps(evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Add descriptive section headings followed by concise answer paragraphs, factual lists, or tables for the page's key topics.",
+                "priority": "medium",
+                "implementation_code": "<h2>Pricing</h2>\n<p>The Pro plan costs $49 per month and includes...</p>",
+            },
+        })
+    if parsed_content.hidden_text_words >= 20:
+        findings.append({
+            "id": "F-016",
+            "title": "Important Content Appears Hidden in Initial HTML",
+            "severity": "medium",
+            "category": "aeo_content_extractability",
+            "evidence": json.dumps(evidence, sort_keys=True),
+            "suggested_action": {
+                "summary": "Expose essential facts in visible HTML instead of relying on hidden panels or state-dependent content.",
+                "priority": "medium",
+            },
         })
 
     # 3. Proactive recommendation: Missing llms.txt standard

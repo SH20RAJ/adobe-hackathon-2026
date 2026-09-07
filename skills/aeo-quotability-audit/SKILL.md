@@ -15,11 +15,15 @@ Use to diagnose why AI search engines (ChatGPT Search, Perplexity) fail to extra
 * `url` (string, required): The target website URL.
 
 ## Procedure
-1. Run `python3 skills/aeo-quotability-audit/scripts/quotability_scorer.py --url "<URL>"`.
-2. Parse DOM heading structures (`H1` through `H6`) for logical hierarchy and question-answering formats.
-3. Detect facts locked in non-text (images without descriptive `alt` text).
-4. Measure atomic fact density and Content-to-Noise Ratio.
-5. Return findings array with suggestions for high-quotability summary blocks.
+1. Analyze the already-fetched page HTML in the normal audit path; the standalone
+   `scripts/quotability_scorer.py` adapter uses the same bounded fetch and analyzer.
+2. Measure visible words, meaningful headings, substantive text blocks, direct-answer
+   signals, factual markers, lists, tables, FAQ-like blocks, and informative images.
+3. Detect conservative extractability issues such as missing/multiple H1 headings,
+   low machine-readable quotability signals, hidden content, and missing alt text on
+   likely informative images.
+4. Return a transparent 0-100 heuristic score with its component metrics. This score
+   is not an official Adobe metric and does not predict a particular model's ranking.
 
 ## Output
 JSON array of AEO findings and content refactoring templates.

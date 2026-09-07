@@ -1,41 +1,46 @@
 #!/usr/bin/env python3
-"""
-Quotability Scorer Script.
-Evaluates content-to-noise ratio, heading hierarchy, and facts locked in images.
-"""
+"""Standalone adapter for the audit runner's deterministic AEO analyzer."""
 import sys
 import json
-import urllib.request
-import re
+from pathlib import Path
+
+SCRIPT_DIR = Path(__file__).resolve().parents[2]
+CRAWL_SCRIPT_DIR = SCRIPT_DIR / "crawl-render-audit" / "scripts"
+ORCHESTRATOR_SCRIPT_DIR = SCRIPT_DIR / "audit-orchestrator" / "scripts"
+sys.path.insert(0, str(CRAWL_SCRIPT_DIR))
+sys.path.insert(0, str(ORCHESTRATOR_SCRIPT_DIR))
+
+from audit_runner import HTMLContentExtractor, audit_aeo_quotability
+from safe_fetch import DEFAULT_MAX_RESPONSE_BYTES, DEFAULT_TIMEOUT_SECONDS, safe_fetch
+
 
 def score_quotability(url):
-    if not url.startswith("http"):
+    if not url.startswith(("http://", "https://")):
         url = "https://" + url
-    findings = []
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (compatible; AIAuditBot/1.0)"})
-        with urllib.request.urlopen(req, timeout=8) as res:
-            html = res.read().decode("utf-8", errors="ignore")
-            
-            # Check for images missing alt text
-            imgs = re.findall(r'<img\s+[^>]*>', html, re.IGNORECASE)
-            missing_alt = [img for img in imgs if 'alt=' not in img.lower() or 'alt=""' in img or "alt=''" in img]
-            
-            if len(missing_alt) >= 3:
-                findings.append({
-                    "id": "F-AEO-01",
-                    "title": "Non-Text Visual Data Lacks Alt Descriptions",
-                    "severity": "medium",
-                    "evidence": f"{len(missing_alt)} images lack descriptive alt text.",
-                    "suggested_action": {
-                        "summary": "Add detailed alt text to images containing diagrams, charts, or product specs.",
-                        "priority": "medium",
-                        "implementation_code": "<img src=\"chart.png\" alt=\"Annual revenue growth comparison chart for 2024 to 2026.\">"
-                    }
-                })
-    except Exception:
-        pass
-    return findings
+    result = safe_fetch(
+        url,
+        timeout=DEFAULT_TIMEOUT_SECONDS,
+        max_bytes=DEFAULT_MAX_RESPONSE_BYTES,
+        require_html=True,
+    )
+    if result["error"]:
+        return [{
+            "id": "F-AEO-02",
+            "title": "AEO Page Could Not Be Fetched",
+            "severity": "medium",
+            "evidence": json.dumps({
+                "url": url,
+                "status": "FETCH_ERROR",
+                "error_code": result.get("error_code") or "fetch_failed",
+            }, sort_keys=True),
+            "suggested_action": {
+                "summary": "Make the target page reachable over HTTP or HTTPS before auditing quotability.",
+                "priority": "medium",
+            },
+        }]
+    parsed_content = HTMLContentExtractor()
+    parsed_content.feed(result["html"])
+    return audit_aeo_quotability(parsed_content)
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"
