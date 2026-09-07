@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { AuditConsole } from "@/components/audit/AuditConsole";
+import { McpSetupCard } from "@/components/mcp/McpSetupCard";
 
 export default function HomePage() {
   return (
@@ -37,9 +38,9 @@ export default function HomePage() {
               Explore 6 Specialist Skills
             </Button>
           </Link>
-          <Link href="/benchmarks">
+          <Link href="/docs">
             <Button variant="ghost" size="lg" className="h-11 px-6 text-xs font-medium text-muted-foreground hover:text-foreground">
-              14 Golden Benchmarks
+              Connect Remote MCP URL ↗
             </Button>
           </Link>
         </div>
@@ -47,7 +48,7 @@ export default function HomePage() {
         {/* Proof metrics bar */}
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto text-left">
           {[
-            { metric: "106 / 106", label: "Automated Evals Passed", sub: "Unit & Benchmark tests" },
+            { metric: "117 / 117", label: "Automated Evals Passed", sub: "Unit & Benchmark tests" },
             { metric: "< 50ms", label: "Local AST/DOM Parser", sub: "Zero-dependency speed" },
             { metric: "0 Keys", label: "External API Required", sub: "100% deterministic & private" },
             { metric: "Edge Ready", label: "Cloudflare Workers", sub: "Sub-second global latency" },
@@ -237,6 +238,28 @@ export default function HomePage() {
             </Card>
           ))}
         </div>
+      </section>
+
+      {/* Remote MCP Connection Section */}
+      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 border-t border-border/60">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+          <div>
+            <div className="text-xs font-semibold tracking-wider text-primary uppercase">Direct Agent IDE Connection</div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground mt-1">
+              Model Context Protocol (Remote URL)
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              Connect OmniAudit-GEO directly into Cursor, Claude Desktop, Claude Code, and Windsurf via live HTTP/SSE.
+            </p>
+          </div>
+          <Link href="/docs">
+            <Button variant="outline" size="sm" className="text-xs">
+              View Full Documentation →
+            </Button>
+          </Link>
+        </div>
+
+        <McpSetupCard />
       </section>
     </div>
   );
