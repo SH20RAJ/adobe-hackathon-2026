@@ -1,7 +1,7 @@
 # OmniAudit-GEO: Enterprise Brand AI-Readiness Marketplace
 
 <p align="center">
-  <a href="https://visitorbadge.io/status?path=SH20RAJ.adobe-hackathon-2026"><img src="https://api.visitorbadge.io/api/visitors?page_id=SH20RAJ.adobe-hackathon-2026&label=Visitors&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Visitors" /></a>
+  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026"><img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026&countColor=%23263759&style=flat" alt="Visitors" /></a>
   <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/verify.yml?branch=main&label=6-Gate%20Verification&style=flat-square&logo=githubactions&logoColor=white" alt="Verification" /></a>
   <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/publish-container.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/publish-container.yml?branch=main&label=GHCR%20Build&style=flat-square&logo=docker&logoColor=white" alt="Container" /></a>
   <a href="https://omniaudit-geo.onrender.com/"><img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=flat-square&logo=render&logoColor=white" alt="Live Demo" /></a>

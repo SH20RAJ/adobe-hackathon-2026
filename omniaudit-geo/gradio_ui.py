@@ -501,8 +501,8 @@ def create_gradio_app() -> gr.Blocks:
                             Adobe University Hackathon 2026 · Round 3 CRP
                         </div>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <a href="https://visitorbadge.io/status?path=omniaudit-geo.onrender.com" target="_blank" style="text-decoration: none;">
-                                <img src="https://api.visitorbadge.io/api/visitors?page_id=omniaudit-geo.onrender.com&label=Visitors&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Visitors" style="vertical-align: middle; border-radius: 4px;" />
+                            <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026" target="_blank" style="text-decoration: none;">
+                                <img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026&countColor=%23263759&style=flat" alt="Visitors" style="vertical-align: middle; border-radius: 4px;" />
                             </a>
                             <a href="https://github.com/SH20RAJ/adobe-hackathon-2026" target="_blank" style="text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #cbd5e1; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 3px 10px; border-radius: 4px;">
                                 ★ GitHub
@@ -859,8 +859,8 @@ def create_gradio_app() -> gr.Blocks:
         gr.HTML("""
         <div style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.06);">
             <div style="margin-bottom: 8px;">
-                <a href="https://visitorbadge.io/status?path=omniaudit-geo.onrender.com" target="_blank" style="display: inline-block;">
-                    <img src="https://api.visitorbadge.io/api/visitors?page_id=omniaudit-geo.onrender.com&label=Total%20App%20Visits&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Total App Visits" />
+                <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026" target="_blank" style="display: inline-block;">
+                    <img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026&countColor=%23263759&style=flat" alt="Visitors" />
                 </a>
             </div>
             OmniAudit-GEO · Apache 2.0 License · Built by Shaswat Raj (@sh20raj) & Prithvi (@chikolavosaki-sys) · Adobe University Hackathon 2026
