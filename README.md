@@ -1,8 +1,23 @@
 # OmniAudit-GEO: Enterprise Brand AI-Readiness Marketplace
 
-> **Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission**
-> **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
-> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
+<p align="center">
+  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026"><img src="https://api.visitorbadge.io/api/visitors?page_id=SH20RAJ.adobe-hackathon-2026&label=Visitors&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Visitors" /></a>
+  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/verify.yml?branch=main&label=6-Gate%20Verification&style=flat-square&logo=githubactions&logoColor=white" alt="Verification" /></a>
+  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/publish-container.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/publish-container.yml?branch=main&label=GHCR%20Build&style=flat-square&logo=docker&logoColor=white" alt="Container" /></a>
+  <a href="https://omniaudit-geo.onrender.com/"><img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=flat-square&logo=render&logoColor=white" alt="Live Demo" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" /></a>
+  <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.12%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
+  <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
+  <a href="https://agentskills.io"><img src="https://img.shields.io/badge/Spec-agentskills.io-8B5CF6?style=flat-square" alt="agentskills.io" /></a>
+  <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/Protocol-Anthropic%20MCP-D97706?style=flat-square" alt="MCP" /></a>
+  <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" /></a>
+  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/stargazers"><img src="https://img.shields.io/github/stars/SH20RAJ/adobe-hackathon-2026?style=flat-square&color=ffd700" alt="Stars" /></a>
+  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/network/members"><img src="https://img.shields.io/github/forks/SH20RAJ/adobe-hackathon-2026?style=flat-square&color=blue" alt="Forks" /></a>
+</p>
+
+> **Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission**<br>
+> **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))<br>
+> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)<br>
 > **Live Web Demo & API:** [omniaudit-geo.onrender.com](https://omniaudit-geo.onrender.com/)
 
 ---
@@ -218,6 +233,17 @@ Explore the comprehensive research and design documents in [`docs/`](./docs/):
 5. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
 6. **[Technical Q&A Defense](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions.
 7. **[Team Profiles & Engineering Strengths](./docs/03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** — Shaswat's product/showcase foundation and Prithvi's audit-engine hardening contributions.
+
+---
+
+## 🤝 Open Source Community & Contributing
+
+We welcome contributions from developers, researchers, and AI practitioners! OmniAudit-GEO is built in the open to advance website visibility and discoverability in the era of generative answer engines.
+
+* 📖 **[Contributing Guide (CONTRIBUTING.md)](./CONTRIBUTING.md)** — Step-by-step developer setup, local testing, and PR submission guidelines.
+* 📜 **[Code of Conduct (CODE_OF_CONDUCT.md)](./CODE_OF_CONDUCT.md)** — Community pledges, standards, and reporting procedures.
+* 🔒 **[Security Policy (SECURITY.md)](./SECURITY.md)** — Vulnerability reporting and responsible disclosure for anti-SSRF protections.
+* ⚖️ **[Apache 2.0 License (LICENSE)](./LICENSE)** — Permissive open-source license free for community, research, and enterprise use.
 
 ---
 
