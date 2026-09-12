@@ -222,7 +222,10 @@ def build_package() -> Path:
         except Exception as e:
             sys.exit(f"❌ Error validating unzipped CLI report output: {e}")
 
-    print(f"✓ All tests and CLI verification PASSED inside unzipped sandbox archive.")
+    # Clean up temporary staging directory
+    shutil.rmtree(OUTPUT_DIR, ignore_errors=True)
+
+    print("✓ All tests and CLI verification PASSED inside unzipped sandbox archive.")
     print("═" * 70)
     print(f"🎉 Package Submission Ready: {OUTPUT_ZIP.resolve()}")
     print(f"   Size: {zip_size_mb:.2f} MB | Packaged files: {file_count}")

@@ -5,11 +5,9 @@ Zero external dependencies (Python standard library only).
 Validates reports strictly against skills/audit-orchestrator/references/audit_schema.json.
 """
 
-import os
 import json
-import re
 from datetime import datetime
-from typing import Any, Dict, List, Tuple
+from typing import Any, List, Tuple
 
 SEVERITY_ENUM = {"critical", "high", "medium", "low"}
 PRIORITY_ENUM = {"critical", "high", "medium", "low"}

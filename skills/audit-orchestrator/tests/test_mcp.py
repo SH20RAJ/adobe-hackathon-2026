@@ -17,7 +17,7 @@ SCRIPTS_DIR = os.path.abspath(
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
-from mcp_server import handle_json_rpc, MCP_TOOLS
+from mcp_server import handle_json_rpc
 
 SAMPLE_HTML = """<!DOCTYPE html>
 <html lang="en">

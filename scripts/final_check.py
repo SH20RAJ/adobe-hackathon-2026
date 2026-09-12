@@ -8,7 +8,6 @@ only if all mandatory checks pass without warnings or failures.
 """
 
 import sys
-import os
 import subprocess
 from pathlib import Path
 

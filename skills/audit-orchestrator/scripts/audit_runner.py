@@ -9,7 +9,6 @@ import sys
 import os
 import json
 import re
-import math
 import urllib.request
 import urllib.error
 import urllib.parse

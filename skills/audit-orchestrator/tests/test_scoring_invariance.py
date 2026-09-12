@@ -3,7 +3,6 @@
 Unit tests for scoring engine invariance, determinism, and bounds.
 """
 
-import os
 import sys
 import unittest
 from pathlib import Path
@@ -61,7 +60,6 @@ class TestScoringInvariance(unittest.TestCase):
         self.assertLess(dup_ded, single_ded * 2.0)
 
     def test_proactive_zero_impact(self):
-        proactive_finding = [{"severity": "low", "category": "aeo_proactive_enhancement"}]
         # Category without severity deduction
         clean = compute_scores([])
         proactive = compute_scores([{"severity": "info", "category": "aeo_proactive"}])

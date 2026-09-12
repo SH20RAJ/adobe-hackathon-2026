@@ -315,12 +315,6 @@ CUSTOM_CSS = """
 
 def create_gradio_app() -> gr.Blocks:
     """Creates the full, pure Gradio frontend for OmniAudit-GEO."""
-    theme = gr.themes.Soft(
-        primary_hue=gr.themes.colors.red,
-        secondary_hue=gr.themes.colors.slate,
-        neutral_hue=gr.themes.colors.zinc,
-    )
-
     with gr.Blocks(title="OmniAudit-GEO — Brand AI-Readiness Platform") as demo:
         # Top Header
         with gr.Row():
@@ -464,7 +458,7 @@ def create_gradio_app() -> gr.Blocks:
             # ===============================================================
             with gr.TabItem("📦 Skill Marketplace", id="tab_marketplace"):
                 gr.Markdown("Official `marketplace.json` manifest conforming to the `agentskills.io` standard for Adobe Hackathon Round 3.")
-                market_df = gr.Dataframe(
+                gr.Dataframe(
                     headers=["Skill Name", "Role", "Description", "Entrypoint", "Version"],
                     datatype=["str", "str", "str", "str", "str"],
                     value=get_marketplace_data(),
@@ -496,7 +490,7 @@ def create_gradio_app() -> gr.Blocks:
                 """)
 
                 gr.Markdown("#### Declared MCP Tools (7):")
-                mcp_df = gr.Dataframe(
+                gr.Dataframe(
                     headers=["Tool Name", "Description", "Required Inputs"],
                     datatype=["str", "str", "str"],
                     value=get_mcp_tools_data(),

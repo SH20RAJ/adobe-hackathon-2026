@@ -17,8 +17,6 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from safe_fetch import (
-    DEFAULT_MAX_REDIRECTS,
-    DEFAULT_MAX_RESPONSE_BYTES,
     FetchValidationError,
     normalize_url,
     safe_fetch,

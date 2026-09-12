@@ -10,7 +10,6 @@ import sys
 import os
 import time
 import json
-import urllib.parse
 from pathlib import Path
 from typing import Optional
 
@@ -43,7 +42,7 @@ from audit_runner import (
     enrich_findings_actions,
 )
 from safe_fetch import normalize_url, FetchValidationError
-from mcp_server import handle_json_rpc, execute_tool, MCP_TOOLS
+from mcp_server import handle_json_rpc, MCP_TOOLS
 from schema_validator import validate_report
 from eval_benchmarks import run_evals
 

@@ -4,7 +4,6 @@ Unit tests for recursive schema_validator.py.
 Validates valid reports, and ensures malformed reports fail with descriptive errors.
 """
 
-import os
 import sys
 import unittest
 from pathlib import Path

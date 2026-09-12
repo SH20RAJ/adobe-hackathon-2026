@@ -5,10 +5,8 @@ Mechanically computes precision, recall, false positive/negative rates,
 per-fixture latency, and verifies recursive schema validity on every fixture.
 """
 
-import os
 import sys
 import time
-import json
 import pathlib
 from unittest.mock import patch
 
@@ -262,7 +260,7 @@ def run_evals(return_dict: bool = False):
     f1 = (2 * precision * recall) / (precision + recall) if (precision + recall) > 0 else 100.0
 
     print("─" * 95)
-    print(f"📊 Evaluation Metrics & Statistical Accuracy:")
+    print("📊 Evaluation Metrics & Statistical Accuracy:")
     print(f"   • Total Benchmarks Evaluated : {total_fixtures}")
     print(f"   • Passed Benchmarks          : {passed_fixtures}/{total_fixtures} ({pass_rate:.1f}%)")
     print(f"   • True Positives (TP)        : {total_tp}")

@@ -5,8 +5,6 @@ Validates all endpoints, SSRF blocks, JSON-RPC MCP adapter, and SSR HTML views.
 """
 
 import sys
-import os
-import json
 import unittest
 from pathlib import Path
 from unittest.mock import patch

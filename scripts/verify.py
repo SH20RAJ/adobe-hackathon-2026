@@ -14,12 +14,9 @@ Gates:
 """
 
 import sys
-import os
 import time
 import json
-import re
 import unittest
-import subprocess
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -27,7 +24,6 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 sys.path.insert(0, str(REPO_ROOT / "skills" / "audit-orchestrator" / "scripts"))
 
 from eval_benchmarks import run_evals
-from schema_validator import validate_report
 from package_submission import build_package
 
 # Terminal ANSI styles
@@ -266,7 +262,7 @@ def main():
     print(f"  • Total Tests Executed       : {total_combined} tests")
     print(f"  • Total Tests Passed         : {passed_combined} passed ({failed_combined} failed)")
     print(f"  • Benchmarks Precision       : {bench_data['precision_pct']}% (Recall: {bench_data['recall_pct']}%)")
-    print(f"  • Schema Compliance          : 100% verified against audit_schema.json")
+    print("  • Schema Compliance          : 100% verified against audit_schema.json")
     print(f"  • Report Written             : {report_file.resolve()}")
     print("═" * 70)
 
