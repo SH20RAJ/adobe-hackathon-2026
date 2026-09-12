@@ -155,7 +155,7 @@ BENCHMARK_SPECS = [
 def run_evals(return_dict: bool = False):
     print("╔═══════════════════════════════════════════════════════════════════════════════════════════════╗")
     print("║                 OmniAudit-GEO — Benchmark Evaluation Harness (ECC Spec)                      ║")
-    print("║       Adobe University Hackathon 2026 (Round 3 CRP) — 14+ Golden Fixtures Test Matrix         ║")
+    print("║       Adobe University Hackathon 2026 (Round 3 CRP) — 16 Golden Fixtures Test Matrix          ║")
     print("╚═══════════════════════════════════════════════════════════════════════════════════════════════╝\n")
 
     print(f"{'#':<3} {'Fixture Name':<20} {'Category':<20} {'ACPI':<6} {'CRS':<6} {'Schema':<8} {'Latency':<9} {'Status':<6}")
