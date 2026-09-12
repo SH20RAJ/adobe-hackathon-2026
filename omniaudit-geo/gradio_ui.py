@@ -321,7 +321,12 @@ def create_gradio_app() -> gr.Blocks:
             with gr.Column():
                 gr.HTML("""
                 <div style="padding: 10px 0 20px 0; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 15px;">
-                    <div class="header-badge">Adobe University Hackathon 2026 · Round 3 CRP</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+                        <div class="header-badge" style="margin-bottom: 0;">Adobe University Hackathon 2026 · Round 3 CRP</div>
+                        <a href="https://visitorbadge.io/status?path=omniaudit-geo.onrender.com" target="_blank" style="text-decoration: none;">
+                            <img src="https://api.visitorbadge.io/api/visitors?page_id=omniaudit-geo.onrender.com&label=Visitors&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Visitors" style="vertical-align: middle; border-radius: 4px;" />
+                        </a>
+                    </div>
                     <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 6px 0; letter-spacing: -0.02em;">
                         OmniAudit<span style="color:#eb1000;">.GEO</span>
                     </h1>
@@ -512,6 +517,11 @@ def create_gradio_app() -> gr.Blocks:
         # Footer
         gr.HTML("""
         <div style="text-align: center; color: #64748b; font-size: 0.8rem; margin-top: 30px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.06);">
+            <div style="margin-bottom: 8px;">
+                <a href="https://visitorbadge.io/status?path=omniaudit-geo.onrender.com" target="_blank" style="display: inline-block;">
+                    <img src="https://api.visitorbadge.io/api/visitors?page_id=omniaudit-geo.onrender.com&label=Total%20App%20Visits&labelColor=%2324292e&countColor=%23eb1000&style=flat-square" alt="Total App Visits" />
+                </a>
+            </div>
             OmniAudit-GEO · Apache 2.0 License · Built by Shaswat Raj (@sh20raj) & Prithvi (@chikolavosaki-sys) · Adobe University Hackathon 2026
         </div>
         """)
