@@ -277,10 +277,6 @@ async def benchmarks_endpoint():
 # Server-Side Rendered (SSR) HTML Pages
 # -------------------------------------------------------------
 
-@app.get("/", response_class=HTMLResponse)
-async def serve_home(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html", context={"active_page": "home"})
-
 @app.get("/audit", response_class=HTMLResponse)
 async def serve_audit(request: Request, url: Optional[str] = None):
     report = None
@@ -349,6 +345,15 @@ async def serve_og():
 async def serve_manifest():
     f = PUBLIC_DIR / "manifest.json"
     return FileResponse(f, media_type="application/json") if f.is_file() else Response(status_code=404)
+
+# -------------------------------------------------------------
+# Pure Gradio Frontend Mounting (Root / and Standalone)
+# -------------------------------------------------------------
+import gradio as gr
+from gradio_ui import create_gradio_app
+
+gradio_blocks = create_gradio_app()
+app = gr.mount_gradio_app(app, gradio_blocks, path="/")
 
 if __name__ == "__main__":
     import uvicorn

@@ -8,6 +8,7 @@
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.12%20%7C%203.14-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
+  <a href="https://gradio.app/"><img src="https://img.shields.io/badge/Frontend-Gradio%206-FF7C00?style=flat-square&logo=gradio&logoColor=white" alt="Gradio" /></a>
   <a href="https://agentskills.io"><img src="https://img.shields.io/badge/Spec-agentskills.io-8B5CF6?style=flat-square" alt="agentskills.io" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/Protocol-Anthropic%20MCP-D97706?style=flat-square" alt="MCP" /></a>
   <a href="./CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square" alt="PRs Welcome" /></a>
@@ -94,14 +95,17 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 
 ## 🌐 Web Control Plane, API & Container Deployment
 
-* **Pure Python Web Control Plane & MCP Server (`omniaudit-geo`):**
-  * Built 100% in Python using **FastAPI** and **Jinja2 SSR** (Zero React, Zero JS build step).
+* **Pure Python Control Plane, Gradio UI & MCP Server (`omniaudit-geo`):**
+  * Built 100% in Python using **Gradio 6**, **FastAPI**, and **Jinja2 SSR** (Zero React, Zero JS build step).
   * Direct Python AST & heuristic imports directly from canonical skill scripts (`audit_runner.py`, `mcp_server.py`, `safe_fetch.py`).
+  * **Enterprise Gradio Frontend:** Mounted directly at root `/` with 5 enterprise tabs: Master Brand Audit, Specialist Diagnostics, 16 Golden Benchmarks Matrix, Skill Marketplace Manifest, and MCP & API Docs.
+  * **Standalone Launcher:** Run locally or deploy anywhere via `python3 app.py` (port 7860).
   * Real-time live auditing API at `GET /api/audit?url=<URL>`.
   * Remote Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` and `GET /mcp`.
   * Clean, ultra-fast **Adobe Spectrum UI/UX** design system rendered server-side in sub-milliseconds.
-  * Containerized for DigitalOcean App Platform and cloud runtimes via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
+  * Containerized for DigitalOcean App Platform, Render, and cloud runtimes via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
   * **Live Production Instance:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
+    * Gradio Enterprise UI: `https://omniaudit-geo.onrender.com/`
     * Audit Console: `https://omniaudit-geo.onrender.com/audit`
     * Benchmarks Matrix: `https://omniaudit-geo.onrender.com/benchmarks`
     * MCP Server Endpoint: `https://omniaudit-geo.onrender.com/api/mcp`
@@ -169,15 +173,23 @@ python3 scripts/eval_benchmarks.py
 ```
 > Evaluates all 16 Golden Benchmarks against labeled ground truth fixtures with benchmark precision/recall (100.0% on fixture suite) and sub-millisecond local engine execution latency (~0.5ms/site local AST execution; real-world audit latency depends on network target response time).
 
-### 4. Run FastAPI Web Control Plane & MCP Server Locally:
+### 4. Run Frontend & Web Control Plane Locally:
+
+**Option A: Standalone Gradio Interface (Port 7860):**
+```bash
+python3 app.py
+```
+- Open browser at `http://localhost:7860`
+
+**Option B: Full FastAPI Control Plane + Mounted Gradio UI (Port 8000):**
 ```bash
 uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
 ```
-- Open browser at `http://localhost:8000`
+- Interactive Gradio UI: `http://localhost:8000/`
 - Audit Console: `http://localhost:8000/audit?url=https://adobe.com`
 - Benchmarks Table: `http://localhost:8000/benchmarks`
 - MCP JSON-RPC Endpoint: `http://localhost:8000/api/mcp`
-- Interactive API Docs: `http://localhost:8000/docs`
+- Interactive OpenAPI Docs: `http://localhost:8000/docs`
 
 ### 5. Model Context Protocol (MCP) Integration:
 - **Instant IDE Remote Connection (Cursor, Claude Desktop, Antigravity):**

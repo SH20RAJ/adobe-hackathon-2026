@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application, skills, scripts, and marketplace manifest
 COPY marketplace.json ./marketplace.json
 COPY README.md ./README.md
+COPY app.py ./app.py
 COPY skills/ ./skills/
 COPY scripts/ ./scripts/
 COPY omniaudit-geo/ ./omniaudit-geo/
