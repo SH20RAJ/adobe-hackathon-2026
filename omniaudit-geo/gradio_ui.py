@@ -5,6 +5,8 @@ Directly uses the canonical Python audit engine and specialist skills.
 Zero React, zero JavaScript build steps. Pure Python.
 """
 
+from __future__ import annotations
+
 import json
 import os
 import time

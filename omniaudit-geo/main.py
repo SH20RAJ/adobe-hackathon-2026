@@ -6,6 +6,8 @@ safe_fetch, and MCP server as the CLI and skills marketplace.
 100% pure Python. Zero React, zero JavaScript build dependencies.
 """
 
+from __future__ import annotations
+
 import sys
 import os
 import time
@@ -19,12 +21,13 @@ from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
 
 # Add repository root and skill directories to sys.path to ensure unified source of truth
 REPO_ROOT = Path(__file__).resolve().parent.parent
+OMNIAUDIT_DIR = REPO_ROOT / "omniaudit-geo"
 SKILLS_DIR = REPO_ROOT / "skills"
 ORCHESTRATOR_SCRIPTS = SKILLS_DIR / "audit-orchestrator" / "scripts"
 CRAWL_SCRIPTS = SKILLS_DIR / "crawl-render-audit" / "scripts"
 ROOT_SCRIPTS = REPO_ROOT / "scripts"
 
-for p in [str(ORCHESTRATOR_SCRIPTS), str(CRAWL_SCRIPTS), str(ROOT_SCRIPTS)]:
+for p in [str(OMNIAUDIT_DIR), str(ORCHESTRATOR_SCRIPTS), str(CRAWL_SCRIPTS), str(ROOT_SCRIPTS)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 

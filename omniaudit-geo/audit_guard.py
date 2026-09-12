@@ -9,13 +9,15 @@ Provides shared security invariants across FastAPI REST, Gradio Web UI, and JSON
   5. Standardized error reporting and telemetry
 """
 
+from __future__ import annotations
+
 import os
 import sys
 import time
 import threading
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional
+from typing import Dict, Any, Tuple, Optional, List
 
 # Ensure sibling directories are on sys.path
 REPO_ROOT = Path(__file__).resolve().parent.parent

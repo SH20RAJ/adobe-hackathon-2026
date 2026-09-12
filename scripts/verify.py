@@ -71,9 +71,13 @@ def run_python_suite(test_dirs: list):
 
 def run_fastapi_tests():
     """Run Python unittests for omniaudit-geo FastAPI control plane and MCP server."""
-    webapp_tests = REPO_ROOT / "omniaudit-geo" / "tests"
+    webapp_dir = REPO_ROOT / "omniaudit-geo"
+    webapp_tests = webapp_dir / "tests"
     if not webapp_tests.is_dir():
         return {"status": "skipped", "passed": 0, "failed": 0, "total": 0, "reason": "tests_directory_missing"}
+
+    if str(webapp_dir) not in sys.path:
+        sys.path.insert(0, str(webapp_dir))
 
     loader = unittest.TestLoader()
     suite = loader.discover(start_dir=str(webapp_tests), pattern="test_*.py")
@@ -88,6 +92,13 @@ def run_fastapi_tests():
     skipped = len(result.skipped)
     passed = total - failed - skipped
 
+    if not result.wasSuccessful():
+        print(f"\n{RED}--- GATE 5 FASTAPI TEST FAILURES ---{RESET}")
+        for test, trace in result.failures + result.errors:
+            print(f"{RED}FAILED TEST:{RESET} {test}")
+            print(trace)
+        print(f"{RED}------------------------------------{RESET}\n")
+
     return {
         "status": "passed" if (result.wasSuccessful() and total > 0) else "failed",
         "passed": passed,
@@ -100,12 +111,17 @@ def run_fastapi_tests():
 def verify_fastapi_engine():
     """Verify FastAPI application imports and routes compile cleanly without runtime errors."""
     try:
-        sys.path.insert(0, str(REPO_ROOT / "omniaudit-geo"))
+        if str(REPO_ROOT / "omniaudit-geo") not in sys.path:
+            sys.path.insert(0, str(REPO_ROOT / "omniaudit-geo"))
         import main
         assert hasattr(main, "app"), "FastAPI 'app' instance missing in main.py"
         routes_count = len(main.app.routes)
         return {"status": "passed", "routes_count": routes_count}
     except Exception as e:
+        import traceback
+        print(f"\n{RED}--- GATE 5 FASTAPI ENGINE IMPORT FAILURE ---{RESET}")
+        traceback.print_exc()
+        print(f"{RED}--------------------------------------------{RESET}\n")
         return {"status": "failed", "error": str(e)}
 
 def main():
