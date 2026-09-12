@@ -20,7 +20,7 @@ Follow this systematic 4-phase discipline whenever adding new heuristics, parser
 2. Re-run the test to confirm it now passes.
 
 ## Phase 3: Cross-Skill Impact & Refactoring (REFACTOR)
-1. Ensure no regressions across the 14 golden benchmark fixtures.
+1. Ensure no regressions across the 16 golden benchmark fixtures.
 2. Refactor regex patterns or parsing logic for clarity and execution speed.
 3. Verify test execution time remains < 50ms.
 

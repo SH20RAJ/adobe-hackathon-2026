@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "SpecialistAuditResult",
+  "description": "Payload returned by modular specialist audit tools (inspect_robots_and_rendering, inspect_structured_data, inspect_aeo_quotability, inspect_freshness_trust, inspect_on_site_retention) when invoked individually via MCP or Python API.",
+  "type": "object",
+  "required": [
+    "site",
+    "tool",
+    "total_findings",
+    "findings"
+  ],
+  "properties": {
+    "site": {
+      "type": "string",
+      "description": "The target domain or URL audited."
+    },
+    "tool": {
+      "type": "string",
+      "description": "The specific specialist tool identifier executed."
+    },
+    "error": {
+      "type": "string",
+      "description": "Optional error description if execution was prevented (e.g. SSRF blocked or fetch failure)."
+    },
+    "total_findings": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total count of findings detected by this specialist tool."
+    },
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "severity",
+          "evidence",
+          "suggested_action"
+        ],
+        "properties": {
+          "id": { "type": "string" },
+          "title": { "type": "string" },
+          "severity": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "category": { "type": "string" },
+          "evidence": { "type": "string" },
+          "suggested_action": {
+            "type": "object",
+            "required": ["summary", "priority"],
+            "properties": {
+              "summary": { "type": "string" },
+              "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+              "implementation_code": { "type": "string" },
+              "proactive_enhancement": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,6 @@
 ---
 name: eval-harness
-description: Run accuracy and benchmark evaluations across the 14 Golden Fixtures for ACPI and CRS scores.
+description: Run accuracy and benchmark evaluations across the 16 Golden Fixtures for ACPI and CRS scores.
 ---
 
 # Evaluation Harness Skill
@@ -9,11 +9,11 @@ Executes the offline evaluation benchmark to score and calibrate OmniAudit-GEO a
 
 ## Execution Command
 ```bash
-python3 -m unittest skills/audit-orchestrator/tests/test_benchmark.py
+python3 scripts/eval_benchmarks.py
 ```
 
 ## Benchmark Scenarios
-The eval harness tests 14 distinct real-world architectural scenarios:
+The eval harness tests 16 distinct real-world architectural scenarios:
 1. `crawler_blocked.html`: Ensures blocked AI user-agents yield critical finding and low ACPI.
 2. `hydration_spa.html`: Ensures client-only SPAs trigger hydration gap warning.
 3. `next-ssr.html` & `next-rsc.html`: Verifies proper detection of server-rendered React payloads.

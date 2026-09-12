@@ -46,7 +46,7 @@ This document specifies the formal **Acceptance Criteria (AC)**, **Evaluation Ha
 
 ---
 
-## 3. Evaluation Benchmark Harness (14 Golden Fixtures)
+## 3. Evaluation Benchmark Harness (16 Golden Fixtures)
 
 The evaluation suite verifies that our heuristics discriminate accurately across diverse real-world architectures:
 
@@ -54,37 +54,43 @@ The evaluation suite verifies that our heuristics discriminate accurately across
 |---|---|---|---|---|
 | `crawler_blocked.html` | Blocked AI crawlers | Low (<40) | N/A | `robots_disallow` |
 | `hydration_spa.html` | Client-only SPA | Low (<40) | Medium | `hydration_gap` |
-| `next-ssr.html` | Next.js Server-Side Rendered | High (>75) | High (>70) | No hydration gap |
-| `next-rsc.html` | Next.js App Router (RSC) | High (>80) | High (>70) | Clean static payload |
-| `bad_structured.html` | Broken/missing Schema.org | Penalty (-30) | Medium | Missing schema / no `sameAs` |
+| `partial_hydration.html`| Partial hydration gap | Medium | High | Partial JS content dependency |
+| `large_state_static.html`| Large static JSON state | High (>80) | High (>80) | Hydration false positive prevention |
+| `app_router.html` | App Router (RSC) | High (>80) | High (>80) | Clean static payload verification |
+| `good_business.html` | Production Brand | High (>90) | High (>90) | Full commercial readiness |
 | `good_structured.html` | Valid JSON-LD `@graph` + `sameAs` | High (>80) | High | Entity disambiguated |
-| `weak_aeo.html` | Vague fluff, no facts, no tables | Low (<45) | Low | Low atomic density |
+| `bad_structured.html` | Broken/missing Schema.org | Penalty | Medium | Missing schema / no `sameAs` |
 | `strong_aeo.html` | Rich facts, FAQ headings, tables | High (>80) | High | High quotability |
+| `weak_aeo.html` | Vague fluff, no facts, no tables | Low (<45) | Low | Low atomic density |
 | `stale_article.html` | Copyright 2021, no updated date | Low (<50) | Medium | Temporal decay |
 | `current_article.html` | 2026 timestamps, author bio | High (>80) | High | Freshness confirmed |
-| `weak_engagement.html` | Wall of text, no H1, no CTA | Medium | Low (<40) | Bounce risk |
 | `strong_engagement.html` | Hero H1 + subhead + clear CTA | High | High (>85) | Optimal CRS |
-| `documentation.html` | API Docs layout | High | High | Technical readability |
+| `weak_engagement.html` | Wall of text, no H1, no CTA | Medium | Low (<40) | Bounce risk |
+| `documentation.html` | API Docs layout | High | High | Technical readability / no false CTA |
 | `navigation_noise.html` | Massive menu DOM, low main content | Adjusted | Adjusted | Content-to-nav ratio |
 
 ---
 
-## 4. Quality Gates & Enforcement
+## 4. Master 6-Gate Quality Verification
 
-Any proposed change to the codebase must pass all four Quality Gates:
+Any proposed change to the codebase must pass all 6 Verification Gates via `python3 scripts/verify.py`:
 
 ```text
-[Gate 1: Static Analysis & Security]
-   ├── Zero linting/syntax errors
-   └── SSRF prevention verified in safe_fetch.py
+[Gate 1: Hostile Security & SSRF Defense Invariants]
+   └── 61 security invariant tests passing (IPv4/v6, decimal, octal, hex, DNS rebinding, redirect hops)
 
-[Gate 2: Unit Test Suite]
-   ├── 100% pass rate in skills/audit-orchestrator/tests
-   └── 100% pass rate in skills/crawl-render-audit/tests
+[Gate 2: Core Audit Engine & Specialist Tests]
+   └── 83 unit tests passing in skills/audit-orchestrator/tests (AST, parser invariants, scoring determinism)
 
-[Gate 3: Benchmark Evals]
-   └── 14/14 Golden Benchmark fixtures match expected score bounds
+[Gate 3: Golden Benchmark Evaluation Matrix]
+   └── 16/16 Golden Fixtures passing with 100% precision, 100% recall, and sub-millisecond latency
 
-[Gate 4: Full Production Build]
-   └── bun run build in omniaudit-geo completes with 0 errors
+[Gate 4: Recursive JSON Schema & Contract Parity]
+   └── 100% compliance against BrandAIReadinessAuditReport and SpecialistAuditResult schemas
+
+[Gate 5: FastAPI Web Control Plane & MCP Server]
+   └── 8 unit tests passing across all endpoints, 27 routes cleanly mounted, JSON-RPC 2.0 verified
+
+[Gate 6: Marketplace Package & Sandbox Verification]
+   └── Clean assembly of marketplace.json, README.md, skills/ into isolated archive & sandbox verification
 ```

@@ -114,7 +114,13 @@ class HTMLContentExtractor(HTMLParser):
         else:
             is_interface = False
         if tag not in self._VOID_TAGS:
-            self._element_stack.append((tag, is_hidden, is_interface))
+            self._element_stack.append({
+                "tag": tag,
+                "is_hidden": is_hidden,
+                "is_interface": is_interface,
+                "is_nav": (tag == "nav"),
+                "region": tag if tag in self._region_depths else None,
+            })
         if tag == "nav":
             self._navigation_depth += 1
         if tag in self._region_depths:
@@ -138,45 +144,61 @@ class HTMLContentExtractor(HTMLParser):
                 "has_alt": bool(attr_dict.get("alt", "").strip())
             })
         elif tag == "a":
+            self._block_tag = None
             href = attr_dict.get("href", "")
             if href:
                 self.links.append(href)
-        elif tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
-            self._current_heading_tag = tag
-            self.headings.append({"level": tag, "text": ""})
-        if tag in {"p", "blockquote", "li", "dt", "dd"}:
-            self._block_tag = tag
-            self._block_buffer = []
-        elif tag == "ul" or tag == "ol":
-            self.list_blocks += 1
-        elif tag == "table":
-            self.table_blocks += 1
-        if tag in {"a", "button"}:
             self.action_stacks.append({
-                "tag": tag,
-                "href": attr_dict.get("href", ""),
-                "label": attr_dict.get("aria-label", attr_dict.get("title", "")),
-                "region": self._current_action_region(),
+                "tag": "a",
+                "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
+                "href": href,
+                "region": self.current_region(),
                 "hidden": self._hidden_depth > 0,
             })
-        if tag == "form":
+        elif tag == "button":
+            self.action_stacks.append({
+                "tag": "button",
+                "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
+                "href": "",
+                "region": self.current_region(),
+                "hidden": self._hidden_depth > 0,
+            })
+            if self.form_stacks:
+                button_type = (attr_dict.get("type") or "submit").lower()
+                if button_type == "submit":
+                    self.form_stacks[-1]["submit_controls"] += 1
+        elif tag == "form":
             self.form_stacks.append({
+                "action": attr_dict.get("action", ""),
+                "method": (attr_dict.get("method") or "get").lower(),
                 "controls": 0,
                 "submit_controls": 0,
                 "labels": 0,
-                "action": attr_dict.get("action", ""),
+                "region": self.current_region(),
+                "hidden": self._hidden_depth > 0,
             })
-        elif self.form_stacks and tag in {"input", "select", "textarea"}:
-            self.form_stacks[-1]["controls"] += 1
-            if tag == "input" and attr_dict.get("type", "").lower() in {"submit", "button"}:
-                self.form_stacks[-1]["submit_controls"] += 1
-        elif self.form_stacks and tag == "button":
-            self.form_stacks[-1]["submit_controls"] += 1
+        elif tag in {"input", "select", "textarea"} and self.form_stacks:
+            current_form = self.form_stacks[-1]
+            current_form["controls"] += 1
+            control_type = (attr_dict.get("type") or "text").lower()
+            if tag == "input" and control_type in {"submit", "image"}:
+                current_form["submit_controls"] += 1
         elif self.form_stacks and tag == "label":
             self.form_stacks[-1]["labels"] += 1
+        elif tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            self._current_heading_tag = tag
+            self.headings.append({"level": tag, "tag": tag, "text": ""})
+        elif tag in {"p", "blockquote", "li", "dt", "dd"}:
+            self._block_tag = tag
+            self._block_buffer = []
+        elif tag in {"ul", "ol"}:
+            self.list_blocks += 1
+        elif tag == "table":
+            self.table_blocks += 1
+        self.assert_invariants()
 
-    def _current_action_region(self):
-        for region in ("nav", "footer", "header"):
+    def current_region(self):
+        for region in ("nav", "header", "footer"):
             if self._region_depths[region]:
                 return region
         return "content"
@@ -206,7 +228,6 @@ class HTMLContentExtractor(HTMLParser):
             self._block_tag = None
             self._block_buffer = []
         if tag in {"a", "button"} and self.action_stacks:
-            # Match last action matching tag
             action_idx = None
             for i in range(len(self.action_stacks) - 1, -1, -1):
                 if self.action_stacks[i]["tag"] == tag:
@@ -221,25 +242,32 @@ class HTMLContentExtractor(HTMLParser):
                 self.action_candidates.append(action)
         if tag == "form" and self.form_stacks:
             self.forms.append(self.form_stacks.pop())
-        if tag == "nav":
-            self._navigation_depth = max(0, self._navigation_depth - 1)
-        if tag in self._region_depths:
-            self._region_depths[tag] = max(0, self._region_depths[tag] - 1)
 
         # Robust stack unwinding for matching tag (handles malformed nesting)
         match_idx = None
         for i in range(len(self._element_stack) - 1, -1, -1):
-            if self._element_stack[i][0] == tag:
+            if self._element_stack[i]["tag"] == tag:
                 match_idx = i
                 break
 
         if match_idx is not None:
             while len(self._element_stack) > match_idx:
-                _, is_hidden, is_interface = self._element_stack.pop()
-                if is_hidden:
+                popped = self._element_stack.pop()
+                if popped["is_hidden"]:
                     self._hidden_depth = max(0, self._hidden_depth - 1)
-                    if is_interface:
+                    if popped["is_interface"]:
                         self._hidden_interface_depth = max(0, self._hidden_interface_depth - 1)
+                if popped["is_nav"]:
+                    self._navigation_depth = max(0, self._navigation_depth - 1)
+                if popped["region"]:
+                    r = popped["region"]
+                    self._region_depths[r] = max(0, self._region_depths[r] - 1)
+        else:
+            # Orphaned closing tag without matching start tag: ensure non-negative bounds
+            if tag == "nav":
+                self._navigation_depth = max(0, self._navigation_depth - 1)
+            if tag in self._region_depths:
+                self._region_depths[tag] = max(0, self._region_depths[tag] - 1)
 
         if tag in ["h1", "h2", "h3", "h4", "h5", "h6"] and tag == self._current_heading_tag:
             self._current_heading_tag = None
@@ -501,19 +529,25 @@ def audit_structured_data(base_url, parsed_content):
         })
 
     if parsed_schemas and not has_same_as:
+        has_strong_identity = any(
+            "name" not in s["fields_missing"] and "url" not in s["fields_missing"]
+            for s in entity_summaries
+        )
+        severity = "low" if has_strong_identity else "medium"
         findings.append({
             "id": "F-005",
             "title": "Missing sameAs Entity Corroboration Links",
-            "severity": "medium",
+            "severity": severity,
             "category": "structured_data_corroboration",
             "evidence": json.dumps({
                 **entity_evidence,
                 "sameAs_status": "missing",
+                "has_strong_identity": has_strong_identity,
             }, sort_keys=True),
             "suggested_action": {
-                "summary": "Add sameAs URIs to Organization JSON-LD to eliminate entity ambiguity in AI models.",
-                "priority": "medium",
-                "implementation_code": "\"sameAs\": [\n  \"https://www.wikidata.org/entity/...\",\n  \"https://www.crunchbase.com/organization/...\"\n]"
+                "summary": "Publish authoritative sameAs URIs (Wikidata, Wikipedia, LinkedIn, Crunchbase) to eliminate entity ambiguity in AI knowledge graphs.",
+                "priority": severity,
+                "implementation_code": "\"sameAs\": [\n  \"https://www.wikidata.org/wiki/QXXXXX\",\n  \"https://www.crunchbase.com/organization/...\"\n]"
             }
         })
 
@@ -927,11 +961,57 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
         })
     return findings
 
-def audit_on_site_engagement(parsed_content):
+def infer_page_type(url: str = "", html: str = "", parsed_content: Optional[HTMLContentExtractor] = None) -> str:
+    """
+    Infers the high-level functional archetype of the page:
+    - 'documentation': Developer docs, API references, technical specifications, guides
+    - 'article': Blog posts, editorial news, knowledge base guides
+    - 'ecommerce': Product detail pages, catalogs, pricing sheets
+    - 'local_business': Brick-and-mortar storefronts, professional practices
+    - 'marketing': Marketing landing pages, brand homepages (default)
+    """
+    url_lower = url.lower() if url else ""
+    path = urllib.parse.urlparse(url_lower).path
+
+    if any(p in path for p in ("/docs", "/documentation", "/api", "/reference", "/guide", "/manual", "/sdk")):
+        return "documentation"
+    if any(p in path for p in ("/blog", "/article", "/news", "/post", "/press", "/insights")):
+        return "article"
+    if any(p in path for p in ("/product", "/item", "/shop", "/cart", "/store")):
+        return "ecommerce"
+
+    if parsed_content:
+        for block in parsed_content.json_ld_blocks:
+            block_lower = block.lower()
+            if any(t in block_lower for t in ('"techarticle"', '"apireference"', '"manual"', '"guide"')):
+                return "documentation"
+            if any(t in block_lower for t in ('"article"', '"blogposting"', '"newsarticle"')):
+                return "article"
+            if any(t in block_lower for t in ('"product"', '"offer"', '"itempage"')):
+                return "ecommerce"
+            if any(t in block_lower for t in ('"localbusiness"', '"restaurant"', '"store"')):
+                return "local_business"
+
+        h1_text = " ".join(h["text"] for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1").lower()
+        if any(term in h1_text for term in ("documentation", "api reference", "developer guide", "quickstart")):
+            return "documentation"
+
+        if parsed_content.has_article_region:
+            return "article"
+
+    if html:
+        code_blocks = len(re.findall(r"<pre|<code", html, re.IGNORECASE))
+        if code_blocks >= 4:
+            return "documentation"
+
+    return "marketing"
+
+def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
     findings = []
     text_chunks = parsed_content.text_chunks
     full_text = " ".join(text_chunks)
     words = full_text.split()
+    page_type = infer_page_type(url, html, parsed_content)
     strong_terms = (
         "contact", "demo", "get started", "sign up", "signup", "register",
         "trial", "buy", "purchase", "pricing", "book", "schedule", "download",
@@ -1010,6 +1090,7 @@ def audit_on_site_engagement(parsed_content):
         "engagement_readiness_score": engagement_score,
         "action_labels": [item["label"] for item in meaningful],
         "content_region_detected": parsed_content.has_article_region,
+        "page_type": page_type,
     }
     if weak_ctas and not strong_ctas and not forms:
         findings.append({
@@ -1025,6 +1106,7 @@ def audit_on_site_engagement(parsed_content):
         })
     elif (
         len(words) >= 40
+        and page_type not in ("documentation", "article")
         and not parsed_content.has_article_region
         and not contact_or_conversion_path
         and not strong_ctas
@@ -1041,18 +1123,33 @@ def audit_on_site_engagement(parsed_content):
                 "implementation_code": "<a href=\"/contact\" class=\"primary-cta\">Contact sales</a>",
             },
         })
-    # Hero / Above-the-fold value prop length
-    first_100_words = " ".join(words[:100])
-    if len(words) > 50 and len(first_100_words.strip()) < 80:
+
+    # Hero / Above-the-fold value prop orientation (evidence-based)
+    h1_headings = [h for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1"]
+    has_h1 = bool(h1_headings and h1_headings[0]["text"].strip())
+    h1_text = h1_headings[0]["text"].strip() if has_h1 else ""
+    first_100_words = " ".join(words[:100]).strip()
+    meta_desc = parsed_content.meta_tags.get("description", "").strip()
+    is_generic_h1 = h1_text.lower() in ("information", "home", "welcome", "index", "page", "title", "about") or (len(h1_text) < 5)
+
+    if page_type in ("documentation", "article") and has_h1 and not is_generic_h1:
+        pass  # Well-oriented by specific topic H1
+    elif is_generic_h1 or (len(words) > 30 and len(first_100_words) < 80 and len(meta_desc) < 30):
         findings.append({
             "id": "F-010",
             "title": "Weak Above-The-Fold Value Proposition Orientation",
-            "severity": "high",
+            "severity": "medium",
             "category": "engagement_orientation",
-            "evidence": "First 100 words lack clear descriptive explanation of core product value, causing immediate bounce for AI-referred visitors.",
+            "evidence": json.dumps({
+                "has_h1": has_h1,
+                "h1_text": h1_text,
+                "is_generic_h1": is_generic_h1,
+                "hero_text_length": len(first_100_words),
+                "page_type": page_type,
+            }, sort_keys=True),
             "suggested_action": {
-                "summary": "Refactor the hero section headline and sub-headline to state what the product does within 5 seconds of reading.",
-                "priority": "high",
+                "summary": "Strengthen hero section headline and introductory value proposition so first-time visitors orient within 5 seconds of reading.",
+                "priority": "medium",
                 "implementation_code": "<section class=\"hero\">\n  <h1>Autonomous Brand Intelligence</h1>\n  <p>Audit and optimize your website for AI discoverability and customer retention in real-time.</p>\n</section>"
             }
         })
@@ -1062,61 +1159,59 @@ def generate_proactive_recommendations(target_url, parsed_content, findings):
     """
     Synthesizes beyond-defect proactive recommendations that strengthen AI discoverability
     and on-site engagement even when no explicit defect was flagged.
-    Fulfills the Adobe Round 3 Evaluation Rubric requirement:
-    'Suggestions may go beyond the detected problems: proactive improvements that would
-    strengthen discoverability or engagement even where no explicit defect was found.'
+    Only emits contextual recommendations triggered by actual site DOM/AST evidence.
     """
     recs = []
-    
-    # 1. Proactive llms.txt & llms-full.txt machine index
-    recs.append({
-        "id": "PROACTIVE-001",
-        "area": "ai_context_ingestion",
-        "priority": "medium",
-        "recommendation": "Deploy a standardized /llms.txt and /llms-full.txt markdown manifest at the domain root.",
-        "expected_impact": "Permits frontier LLM agents (ChatGPT, Claude, Cursor) to ingest canonical brand facts in under 1,000 tokens without web scraping overhead.",
-        "implementation_code": "# /llms.txt specification\n# Title: Brand AI Context Manifest\n> Comprehensive overview of core services, APIs, and canonical entity claims.\n\n- [Product Capabilities](/docs/features.md): Overview of primary value props\n- [API Reference](/api/spec): Deterministic endpoints and schema definitions\n- [Company Info](/about): Executive team, founding year, and legal entity identifiers"
-    })
-    
-    # 2. External Knowledge Graph Triples & Disambiguation
-    recs.append({
-        "id": "PROACTIVE-002",
-        "area": "entity_corroboration",
-        "priority": "high",
-        "recommendation": "Publish authoritative sameAs Wikidata and industry registry entity triples.",
-        "expected_impact": "Reinforces agreement across the wider web (Round 2 Concept D), establishing persistent subject-predicate-object ground truth that shields the brand from LLM hallucinations.",
-        "implementation_code": "<script type=\"application/ld+json\">\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"Your Brand\",\n  \"url\": \"https://example.com\",\n  \"sameAs\": [\n    \"https://www.wikidata.org/wiki/QXXXXX\",\n    \"https://en.wikipedia.org/wiki/Your_Brand\",\n    \"https://www.linkedin.com/company/yourbrand\",\n    \"https://www.crunchbase.com/organization/yourbrand\"\n  ]\n}\n</script>"
-    })
+    parsed_url = urllib.parse.urlparse(target_url)
+    domain = parsed_url.netloc or "example.com"
+    brand_name = domain.split(".")[0].capitalize()
+    words = parsed_content.get_visible_words() if hasattr(parsed_content, "get_visible_words") else parsed_content.text_chunks
+    word_count = len(words)
 
-    # 3. AI Deep-Link Orientation Anchors
-    recs.append({
-        "id": "PROACTIVE-003",
-        "area": "visitor_retention",
-        "priority": "medium",
-        "recommendation": "Equip all sub-pages with self-contained context headers and micro-summaries.",
-        "expected_impact": "Accommodates AI assistant referral behavior (Round 2 Concept E), where users are linked directly to deep sub-pages without seeing the homepage.",
-        "implementation_code": "<div class=\"context-anchor\" role=\"region\" aria-label=\"Context Anchor\">\n  <nav aria-label=\"Breadcrumb\">\n    <ol><li>Home</li><li>Solutions</li><li aria-current=\"page\">Feature Overview</li></ol>\n  </nav>\n  <p class=\"text-sm text-muted\">Part of OmniAudit-GEO: Automated Brand AI-Readiness Evaluation.</p>\n</div>"
-    })
+    # 1. Proactive llms.txt context manifest for content-rich sites
+    if word_count >= 100:
+        recs.append({
+            "id": "PROACTIVE-001",
+            "area": "ai_context_ingestion",
+            "priority": "medium",
+            "recommendation": f"Deploy a standardized /llms.txt context manifest at {domain}.",
+            "expected_impact": "Permits frontier LLM agents (ChatGPT, Claude, Cursor) to ingest canonical brand facts in under 1,000 tokens without web scraping overhead.",
+            "implementation_code": f"# /{domain}/llms.txt\n# Title: {brand_name} AI Context Manifest\n> Canonical overview of verified organizational facts and capabilities.\n\n- [Core Offerings](/docs): Technical capabilities and specifications\n- [Verified Identity](/about): Founding details and organizational attributes"
+        })
 
-    # 4. Opening Section Fact Density (Summarizer Truncation Immunity)
-    recs.append({
-        "id": "PROACTIVE-004",
-        "area": "aeo_summarization",
-        "priority": "medium",
-        "recommendation": "Front-load quantifiable metrics into the initial 40 words of each major content section.",
-        "expected_impact": "Prevents AI email and document summarizers (Round 2 Concept F) from dropping crucial value propositions when aggressive context window compression occurs.",
-        "implementation_code": "<!-- Lead with quantifiable high-entropy facts -->\n<p><strong>OmniAudit-GEO evaluates 7 AI crawler protocols and parses JSON-LD graphs in <50ms with 100% test fixture accuracy.</strong></p>"
-    })
+    # 2. External Knowledge Graph Triples & Disambiguation (if Organization exists but lacks sameAs)
+    has_same_as = any('"sameas"' in block.lower() for block in parsed_content.json_ld_blocks)
+    if not has_same_as:
+        recs.append({
+            "id": "PROACTIVE-002",
+            "area": "entity_corroboration",
+            "priority": "high",
+            "recommendation": f"Publish authoritative sameAs Wikidata and industry registry entity triples for {brand_name}.",
+            "expected_impact": "Establishes persistent subject-predicate-object ground truth across knowledge graphs, shielding the brand from LLM hallucinations.",
+            "implementation_code": f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{brand_name}",\n  "url": "https://{domain}",\n  "sameAs": [\n    "https://www.wikidata.org/wiki/QXXXXX",\n    "https://en.wikipedia.org/wiki/{brand_name}",\n    "https://www.linkedin.com/company/{domain.split(".")[0]}",\n    "https://www.crunchbase.com/organization/{domain.split(".")[0]}"\n  ]\n}}\n</script>'
+        })
 
-    # 5. Semantic Callouts for High-Citation Quotability
-    recs.append({
-        "id": "PROACTIVE-005",
-        "area": "answer_engine_quotability",
-        "priority": "medium",
-        "recommendation": "Encase key definitions and benchmark conclusions in semantic <aside> or <figure> blocks.",
-        "expected_impact": "Significantly boosts the extraction probability for Perplexity citations and Google AI Overviews soundbites.",
-        "implementation_code": "<figure class=\"key-takeaway\">\n  <blockquote>OmniAudit-GEO is an open-standard agent skill marketplace for evaluating website AI discoverability and on-site visitor retention.</blockquote>\n  <figcaption>— Key Architectural Definition</figcaption>\n</figure>"
-    })
+    # 3. AI Deep-Link Orientation Anchors (for subpages)
+    if parsed_url.path and parsed_url.path.strip("/") != "":
+        recs.append({
+            "id": "PROACTIVE-003",
+            "area": "visitor_retention",
+            "priority": "medium",
+            "recommendation": "Equip deep sub-pages with contextual breadcrumb trails and parent-topic orientation anchors.",
+            "expected_impact": "Accommodates generative AI search referrals where users land directly on deep sub-pages without seeing the homepage.",
+            "implementation_code": '<nav aria-label="Breadcrumb" class="context-anchor">\n  <ol>\n    <li><a href="/">Home</a></li>\n    <li><a href="/section">Category</a></li>\n    <li aria-current="page">Current Page</li>\n  </ol>\n</nav>'
+        })
+
+    # 4. Semantic Answer Callouts for High-Citation Quotability
+    if parsed_content.aeo_blocks or word_count >= 150:
+        recs.append({
+            "id": "PROACTIVE-004",
+            "area": "answer_engine_quotability",
+            "priority": "medium",
+            "recommendation": "Encase key conclusions, metrics, and definitions in semantic <figure> or <aside> callouts.",
+            "expected_impact": "Significantly boosts the extraction probability for Perplexity citations and Google AI Overviews soundbites.",
+            "implementation_code": f'<figure class="key-takeaway">\n  <blockquote>{brand_name} delivers verified solutions engineered for high-reliability operational environments.</blockquote>\n  <figcaption>— Key Architectural Summary</figcaption>\n</figure>'
+        })
 
     return recs
 
@@ -1152,8 +1247,24 @@ def enrich_findings_actions(findings):
             )
             act["proactive_enhancement"] = enhancement
 
-def calculate_metrics(findings, parsed_content=None):
-    score_data = compute_scores(findings)
+def calculate_metrics(findings, parsed_content=None, target_url=""):
+    measurements = None
+    if parsed_content:
+        words = parsed_content.get_visible_words() if hasattr(parsed_content, "get_visible_words") else parsed_content.text_chunks
+        strong_ctas = sum(1 for c in parsed_content.action_candidates if not c.get("hidden"))
+        measurements = {
+            "words_count": len(words),
+            "h1_count": sum(1 for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1"),
+            "has_meta_desc": bool(parsed_content.meta_tags.get("description")),
+            "json_ld_count": len(parsed_content.json_ld_blocks),
+            "has_sameas": any('"sameas"' in b.lower() for b in parsed_content.json_ld_blocks),
+            "facts_count": getattr(parsed_content, "factual_signal_count", len(parsed_content.aeo_blocks)),
+            "faq_pairs": parsed_content.faq_pairs,
+            "images_count": len(parsed_content.images),
+            "strong_cta_count": strong_ctas,
+            "form_count": len(parsed_content.forms),
+        }
+    score_data = compute_scores(findings, measurements)
     return {
         "acpi_score": score_data["acpi_score"],
         "crs_score": score_data["crs_score"]
@@ -1195,7 +1306,7 @@ def run_full_audit(target_url):
         all_findings.extend(audit_structured_data(target_url, parsed_content))
         all_findings.extend(audit_aeo_quotability(parsed_content))
         all_findings.extend(audit_freshness_trust(parsed_content, html, target_url))
-        all_findings.extend(audit_on_site_engagement(parsed_content))
+        all_findings.extend(audit_on_site_engagement(parsed_content, target_url, html))
 
     enrich_findings_actions(all_findings)
 
@@ -1206,7 +1317,7 @@ def run_full_audit(target_url):
         if sev in severity_counts:
             severity_counts[sev] += 1
 
-    metrics = calculate_metrics(all_findings, parsed_content)
+    metrics = calculate_metrics(all_findings, parsed_content, target_url)
     proactive_recs = generate_proactive_recommendations(target_url, parsed_content, all_findings)
 
     report = {

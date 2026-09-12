@@ -137,20 +137,33 @@ MCP_TOOLS = [
 ]
 
 def execute_tool(name: str, arguments: dict) -> dict:
-    url = arguments.get("url", "https://adobe.com")
+    """
+    Executes an audit tool according to official contract schemas:
+    - 'audit_website' & 'audit_brand_ai_readiness' -> BrandAIReadinessAuditReport (audit_schema.json)
+    - Specialist 'inspect_*' tools -> SpecialistAuditResult (specialist_audit_schema.json)
+    """
+    if not isinstance(arguments, dict):
+        raise ValueError("Tool arguments must be a dictionary")
+        
+    url = arguments.get("url")
+    if not url or not isinstance(url, str) or not url.strip():
+        raise ValueError("Missing or invalid 'url' parameter: must be a non-empty string")
+    
+    url = url.strip()
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
 
     if name in ("audit_website", "audit_brand_ai_readiness"):
         return run_full_audit(url)
 
-    # Sub-audit execution
+    # Sub-audit execution: returns SpecialistAuditResult conforming payload
     fetch_result = fetch_url(url)
     if fetch_result.get("error"):
         return {
             "site": urllib.parse.urlparse(url).netloc or url,
             "tool": name,
             "error": fetch_result["error"],
+            "total_findings": 0,
             "findings": [],
         }
 
@@ -211,10 +224,15 @@ def handle_json_rpc(request_str: str) -> dict:
             }
 
         elif method == "tools/call":
-            params = req.get("params", {})
-            name = params.get("name")
-            arguments = params.get("arguments", {})
+            params = req.get("params")
+            if not isinstance(params, dict):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32602, "message": "Invalid params: 'params' must be an object"},
+                }
 
+            name = params.get("name")
             matched_tool = next((t for t in MCP_TOOLS if t["name"] == name), None)
             if not matched_tool:
                 return {
@@ -223,7 +241,37 @@ def handle_json_rpc(request_str: str) -> dict:
                     "error": {"code": -32601, "message": f"Tool '{name}' not found"},
                 }
 
-            result_data = execute_tool(name, arguments)
+            arguments = params.get("arguments")
+            if not isinstance(arguments, dict):
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32602, "message": "Invalid params: 'arguments' must be an object"},
+                }
+
+            url = arguments.get("url")
+            if not url or not isinstance(url, str) or not url.strip():
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32602, "message": "Invalid params: 'url' is required and must be a non-empty string"},
+                }
+
+            try:
+                result_data = execute_tool(name, arguments)
+            except ValueError as ve:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32602, "message": f"Invalid params: {ve}"},
+                }
+            except Exception as ex:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32603, "message": f"Internal error during tool execution: {ex}"},
+                }
+
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,

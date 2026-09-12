@@ -30,11 +30,11 @@ adobe-hackathon-2026/
 │   └── skills/                         <- Workspace skills
 │       ├── brand-ai-auditor/           <- Brand AI Readiness audit runner
 │       ├── tdd-workflow/               <- Red-Green-Refactor test cycle
-│       ├── verification-loop/          <- 5-Gate automated verification runner
+│       ├── verification-loop/          <- 6-Gate automated verification runner
 │       ├── security-review/            <- SSRF and ReDoS security reviewer
-│       └── eval-harness/               <- 14 Golden Benchmarks evaluator
+│       └── eval-harness/               <- 16 Golden Benchmarks evaluator
 ├── scripts/
-│   └── verify.py                       <- Unified 5-gate automated verification runner
+│   └── verify.py                       <- Unified 6-gate automated verification runner
 ├── context/                            <- Challenge PDFs & Handouts
 │   ├── 6a8ffdf33590a_round3-handout-updated.pdf
 │   └── Certificate of Participation - Shaswat Raj.pdf
@@ -58,7 +58,7 @@ adobe-hackathon-2026/
 
 ## ⚡ Agent Execution & Verification Commands
 
-### 1. Unified 5-Gate Verification Loop (Pre-commit / Pre-PR):
+### 1. Unified 6-Gate Verification Loop (Pre-commit / Pre-PR):
 ```bash
 python3 scripts/verify.py
 ```

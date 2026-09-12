@@ -20,7 +20,7 @@ Invariants:
 - Proactive recommendations have zero penalty impact.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 ACPI_WEIGHTS = {
     "crawlability": 0.30,
@@ -98,10 +98,14 @@ CATEGORY_MAX_DEDUCTION = {
 }
 
 
-def compute_scores(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
+def compute_scores(
+    findings: List[Dict[str, Any]],
+    measurements: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     """
-    Computes bounded, explainable ACPI and CRS scores from findings.
-    Prevents duplicate penalty accumulation from redundant findings.
+    Computes bounded, explainable ACPI and CRS scores.
+    Derives baseline component scores from empirical AST/DOM measurements,
+    and applies calibrated deductions with root-cause capping to prevent penalty accumulation.
     """
     component_deductions: Dict[str, float] = {
         "crawlability": 0.0,
@@ -154,12 +158,60 @@ def compute_scores(findings: List[Dict[str, Any]]) -> Dict[str, Any]:
 
         component_deductions[component] += effective_ded
 
-    # Compute capped component scores (0 to 100)
+    # Derive baseline component scores from empirical measurements if provided
+    base_scores: Dict[str, float] = {
+        "crawlability": 100.0,
+        "renderability": 100.0,
+        "entity_clarity": 100.0,
+        "quotability": 100.0,
+        "trust_freshness": 100.0,
+        "orientation": 100.0,
+        "intent_continuity": 100.0,
+        "readability": 100.0,
+        "actionability": 100.0,
+    }
+
+    if measurements:
+        # Entity Clarity: Schema.org richness, sameAs authority
+        json_ld_count = measurements.get("json_ld_count", 0)
+        has_sameas = measurements.get("has_sameas", False)
+        base_entity = 75.0
+        if json_ld_count > 0:
+            base_entity += min(15.0, json_ld_count * 10.0)
+        if has_sameas:
+            base_entity += 10.0
+        base_scores["entity_clarity"] = min(100.0, base_entity)
+
+        # Quotability: factual density, direct Q&A blocks, table accessibility
+        facts_count = measurements.get("facts_count", 0)
+        words_count = max(1, measurements.get("words_count", 1))
+        fact_density = (facts_count / (words_count / 100.0))
+        base_quotability = 70.0 + min(20.0, fact_density * 4.0)
+        if measurements.get("faq_pairs", 0) > 0:
+            base_quotability += min(10.0, measurements.get("faq_pairs") * 5.0)
+        base_scores["quotability"] = min(100.0, base_quotability)
+
+        # Orientation: clear H1 structure, meta description presence
+        base_orientation = 75.0
+        if measurements.get("h1_count", 0) == 1:
+            base_orientation += 15.0
+        if measurements.get("has_meta_desc", False):
+            base_orientation += 10.0
+        base_scores["orientation"] = min(100.0, base_orientation)
+
+        # Actionability: presence of usable forms, clear CTAs
+        strong_ctas = measurements.get("strong_cta_count", 0)
+        forms_count = measurements.get("form_count", 0)
+        base_action = 75.0 + min(15.0, strong_ctas * 7.5) + min(10.0, forms_count * 5.0)
+        base_scores["actionability"] = min(100.0, base_action)
+
+    # Compute capped component scores
     component_scores: Dict[str, float] = {}
     for comp, ded in component_deductions.items():
+        base_val = base_scores.get(comp, 100.0)
         max_cap = CATEGORY_MAX_DEDUCTION.get(comp, 60.0)
         capped_ded = min(ded, max_cap)
-        component_scores[comp] = round(max(0.0, 100.0 - capped_ded), 1)
+        component_scores[comp] = round(max(0.0, base_val - capped_ded), 1)
 
     # Compute composite ACPI
     acpi_raw = sum(
