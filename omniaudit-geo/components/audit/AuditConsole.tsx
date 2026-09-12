@@ -124,7 +124,7 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
             <Button
               type="submit"
               disabled={status === "running"}
-              className="w-full sm:w-auto px-6 h-11 text-xs font-semibold"
+              className="w-full sm:w-auto px-6 h-11 text-xs font-semibold bg-[#EB1000] hover:bg-[#D40F00] text-white rounded-md shadow-sm"
             >
               {status === "running" ? "Auditing Agents..." : "Run Free GEO Audit"}
             </Button>
@@ -138,7 +138,7 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                 key={s.key}
                 type="button"
                 onClick={() => handleSelectSample(s)}
-                className="px-2.5 py-1 rounded-full bg-muted/50 hover:bg-muted text-foreground text-[11px] transition-colors border border-border/40 cursor-pointer"
+                className="px-3 py-1 rounded-full bg-[#242424] hover:bg-[#2C2C2C] text-white text-[11px] font-medium transition-colors border border-[#383838] cursor-pointer"
               >
                 {s.label}
               </button>
@@ -147,16 +147,16 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
 
           {/* Real-time execution progress */}
           {status === "running" && (
-            <div className="mt-4 p-3.5 rounded-xl bg-muted/40 border border-primary/20 space-y-2">
+            <div className="mt-4 p-3.5 rounded-lg bg-[#181818] border border-[#EB1000]/30 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-mono text-primary flex items-center gap-2">
-                  <span className="inline-block h-2 w-2 rounded-full bg-primary animate-ping" />
+                <span className="font-mono text-[#EB1000] flex items-center gap-2">
+                  <span className="inline-block h-2 w-2 rounded-full bg-[#EB1000] animate-ping" />
                   {activeStep}
                 </span>
                 <span className="text-[10px] text-muted-foreground font-mono">5 Specialists Dispatched</span>
               </div>
-              <div className="w-full h-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-primary animate-pulse w-3/4 rounded-full" />
+              <div className="w-full h-1 bg-[#242424] rounded-full overflow-hidden">
+                <div className="h-full bg-[#EB1000] animate-pulse w-3/4 rounded-full" />
               </div>
             </div>
           )}
@@ -169,8 +169,8 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
           {/* Executive Score Card */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* ACPI Card */}
-            <Card className="border-border bg-card/60 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+            <Card className="border-border bg-[#1E1E1E] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#EB1000]/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">ACPI Score</span>
@@ -179,20 +179,20 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                   </Badge>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground font-mono">
+                  <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white font-mono">
                     {Number(acpiScore).toFixed(1)}
                   </span>
                   <span className="text-sm font-semibold text-muted-foreground">/ 100</span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  <strong>AI Citation Probability Index:</strong> Likelihood of ChatGPT, Claude, and Perplexity selecting this site as a primary ground-truth citation.
+                  <strong className="text-white">AI Citation Probability Index:</strong> Likelihood of ChatGPT, Claude, and Perplexity selecting this site as a primary ground-truth citation.
                 </p>
               </CardContent>
             </Card>
 
             {/* CRS Card */}
-            <Card className="border-border bg-card/60 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
+            <Card className="border-border bg-[#1E1E1E] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-[#27C281]/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">CRS Score</span>
@@ -201,53 +201,53 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                   </Badge>
                 </div>
                 <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-foreground font-mono">
+                  <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white font-mono">
                     {Number(crsScore).toFixed(1)}
                   </span>
                   <span className="text-sm font-semibold text-muted-foreground">/ 100</span>
                 </div>
                 <p className="mt-2 text-xs text-muted-foreground leading-relaxed">
-                  <strong>Cognitive Retention Score:</strong> Above-the-fold clarity, reading ease, and intent continuity when AI visitors land on-site.
+                  <strong className="text-white">Cognitive Retention Score:</strong> Above-the-fold clarity, reading ease, and intent continuity when AI visitors land on-site.
                 </p>
               </CardContent>
             </Card>
 
             {/* Finding Breakdown Card */}
-            <Card className="border-border bg-card/60">
+            <Card className="border-border bg-[#1E1E1E]">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-semibold text-muted-foreground tracking-wider uppercase">Findings Summary</span>
                   <span className="text-xs font-mono text-muted-foreground">{totalFindings} items</span>
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
-                  <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 flex items-center justify-between">
-                    <span className="text-destructive font-medium">Critical</span>
-                    <span className="font-bold text-destructive font-mono">{critCount}</span>
+                  <div className="p-2.5 rounded-lg bg-[#EB1000]/15 border border-[#EB1000]/30 flex items-center justify-between">
+                    <span className="text-[#FF5252] font-semibold">Critical</span>
+                    <span className="font-bold text-[#FF5252] font-mono">{critCount}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between">
-                    <span className="text-amber-400 font-medium">High</span>
-                    <span className="font-bold text-amber-400 font-mono">{highCount}</span>
+                  <div className="p-2.5 rounded-lg bg-[#E68619]/15 border border-[#E68619]/30 flex items-center justify-between">
+                    <span className="text-[#FFA033] font-semibold">High</span>
+                    <span className="font-bold text-[#FFA033] font-mono">{highCount}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-between">
-                    <span className="text-primary font-medium">Medium</span>
-                    <span className="font-bold text-primary font-mono">{medCount}</span>
+                  <div className="p-2.5 rounded-lg bg-[#1473E6]/15 border border-[#1473E6]/30 flex items-center justify-between">
+                    <span className="text-[#4FA5FF] font-semibold">Medium</span>
+                    <span className="font-bold text-[#4FA5FF] font-mono">{medCount}</span>
                   </div>
-                  <div className="p-2.5 rounded-xl bg-muted/60 border border-border/50 flex items-center justify-between">
+                  <div className="p-2.5 rounded-lg bg-[#242424] border border-border flex items-center justify-between">
                     <span className="text-muted-foreground font-medium">Low/Info</span>
-                    <span className="font-bold text-foreground font-mono">{lowCount}</span>
+                    <span className="font-bold text-white font-mono">{lowCount}</span>
                   </div>
                 </div>
                 <div className="mt-3 text-[11px] text-muted-foreground text-center">
-                  Audited site: <span className="font-mono text-foreground">{report.site}</span>
+                  Audited site: <span className="font-mono text-white">{report.site}</span>
                 </div>
               </CardContent>
             </Card>
           </div>
 
           {/* Component Scores Bar Meter */}
-          <Card className="border-border bg-card/50">
+          <Card className="border-border bg-[#1E1E1E]">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Specialist Component Diagnostics</CardTitle>
+              <CardTitle className="text-sm font-semibold text-white">Specialist Component Diagnostics</CardTitle>
               <CardDescription className="text-xs">Individual component weights contributing to ACPI and CRS composite scores.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -259,21 +259,24 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                   { label: "AEO Quotability Density", score: componentScores.quotability ?? 84, weight: "20% ACPI" },
                   { label: "Freshness & E-E-A-T Trust", score: componentScores.trust_freshness ?? 80, weight: "15% ACPI" },
                   { label: "Value Prop & Readability", score: componentScores.orientation ?? 88, weight: "55% CRS" },
-                ].map((c) => (
-                  <div key={c.label} className="p-3 rounded-xl bg-background/50 border border-border/40 space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-medium text-foreground">{c.label}</span>
-                      <span className="font-mono font-bold text-primary">{Number(c.score).toFixed(0)}%</span>
+                ].map((c) => {
+                  const fillColor = Number(c.score) >= 85 ? "bg-[#27C281]" : Number(c.score) >= 70 ? "bg-[#1473E6]" : "bg-[#E68619]";
+                  return (
+                    <div key={c.label} className="p-3 rounded-lg bg-[#181818] border border-border/60 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-medium text-white">{c.label}</span>
+                        <span className="font-mono font-bold text-white">{Number(c.score).toFixed(0)}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-[#262626] rounded-full overflow-hidden">
+                        <div
+                          className={`h-full ${fillColor} rounded-full transition-all duration-500`}
+                          style={{ width: `${Math.min(100, Math.max(0, Number(c.score)))}%` }}
+                        />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground block">{c.weight}</span>
                     </div>
-                    <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary rounded-full transition-all duration-500"
-                        style={{ width: `${Math.min(100, Math.max(0, Number(c.score)))}%` }}
-                      />
-                    </div>
-                    <span className="text-[10px] text-muted-foreground block">{c.weight}</span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -320,7 +323,7 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                 const impact = f.score_impact ?? (f.severity === "critical" ? -30 : f.severity === "high" ? -15 : f.severity === "medium" ? -5 : 0);
 
                 return (
-                  <Card key={f.id} className="border-border bg-card/60 transition-all hover:border-border/90">
+                  <Card key={f.id} className="border-border bg-[#1E1E1E] transition-all hover:border-[#3E3E3E]">
                     <CardContent className="p-5 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
@@ -331,18 +334,18 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                                 : f.severity === "high"
                                 ? "warning"
                                 : f.severity === "medium"
-                                ? "default"
+                                ? "indigo"
                                 : "secondary"
                             }
                             className="capitalize text-[11px]"
                           >
                             {f.severity}
                           </Badge>
-                          <span className="font-semibold text-sm text-foreground">{f.title}</span>
+                          <span className="font-semibold text-sm text-white">{f.title}</span>
                         </div>
                         <div className="flex items-center gap-2 text-xs font-mono">
                           <span className="text-muted-foreground">Impact:</span>
-                          <span className={impact < 0 ? "text-destructive font-bold" : "text-emerald-400 font-bold"}>
+                          <span className={impact < 0 ? "text-[#FF5252] font-bold" : "text-[#27C281] font-bold"}>
                             {impact > 0 ? `+${impact}` : impact} pts
                           </span>
                         </div>
@@ -354,11 +357,11 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
 
                       {/* Evidence Snippet */}
                       {evidenceText && (
-                        <div className="p-2.5 rounded-lg bg-background/80 border border-border/50 text-xs font-mono text-muted-foreground overflow-x-auto">
+                        <div className="p-3 rounded-lg bg-[#141414] border border-[#2E2E2E] text-xs font-mono text-muted-foreground overflow-x-auto">
                           <div className="text-[10px] text-muted-foreground/80 mb-1 uppercase font-sans font-semibold">
                             Detected Evidence:
                           </div>
-                          <code>{evidenceText}</code>
+                          <code className="text-[#A0A0A0]">{evidenceText}</code>
                         </div>
                       )}
 
@@ -366,16 +369,16 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                       {codePatch ? (
                         <div className="space-y-1.5 pt-1">
                           <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-primary">{actionTitle}</span>
+                            <span className="text-xs font-semibold text-[#EB1000]">{actionTitle}</span>
                             <button
                               type="button"
                               onClick={() => copyCode(f.id, codePatch)}
-                              className="text-[11px] text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
+                              className="text-[11px] text-[#EB1000] hover:text-[#FF4D4D] font-mono transition-colors cursor-pointer"
                             >
                               {copiedId === f.id ? "✓ Copied Patch" : "Copy Code Patch"}
                             </button>
                           </div>
-                          <pre className="p-3 rounded-xl bg-background border border-border text-xs font-mono text-foreground overflow-x-auto">
+                          <pre className="p-3 rounded-lg bg-[#141414] border border-[#2E2E2E] text-xs font-mono text-white overflow-x-auto">
                             {codePatch}
                           </pre>
                           {actionExplanation && (
@@ -385,15 +388,15 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                       ) : (
                         actionExplanation && (
                           <div className="text-xs text-muted-foreground pt-1">
-                            <strong className="text-foreground">Suggested Fix:</strong> {actionExplanation}
+                            <strong className="text-white">Suggested Fix:</strong> {actionExplanation}
                           </div>
                         )
                       )}
 
                       {f.suggested_action?.proactive_enhancement && (
-                        <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 text-[11px] text-muted-foreground flex items-start gap-2">
-                          <span className="text-primary font-bold whitespace-nowrap">Proactive Strategy:</span>
-                          <span>{f.suggested_action.proactive_enhancement}</span>
+                        <div className="p-2.5 rounded-lg bg-[#EB1000]/10 border border-[#EB1000]/25 text-[11px] text-muted-foreground flex items-start gap-2">
+                          <span className="text-[#EB1000] font-bold whitespace-nowrap">Proactive Strategy:</span>
+                          <span className="text-[#D0D0D0]">{f.suggested_action.proactive_enhancement}</span>
                         </div>
                       )}
                     </CardContent>
@@ -408,9 +411,9 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
             <div className="space-y-4 pt-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
                     <span>Proactive Beyond-Defect Strategies ({report.proactive_recommendations.length})</span>
-                    <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
+                    <Badge variant="outline" className="text-[10px] text-[#27C281] border-[#27C281]/40 bg-[#27C281]/10">
                       Adobe Rubric High-Leverage
                     </Badge>
                   </h3>
@@ -422,13 +425,13 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {report.proactive_recommendations.map((rec) => (
-                  <Card key={rec.id} className="border-border bg-card/60 transition-all hover:border-border/90">
+                  <Card key={rec.id} className="border-border bg-[#1E1E1E] transition-all hover:border-[#3E3E3E]">
                     <CardContent className="p-4 space-y-2.5">
                       <div className="flex items-center justify-between gap-2">
-                        <Badge variant="secondary" className="font-mono text-[10px]">{rec.id}</Badge>
-                        <Badge variant="outline" className="text-[10px] capitalize">{rec.area.replace(/_/g, " ")}</Badge>
+                        <Badge variant="secondary" className="font-mono text-[10px] bg-[#242424] text-white">{rec.id}</Badge>
+                        <Badge variant="outline" className="text-[10px] capitalize text-muted-foreground border-border">{rec.area.replace(/_/g, " ")}</Badge>
                       </div>
-                      <h4 className="text-xs font-semibold text-foreground">{rec.recommendation}</h4>
+                      <h4 className="text-xs font-semibold text-white">{rec.recommendation}</h4>
                       <p className="text-[11px] text-muted-foreground leading-relaxed">{rec.expected_impact}</p>
                       {rec.implementation_code && (
                         <div className="pt-1">
@@ -437,12 +440,12 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                             <button
                               type="button"
                               onClick={() => copyCode(rec.id, rec.implementation_code!)}
-                              className="text-[10px] text-primary hover:underline font-mono cursor-pointer"
+                              className="text-[10px] text-[#EB1000] hover:underline font-mono cursor-pointer"
                             >
                               {copiedId === rec.id ? "✓ Copied" : "Copy"}
                             </button>
                           </div>
-                          <pre className="p-2 rounded-lg bg-background border border-border/60 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-28">
+                          <pre className="p-2 rounded-lg bg-[#141414] border border-[#2E2E2E] text-[10px] font-mono text-[#D0D0D0] overflow-x-auto max-h-28">
                             {rec.implementation_code}
                           </pre>
                         </div>

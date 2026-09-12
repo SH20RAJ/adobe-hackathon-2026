@@ -54,7 +54,7 @@ export default function MarketplacePage() {
                   </Badge>
                   <span className="text-xs font-mono text-muted-foreground">v{skill.version}</span>
                 </div>
-                <span className="text-xs font-mono text-emerald-400 font-semibold">{skill.execution_time_ms}ms avg</span>
+                <span className="text-xs font-mono text-[#27C281] font-semibold">{skill.execution_time_ms}ms avg</span>
               </div>
 
               <CardTitle className="text-base font-bold mt-3 text-foreground font-mono">

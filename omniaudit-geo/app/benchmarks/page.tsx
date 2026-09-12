@@ -48,7 +48,7 @@ export default function BenchmarksPage() {
         </Card>
         <Card className="border-border bg-card/60 p-4">
           <div className="text-xs text-muted-foreground">Calibration Pass Rate</div>
-          <div className="text-2xl font-bold font-mono text-emerald-400 mt-1">100.0%</div>
+          <div className="text-2xl font-bold font-mono text-[#27C281] mt-1">100.0%</div>
           <div className="text-[11px] text-muted-foreground mt-0.5">0 score regressions</div>
         </Card>
         <Card className="border-border bg-card/60 p-4">

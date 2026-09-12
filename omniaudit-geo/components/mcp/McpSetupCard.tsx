@@ -69,25 +69,25 @@ export function McpSetupCard({ className = "" }: { className?: string }) {
 
       <CardContent className="p-6 space-y-4">
         {/* Switcher tabs */}
-        <div className="flex flex-wrap gap-1 p-1 rounded-full bg-muted/60 border border-border/50 max-w-md">
+        <div className="flex flex-wrap gap-1 p-1 rounded-md bg-[#181818] border border-border/80 max-w-md">
           <button
             type="button"
             onClick={() => setActiveTab("remote")}
-            className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "remote"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-[#EB1000] text-white shadow-sm"
+                : "text-muted-foreground hover:text-white"
             }`}
           >
-            Remote URL (Claude / SSE)
+            Remote URL (SSE)
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("cursor")}
-            className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "cursor"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-[#EB1000] text-white shadow-sm"
+                : "text-muted-foreground hover:text-white"
             }`}
           >
             Cursor IDE Setup
@@ -95,10 +95,10 @@ export function McpSetupCard({ className = "" }: { className?: string }) {
           <button
             type="button"
             onClick={() => setActiveTab("stdio")}
-            className={`flex-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
+            className={`flex-1 px-3 py-1.5 rounded text-xs font-semibold transition-all cursor-pointer ${
               activeTab === "stdio"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
+                ? "bg-[#EB1000] text-white shadow-sm"
+                : "text-muted-foreground hover:text-white"
             }`}
           >
             Local Python Stdio
@@ -115,16 +115,16 @@ export function McpSetupCard({ className = "" }: { className?: string }) {
               <button
                 type="button"
                 onClick={() => copyText("remote-config", remoteConfig)}
-                className="text-xs font-mono text-primary hover:underline cursor-pointer"
+                className="text-xs font-mono text-[#EB1000] hover:underline cursor-pointer"
               >
                 {copiedKey === "remote-config" ? "✓ Copied Config" : "Copy JSON"}
               </button>
             </div>
-            <pre className="p-4 rounded-xl bg-background/90 border border-border text-xs font-mono text-foreground overflow-x-auto">
+            <pre className="p-4 rounded-lg bg-[#141414] border border-[#2E2E2E] text-xs font-mono text-white overflow-x-auto">
               {remoteConfig}
             </pre>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="text-emerald-400 font-bold">✓</span>
+              <span className="text-[#27C281] font-bold">✓</span>
               <span>Zero local Python installation required. Runs directly against Cloudflare Workers Edge.</span>
             </div>
           </div>
@@ -137,30 +137,30 @@ export function McpSetupCard({ className = "" }: { className?: string }) {
               In <strong>Cursor Settings → Features → MCP → Add New MCP Server</strong>:
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-xl bg-background/80 border border-border">
+              <div className="p-3 rounded-lg bg-[#181818] border border-[#2E2E2E]">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Name</span>
-                <span className="text-xs font-mono font-semibold text-foreground">omniaudit-geo</span>
+                <span className="text-xs font-mono font-semibold text-white">omniaudit-geo</span>
               </div>
-              <div className="p-3 rounded-xl bg-background/80 border border-border">
+              <div className="p-3 rounded-lg bg-[#181818] border border-[#2E2E2E]">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Type</span>
-                <span className="text-xs font-mono font-semibold text-foreground">sse (or url)</span>
+                <span className="text-xs font-mono font-semibold text-white">sse (or url)</span>
               </div>
-              <div className="p-3 rounded-xl bg-background/80 border border-border relative">
+              <div className="p-3 rounded-lg bg-[#181818] border border-[#2E2E2E] relative">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground block mb-1">Server URL</span>
-                <span className="text-xs font-mono font-semibold text-primary truncate block">
+                <span className="text-xs font-mono font-semibold text-[#EB1000] truncate block">
                   https://omniaudit-geo.../api/mcp
                 </span>
                 <button
                   type="button"
                   onClick={() => copyText("cursor-url", mcpUrl)}
-                  className="mt-1 text-[11px] font-mono text-muted-foreground hover:text-foreground cursor-pointer"
+                  className="mt-1 text-[11px] font-mono text-muted-foreground hover:text-white cursor-pointer"
                 >
                   {copiedKey === "cursor-url" ? "✓ Copied!" : "Copy Full URL"}
                 </button>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Cursor will automatically connect and expose <code className="text-foreground font-mono">audit_website</code> directly into Agent Chat!
+              Cursor will automatically connect and expose <code className="text-white font-mono bg-[#222222] px-1 rounded">audit_website</code> directly into Agent Chat!
             </p>
           </div>
         )}
@@ -175,17 +175,17 @@ export function McpSetupCard({ className = "" }: { className?: string }) {
               <button
                 type="button"
                 onClick={() => copyText("stdio-config", stdioConfig)}
-                className="text-xs font-mono text-primary hover:underline cursor-pointer"
+                className="text-xs font-mono text-[#EB1000] hover:underline cursor-pointer"
               >
                 {copiedKey === "stdio-config" ? "✓ Copied Config" : "Copy JSON"}
               </button>
             </div>
-            <pre className="p-4 rounded-xl bg-background/90 border border-border text-xs font-mono text-foreground overflow-x-auto">
+            <pre className="p-4 rounded-lg bg-[#141414] border border-[#2E2E2E] text-xs font-mono text-white overflow-x-auto">
               {stdioConfig}
             </pre>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="text-primary font-bold">•</span>
-              <span>100% offline-compatible. Uses standard library without external dependencies.</span>
+              <span className="text-[#27C281] font-bold">✓</span>
+              <span>100% offline-compatible. Uses Python standard library without external dependencies.</span>
             </div>
           </div>
         )}

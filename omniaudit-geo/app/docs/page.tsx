@@ -143,7 +143,7 @@ export default function DocsPage() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Weighted linear composition predicting visitor orientation and conversion readiness post-referral:
             </p>
-            <div className="p-3 rounded-xl bg-background border border-border text-xs font-mono text-emerald-400 leading-relaxed">
+            <div className="p-3 rounded-xl bg-background border border-border text-xs font-mono text-[#27C281] leading-relaxed">
               CRS = (0.35 × Orient) + (0.25 × Intent) + (0.20 × Read) + (0.20 × Action)
             </div>
             <div className="space-y-2 text-xs text-muted-foreground">
