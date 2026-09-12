@@ -3,48 +3,53 @@ import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 
+import { siteConfig } from "@/config";
+
 export const viewport: Viewport = {
-  themeColor: "#141414",
+  themeColor: siteConfig.theme.charcoalBase,
   width: "device-width",
   initialScale: 1,
+  maximumScale: 5,
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: "Adobe OmniAudit — Enterprise Brand AI-Readiness & GEO Studio",
-    template: "%s | Adobe OmniAudit",
+    default: siteConfig.title,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    "Standard-compliant Agent Skill Marketplace (agentskills.io) built on Adobe Spectrum 2 design principles. Auditing website AI Discoverability (ACPI) and On-site Visitor Engagement (CRS) for Adobe University Hackathon 2026.",
-  keywords: [
-    "Adobe OmniAudit",
-    "OmniAudit-GEO",
-    "Generative Engine Optimization",
-    "GEO Audit",
-    "AEO",
-    "Adobe Spectrum 2",
-    "AI Discoverability",
-    "Adobe Hackathon 2026",
-    "agentskills.io",
-    "Claude Code",
-    "Perplexity SEO",
-    "Schema.org JSON-LD",
-  ],
-  authors: [
-    { name: "Shaswat Raj", url: "https://github.com/sh20raj" },
-    { name: "Prithvi", url: "https://github.com/chikolavosaki-sys" },
-  ],
+  description: siteConfig.description,
+  keywords: [...siteConfig.keywords],
+  authors: siteConfig.authors.map((a) => ({ name: a.name, url: a.github })),
+  creator: "Shaswat Raj & Prithvi",
+  publisher: "Adobe University Hackathon 2026 Team",
+  manifest: "/manifest.json",
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon.ico", sizes: "32x32" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: siteConfig.shortName,
+  },
   openGraph: {
-    title: "Adobe OmniAudit — Enterprise Brand AI-Readiness & GEO Studio",
-    description: "Standard-compliant Agent Skill Marketplace built with Adobe Spectrum 2 auditing website AI Discoverability and On-site Visitor Engagement.",
-    url: "https://omniaudit-geo.shraj.workers.dev",
-    siteName: "Adobe OmniAudit",
+    title: siteConfig.title,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    siteName: siteConfig.name,
     images: [
       {
-        url: "https://sh20raj.github.io/adobe-hackathon-2026/og-image.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Adobe OmniAudit - Brand AI Readiness Studio",
+        alt: "Adobe OmniAudit GEO — Autonomous Brand AI-Readiness Studio",
       },
     ],
     locale: "en_US",
@@ -52,9 +57,18 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Adobe OmniAudit — Enterprise Brand AI-Readiness & GEO Studio",
-    description: "Auditing website AI Discoverability (ACPI) and On-site Visitor Engagement (CRS) with Adobe Spectrum 2.",
+    title: siteConfig.title,
+    description: siteConfig.description,
+    images: ["/og-image.png"],
     creator: "@sh20raj",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 

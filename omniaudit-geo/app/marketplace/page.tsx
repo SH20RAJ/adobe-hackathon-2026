@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MARKETPLACE_SKILLS } from "@/lib/sample-data";
+import { MARKETPLACE_SKILLS } from "@/const";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
@@ -9,9 +9,20 @@ export const metadata: Metadata = {
   title: "Agent Skills Marketplace — agentskills.io Specification",
   description:
     "Explore the 6 modular skills registered in the OmniAudit-GEO marketplace. Zero external API dependencies, sub-50ms local execution, and native MCP support.",
+  alternates: {
+    canonical: "/marketplace",
+  },
   openGraph: {
-    title: "Agent Skills Marketplace — OmniAudit-GEO",
+    title: "Agent Skills Marketplace — Adobe OmniAudit GEO",
     description: "Modular, high-performance skills for AI Discoverability and Visitor Engagement.",
+    url: "/marketplace",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Agent Skills Marketplace — Adobe OmniAudit GEO",
+    description: "6 modular, standard-compliant agent skills with zero external dependencies.",
+    images: ["/og-image.png"],
   },
 };
 

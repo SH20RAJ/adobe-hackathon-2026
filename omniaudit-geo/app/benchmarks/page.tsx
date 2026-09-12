@@ -1,16 +1,27 @@
 import type { Metadata } from "next";
-import { BENCHMARK_FIXTURES } from "@/lib/sample-data";
+import { BENCHMARK_FIXTURES } from "@/const";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 export const metadata: Metadata = {
-  title: "14 Golden Benchmarks — Evaluation Harness & Calibration Lab",
+  title: "16 Golden Benchmarks — Evaluation Harness & Calibration Lab",
   description:
-    "Explore the 14 real-world benchmark fixtures evaluating ACPI and CRS scores across diverse architectures: SPAs, Next.js RSC, Schema.org graphs, and temporal decay.",
+    "Explore the 16 real-world benchmark fixtures evaluating ACPI and CRS scores across diverse architectures: SPAs, Next.js RSC, Schema.org graphs, and temporal decay.",
+  alternates: {
+    canonical: "/benchmarks",
+  },
   openGraph: {
-    title: "14 Golden Benchmarks — OmniAudit-GEO",
-    description: "100% pass rate across 14 canonical real-world test fixtures.",
+    title: "16 Golden Benchmarks — Adobe OmniAudit GEO",
+    description: "100% pass rate across 16 canonical real-world test fixtures.",
+    url: "/benchmarks",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "16 Golden Benchmarks — Adobe OmniAudit GEO",
+    description: "Deterministic evaluation harness with sub-second calibration runs.",
+    images: ["/og-image.png"],
   },
 };
 

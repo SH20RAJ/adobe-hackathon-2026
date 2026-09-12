@@ -127,7 +127,7 @@ adobe-hackathon-2026/
 ```bash
 python3 scripts/verify.py
 ```
-> Runs 117 unit and benchmark tests across 6 gates: Crawl/SSRF safety, Specialist unit tests, 16 Golden Benchmarks matrix, Schema integrity, Web unit tests, and Cloudflare Next.js production build in ~3 seconds.
+> Runs 122 unit and benchmark tests across 6 gates: Crawl/SSRF safety, Specialist unit tests, 16 Golden Benchmarks matrix, Schema integrity, Web unit tests, and Cloudflare Next.js production build in ~3 seconds.
 
 ### 2. Standalone 16 Golden Benchmarks Evaluation Harness:
 ```bash
@@ -135,20 +135,28 @@ python3 scripts/eval_benchmarks.py
 ```
 > Evaluates all 16 Golden Benchmarks with latency breakdown (<1ms/site), scoring precision, and beyond-defect proactive recommendations in ~20ms.
 
-### 3. Zero-Dependency Python Orchestrator:
+### 3. Model Context Protocol (MCP) Integration:
+- **Instant IDE Remote Connection (Cursor, Claude Desktop, Antigravity):**
+  ```text
+  URL: https://omniaudit-geo.shraj.workers.dev/api/mcp
+  ```
+- **Air-Gapped Python MCP Server (Stdio):**
+  ```bash
+  python3 skills/audit-orchestrator/scripts/mcp_server.py
+  # Self-test all 7 tools:
+  python3 skills/audit-orchestrator/scripts/mcp_server.py --test
+  ```
+
+### 4. Edge HTTP Audit API:
 ```bash
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
+curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://adobe.com"
 ```
 
-### 4. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
-```bash
-python3 skills/audit-orchestrator/scripts/mcp_server.py
-```
+### 5. Adobe Spectrum 2 Web Application & PWA:
+- **Live URL:** [omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)
+- **PWA Manifest:** [omniaudit-geo.shraj.workers.dev/manifest.json](https://omniaudit-geo.shraj.workers.dev/manifest.json)
+- **Design System:** Engineered adhering to authentic Adobe Spectrum 2 design principles (Adobe Red `#EB1000`, Charcoal surfaces `#141414`/`#1E1E1E`, Celery status accents `#27C281`, and crisp typography).
 
-### 5. Edge HTTP API:
-```bash
-curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://example.com"
-```
 
 ---
 

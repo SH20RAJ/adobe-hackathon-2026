@@ -1,9 +1,26 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { siteConfig } from "@/config";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { AuditConsole } from "@/components/audit/AuditConsole";
 import { McpSetupCard } from "@/components/mcp/McpSetupCard";
+
+export const metadata: Metadata = {
+  title: "Adobe OmniAudit GEO — Autonomous Brand AI-Readiness & Search Engine Optimization",
+  description:
+    "Autonomous Edge & Agentic Audit Engine for Generative Engine Optimization (GEO), Answer Engine Optimization (AEO), and On-site Retention (CRS). Built on the agentskills.io standard with native Model Context Protocol (MCP).",
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    title: "Adobe OmniAudit GEO — Autonomous Brand AI-Readiness & Search Optimization",
+    description: "Diagnose why generative AI assistants cite competitors instead of your enterprise brand.",
+    url: siteConfig.url,
+    images: ["/og-image.png"],
+  },
+};
 
 export default function HomePage() {
   return (

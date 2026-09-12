@@ -18,8 +18,8 @@ describe("Sample Audits & Benchmarks Data Integrity", () => {
     }
   });
 
-  it("contains exactly 14 golden benchmark fixtures matching test suite", () => {
-    expect(BENCHMARK_FIXTURES.length).toBe(14);
+  it("contains 16 golden benchmark fixtures matching test suite", () => {
+    expect(BENCHMARK_FIXTURES.length).toBe(16);
     
     BENCHMARK_FIXTURES.forEach((bm, idx) => {
       expect(bm.id).toBe(`BM-${String(idx + 1).padStart(2, "0")}`);
@@ -27,7 +27,7 @@ describe("Sample Audits & Benchmarks Data Integrity", () => {
       expect(bm.fixture_file).toMatch(/\.html$/);
       expect(bm.actual_acpi).toBeGreaterThanOrEqual(0);
       expect(bm.actual_acpi).toBeLessThanOrEqual(100);
-      expect(["pass", "optimal", "fail"]).toContain(bm.status);
+      expect(["pass", "passed", "optimal", "fail"]).toContain(bm.status);
     });
   });
 

@@ -28,6 +28,8 @@ EXCLUDED_DIR_NAMES = {
     ".pytest_cache",
     ".idea",
     ".vscode",
+    "dist",
+    ".wrangler",
 }
 
 EXCLUDED_EXTENSIONS = {

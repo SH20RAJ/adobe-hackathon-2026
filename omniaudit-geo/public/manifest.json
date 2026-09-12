@@ -1,0 +1,48 @@
+{
+  "name": "Adobe OmniAudit GEO",
+  "short_name": "OmniAudit",
+  "description": "Autonomous Brand AI-Readiness & Search Engine Optimization Platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141414",
+  "theme_color": "#141414",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "developer", "productivity", "utilities"],
+  "shortcuts": [
+    {
+      "name": "Audit Studio",
+      "url": "/audit",
+      "description": "Run autonomous Brand GEO audit"
+    },
+    {
+      "name": "Skills Marketplace",
+      "url": "/marketplace",
+      "description": "Explore 6 modular audit skills"
+    },
+    {
+      "name": "16 Golden Benchmarks",
+      "url": "/benchmarks",
+      "description": "View benchmark calibration lab"
+    }
+  ]
+}

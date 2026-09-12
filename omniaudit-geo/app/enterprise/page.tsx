@@ -8,9 +8,20 @@ export const metadata: Metadata = {
   title: "Enterprise GEO & Adobe Experience Cloud Integration",
   description:
     "Discover how OmniAudit-GEO empowers Fortune 500 brands and integrates natively with Adobe Experience Cloud (AEM, Target, Analytics, Firefly) to capture AI search traffic.",
+  alternates: {
+    canonical: "/enterprise",
+  },
   openGraph: {
-    title: "Enterprise GEO — OmniAudit-GEO",
+    title: "Enterprise GEO & Adobe Experience Cloud Integration",
     description: "Enterprise Brand AI-Readiness and Adobe Experience Cloud synergy.",
+    url: "/enterprise",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Enterprise GEO & Adobe Experience Cloud Integration",
+    description: "Empowering Fortune 500 brands to capture generative AI search traffic.",
+    images: ["/og-image.png"],
   },
 };
 

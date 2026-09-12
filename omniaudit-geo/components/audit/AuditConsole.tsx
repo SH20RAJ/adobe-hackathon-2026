@@ -17,9 +17,9 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
   const [copiedId, setCopiedId] = React.useState<string | null>(null);
 
   const sampleUrls = [
-    { label: "Adobe", url: "https://www.adobe.com", key: "adobe.com" },
+    { label: "Adobe", url: "https://adobe.com", key: "adobe.com" },
     { label: "Linear", url: "https://linear.app", key: "linear.app" },
-    { label: "Client SPA Gap", url: "https://spa-unrendered.sample", key: "react-spa-sample.internal" },
+    { label: "React SPA", url: "https://react-spa-sample.internal", key: "react-spa-sample.internal" },
   ];
 
   const handleSelectSample = (sample: typeof sampleUrls[0]) => {

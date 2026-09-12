@@ -7,9 +7,20 @@ export const metadata: Metadata = {
   title: "Documentation & MCP Integration — Developer Reference",
   description:
     "Comprehensive API, CLI, and Model Context Protocol (MCP) documentation for OmniAudit-GEO. Learn how to invoke the audit engine from Claude Code, Cursor, or your CI/CD pipeline.",
+  alternates: {
+    canonical: "/docs",
+  },
   openGraph: {
-    title: "Developer Documentation & MCP Integration — OmniAudit-GEO",
+    title: "Documentation & MCP Integration — Adobe OmniAudit GEO",
     description: "API, CLI, and Remote URL MCP integration guide for OmniAudit-GEO.",
+    url: "/docs",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Developer Documentation & MCP — Adobe OmniAudit GEO",
+    description: "Connect your AI agent via remote MCP URL or local Python CLI.",
+    images: ["/og-image.png"],
   },
 };
 

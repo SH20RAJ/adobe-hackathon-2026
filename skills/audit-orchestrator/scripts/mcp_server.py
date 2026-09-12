@@ -2,74 +2,192 @@
 """
 Model Context Protocol (MCP) Server Adapter for OmniAudit-GEO.
 Enables Claude Desktop, Cursor, and Antigravity agents to discover and invoke
-the Brand AI-Readiness Audit Marketplace natively via JSON-RPC.
+the Brand AI-Readiness Audit Marketplace natively via JSON-RPC 2.0.
+
+Exposes all 6 agentskills.io modular tools:
+1. audit_website (alias: audit_brand_ai_readiness) — Master Orchestrator
+2. inspect_robots_and_rendering — Skill 1 (Crawl & Render)
+3. inspect_structured_data — Skill 2 (Schema & Entity)
+4. inspect_aeo_quotability — Skill 3 (Quotability & Facts)
+5. inspect_freshness_trust — Skill 4 (Freshness & Corroboration)
+6. inspect_on_site_retention — Skill 5 (On-site Retention)
 """
 
 import sys
 import json
 import os
+import urllib.parse
 
-# Import orchestrator logic
-from audit_runner import run_full_audit
+# Ensure audit_runner is importable
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, SCRIPT_DIR)
 
-def handle_json_rpc(request_str):
+from audit_runner import (
+    run_full_audit,
+    fetch_url,
+    HTMLContentExtractor,
+    audit_crawl_render,
+    audit_structured_data,
+    audit_aeo_quotability,
+    audit_freshness_trust,
+    audit_on_site_engagement,
+    enrich_findings_actions,
+)
+
+MCP_TOOLS = [
+    {
+        "name": "audit_website",
+        "description": "Comprehensive master audit of website AI Discoverability (GEO/AEO, robots.txt, Schema.org JSON-LD, JS hydration) and On-site Retention (CRS).",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The target website URL to audit (e.g. 'https://adobe.com').",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "audit_brand_ai_readiness",
+        "description": "Alias for audit_website. Audits off-site AI Discoverability and on-site visitor retention.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "The target website URL to audit.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "inspect_robots_and_rendering",
+        "description": "Audits robots.txt AI bot directives (GPTBot, ClaudeBot, PerplexityBot) and detects client-side hydration gaps in JavaScript SPAs.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Target website URL.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "inspect_structured_data",
+        "description": "Validates Schema.org JSON-LD graph, verifying sameAs Wikidata and entity disambiguation to prevent LLM hallucinations.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Target website URL.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "inspect_aeo_quotability",
+        "description": "Evaluates sentence-level atomic fact density, interrogative Q&A headers, and tabular accessibility for answer engines.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Target website URL.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "inspect_freshness_trust",
+        "description": "Audits temporal freshness, copyright decay, author bylines, and citations for AI knowledge graph credibility.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Target website URL.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+    {
+        "name": "inspect_on_site_retention",
+        "description": "Evaluates hero section orientation, H1 conciseness, Flesch-Kincaid reading ease, CTA contrast, and bounce risk.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Target website URL.",
+                }
+            },
+            "required": ["url"],
+        },
+    },
+]
+
+def execute_tool(name: str, arguments: dict) -> dict:
+    url = arguments.get("url", "https://adobe.com")
+    if not url.startswith("http://") and not url.startswith("https://"):
+        url = "https://" + url
+
+    if name in ("audit_website", "audit_brand_ai_readiness"):
+        return run_full_audit(url)
+
+    # Sub-audit execution
+    fetch_result = fetch_url(url)
+    if fetch_result.get("error"):
+        return {
+            "site": urllib.parse.urlparse(url).netloc or url,
+            "tool": name,
+            "error": fetch_result["error"],
+            "findings": [],
+        }
+
+    html = fetch_result.get("html", "")
+    headers = fetch_result.get("headers", {})
+    extractor = HTMLContentExtractor()
+    extractor.feed(html)
+
+    findings = []
+    if name == "inspect_robots_and_rendering":
+        findings = audit_crawl_render(url, html, headers)
+    elif name == "inspect_structured_data":
+        findings = audit_structured_data(url, extractor)
+    elif name == "inspect_aeo_quotability":
+        findings = audit_aeo_quotability(extractor)
+    elif name == "inspect_freshness_trust":
+        findings = audit_freshness_trust(extractor, html, url)
+    elif name == "inspect_on_site_retention":
+        findings = audit_on_site_engagement(extractor)
+    else:
+        raise ValueError(f"Unknown tool: {name}")
+
+    enrich_findings_actions(findings)
+    return {
+        "site": urllib.parse.urlparse(url).netloc or url,
+        "tool": name,
+        "total_findings": len(findings),
+        "findings": findings,
+    }
+
+def handle_json_rpc(request_str: str) -> dict:
     try:
         req = json.loads(request_str)
         method = req.get("method")
         req_id = req.get("id")
 
-        if method == "tools/list":
-            return {
-                "jsonrpc": "2.0",
-                "id": req_id,
-                "result": {
-                    "tools": [
-                        {
-                            "name": "audit_brand_ai_readiness",
-                            "description": "Comprehensive audit of website AI Discoverability (GEO/AEO, robots.txt, Schema.org JSON-LD, JS hydration) and On-site Visitor Engagement.",
-                            "inputSchema": {
-                                "type": "object",
-                                "properties": {
-                                    "url": {
-                                        "type": "string",
-                                        "description": "The target website URL to audit (e.g. 'https://example.com')."
-                                    }
-                                },
-                                "required": ["url"]
-                            }
-                        }
-                    ]
-                }
-            }
-
-        elif method == "tools/call":
-            params = req.get("params", {})
-            name = params.get("name")
-            arguments = params.get("arguments", {})
-
-            if name == "audit_brand_ai_readiness":
-                target_url = arguments.get("url", "https://example.com")
-                report = run_full_audit(target_url)
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "result": {
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": json.dumps(report, indent=2)
-                            }
-                        ]
-                    }
-                }
-            else:
-                return {
-                    "jsonrpc": "2.0",
-                    "id": req_id,
-                    "error": {"code": -32601, "message": f"Tool '{name}' not found"}
-                }
-
-        elif method == "initialize":
+        if method == "initialize":
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,
@@ -78,27 +196,82 @@ def handle_json_rpc(request_str):
                     "capabilities": {"tools": {}},
                     "serverInfo": {
                         "name": "omniaudit-geo-mcp-server",
-                        "version": "1.0.0"
-                    }
+                        "version": "1.0.0",
+                    },
+                },
+            }
+
+        elif method == "tools/list":
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "tools": MCP_TOOLS,
+                },
+            }
+
+        elif method == "tools/call":
+            params = req.get("params", {})
+            name = params.get("name")
+            arguments = params.get("arguments", {})
+
+            matched_tool = next((t for t in MCP_TOOLS if t["name"] == name), None)
+            if not matched_tool:
+                return {
+                    "jsonrpc": "2.0",
+                    "id": req_id,
+                    "error": {"code": -32601, "message": f"Tool '{name}' not found"},
                 }
+
+            result_data = execute_tool(name, arguments)
+            return {
+                "jsonrpc": "2.0",
+                "id": req_id,
+                "result": {
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": json.dumps(result_data, indent=2),
+                        }
+                    ]
+                },
             }
 
         else:
             return {
                 "jsonrpc": "2.0",
                 "id": req_id,
-                "error": {"code": -32601, "message": f"Method '{method}' not implemented"}
+                "error": {"code": -32601, "message": f"Method '{method}' not implemented"},
             }
 
     except Exception as e:
         return {
             "jsonrpc": "2.0",
             "id": None,
-            "error": {"code": -32700, "message": str(e)}
+            "error": {"code": -32700, "message": str(e)},
         }
 
+def run_self_test():
+    """Runs a self-test of the MCP server methods."""
+    print("Testing MCP initialize...")
+    init_res = handle_json_rpc(json.dumps({"jsonrpc": "2.0", "id": 1, "method": "initialize"}))
+    assert init_res["result"]["serverInfo"]["name"] == "omniaudit-geo-mcp-server", "Initialize failed"
+    print("✓ Initialize passed")
+
+    print("Testing MCP tools/list...")
+    tools_res = handle_json_rpc(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}))
+    tools = tools_res["result"]["tools"]
+    assert len(tools) == 7, f"Expected 7 tools, got {len(tools)}"
+    tool_names = [t["name"] for t in tools]
+    print(f"✓ tools/list passed ({len(tools)} tools: {', '.join(tool_names)})")
+
+    print("All MCP self-tests passed successfully!")
+
 def main():
-    """Reads JSON-RPC messages line by line from stdin and responds on stdout."""
+    if len(sys.argv) > 1 and sys.argv[1] == "--test":
+        run_self_test()
+        sys.exit(0)
+
     for line in sys.stdin:
         line = line.strip()
         if not line:

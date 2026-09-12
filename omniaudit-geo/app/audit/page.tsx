@@ -6,9 +6,20 @@ export const metadata: Metadata = {
   title: "Audit Studio — Autonomous GEO & AEO Diagnostics",
   description:
     "Deep-dive inspection studio for analyzing website AI Discoverability (ACPI) and On-site Retention (CRS). Real-time evaluation of robots.txt, Schema.org, hydration gaps, and atomic fact quotability.",
+  alternates: {
+    canonical: "/audit",
+  },
   openGraph: {
-    title: "Audit Studio — OmniAudit-GEO",
+    title: "Audit Studio — Adobe OmniAudit GEO",
     description: "Run an autonomous GEO & AEO audit on any web property in seconds.",
+    url: "/audit",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Audit Studio — Adobe OmniAudit GEO",
+    description: "Real-time autonomous audit of AI Discoverability and Visitor Engagement.",
+    images: ["/og-image.png"],
   },
 };
 
