@@ -16,6 +16,11 @@ import urllib.parse
 from datetime import datetime, timezone
 from html.parser import HTMLParser
 
+ORCHESTRATOR_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+if ORCHESTRATOR_SCRIPT_DIR not in sys.path:
+    sys.path.insert(0, ORCHESTRATOR_SCRIPT_DIR)
+from scoring import compute_scores
+
 CRAWL_SCRIPT_DIR = os.path.abspath(
     os.path.join(os.path.dirname(__file__), "..", "..", "crawl-render-audit", "scripts")
 )
@@ -1147,19 +1152,11 @@ def enrich_findings_actions(findings):
             )
             act["proactive_enhancement"] = enhancement
 
-def calculate_metrics(findings, parsed_content):
-    # Calculate ACPI (AI Citation Probability Index)
-    crit_count = sum(1 for f in findings if f["severity"] == "critical")
-    high_count = sum(1 for f in findings if f["severity"] == "high")
-    med_count = sum(1 for f in findings if f["severity"] == "medium")
-    
-    deductions = (crit_count * 30) + (high_count * 15) + (med_count * 5)
-    acpi_score = max(5.0, min(100.0, 100.0 - deductions))
-    crs_score = max(10.0, min(100.0, 100.0 - ((high_count * 20) + (med_count * 10))))
-    
+def calculate_metrics(findings, parsed_content=None):
+    score_data = compute_scores(findings)
     return {
-        "acpi_score": round(acpi_score, 1),
-        "crs_score": round(crs_score, 1)
+        "acpi_score": score_data["acpi_score"],
+        "crs_score": score_data["crs_score"]
     }
 
 def run_full_audit(target_url):
