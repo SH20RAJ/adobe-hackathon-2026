@@ -98,6 +98,6 @@ We follow the [Conventional Commits](https://www.conventionalcommits.org/) speci
 ### PR Submission Checklist
 - [ ] Code follows project coding style and architectural invariants.
 - [ ] New tests added for any new feature or heuristic.
-- [ ] `python3 scripts/verify.py --ci` passes with 100% across all 6 gates.
+- [ ] `python3 scripts/verify.py --ci` passes all 6 verification gates.
 - [ ] No secrets, tokens, or credential files included in the diff.
 - [ ] Commit message conforms to Conventional Commits.

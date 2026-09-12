@@ -1,15 +1,15 @@
 {
   "status": "passed",
-  "timestamp": "2026-09-12T19:28:27Z",
-  "total_elapsed_s": 2.25,
+  "timestamp": "2026-09-12T19:42:27Z",
+  "total_elapsed_s": 2.15,
   "ci_mode": true,
   "tests": {
-    "total": 165,
-    "passed": 165,
+    "total": 167,
+    "passed": 167,
     "failed": 0,
     "python_tests": {
-      "total": 165,
-      "passed": 165,
+      "total": 167,
+      "passed": 167,
       "failed": 0
     }
   },
@@ -20,7 +20,7 @@
       "passed": 61,
       "failed": 0,
       "skipped": 0,
-      "elapsed_s": 0.017
+      "elapsed_s": 0.018
     },
     "gate2_core_engine": {
       "success": true,
@@ -28,7 +28,7 @@
       "passed": 95,
       "failed": 0,
       "skipped": 0,
-      "elapsed_s": 0.019
+      "elapsed_s": 0.018
     },
     "gate3_benchmarks": {
       "status": "passed",
@@ -41,8 +41,8 @@
       "precision_pct": 100.0,
       "recall_pct": 100.0,
       "f1_score": 100.0,
-      "avg_latency_ms": 0.47,
-      "total_time_ms": 7.48,
+      "avg_latency_ms": 0.46,
+      "total_time_ms": 7.44,
       "schema_failures": 0,
       "fixtures": [
         {
@@ -52,7 +52,7 @@
           "acpi_score": 84.9,
           "crs_score": 93.0,
           "schema_valid": true,
-          "latency_ms": 0.35,
+          "latency_ms": 0.38,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -64,7 +64,7 @@
           "acpi_score": 79.3,
           "crs_score": 83.5,
           "schema_valid": true,
-          "latency_ms": 0.35,
+          "latency_ms": 0.34,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -76,7 +76,7 @@
           "acpi_score": 84.9,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.35,
+          "latency_ms": 0.36,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -88,7 +88,7 @@
           "acpi_score": 89.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.37,
+          "latency_ms": 0.38,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -124,7 +124,7 @@
           "acpi_score": 96.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 1.81,
+          "latency_ms": 1.67,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -148,7 +148,7 @@
           "acpi_score": 88.2,
           "crs_score": 88.7,
           "schema_valid": true,
-          "latency_ms": 0.51,
+          "latency_ms": 0.53,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -196,7 +196,7 @@
           "acpi_score": 89.4,
           "crs_score": 95.5,
           "schema_valid": true,
-          "latency_ms": 0.4,
+          "latency_ms": 0.41,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -232,7 +232,7 @@
           "acpi_score": 87.8,
           "crs_score": 88.9,
           "schema_valid": true,
-          "latency_ms": 0.46,
+          "latency_ms": 0.47,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -247,11 +247,11 @@
       "status": "passed",
       "tests": {
         "status": "passed",
-        "passed": 9,
+        "passed": 11,
         "failed": 0,
-        "total": 9,
+        "total": 11,
         "skipped": 0,
-        "elapsed_s": 0.048
+        "elapsed_s": 0.049
       },
       "engine": {
         "status": "passed",

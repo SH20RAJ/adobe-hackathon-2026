@@ -44,6 +44,7 @@ from mcp_server import handle_json_rpc, MCP_TOOLS
 from schema_validator import validate_report
 from eval_benchmarks import run_evals
 from seo_config import SEO_HEAD_HTML, NOSCRIPT_SEMANTIC_BODY, SEO_TITLE, SEO_DESCRIPTION
+from audit_guard import check_rate_limit, execute_guarded_audit, execute_guarded_mcp
 
 app = FastAPI(
     title="OmniAudit-GEO — Brand AI-Readiness & GEO Engine",
@@ -53,44 +54,47 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
-# CORS configuration
+# Hardened, environment-configurable CORS policy
+allowed_origins_env = os.environ.get("OMNIAUDIT_ALLOWED_ORIGINS", "").strip()
+if allowed_origins_env:
+    allowed_origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+else:
+    allowed_origins = [
+        "https://omniaudit-geo.onrender.com",
+        "http://localhost:8000",
+        "http://localhost:7860",
+        "http://127.0.0.1:8000",
+        "http://127.0.0.1:7860",
+    ]
+
+is_wildcard = "*" in allowed_origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allowed_origins,
+    allow_credentials=not is_wildcard,  # Standard CORS compliance: credentials cannot be true with wildcard
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
 
 PUBLIC_DIR = Path(__file__).resolve().parent / "public"
 
-# In-memory rate limiting per client IP (60 requests per minute)
-RATE_LIMIT_WINDOW_SECONDS = 60
-MAX_REQUESTS_PER_WINDOW = 60
-_rate_limit_store = {}
 
 @app.middleware("http")
 async def security_and_rate_limit_middleware(request: Request, call_next):
-    # 1. Rate Limiter for /api/ routes
+    # 1. Unified Rate Limiter for /api/ routes
     if request.url.path.startswith("/api/"):
         client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
-        now = time.time()
-        record = _rate_limit_store.get(client_ip)
-
-        if not record or now > record["reset_time"]:
-            _rate_limit_store[client_ip] = {"count": 1, "reset_time": now + RATE_LIMIT_WINDOW_SECONDS}
-        else:
-            if record["count"] >= MAX_REQUESTS_PER_WINDOW:
-                return JSONResponse(
-                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                    content={
-                        "error": "Rate Limit Exceeded",
-                        "error_code": "rate_limit_exceeded",
-                        "message": f"Maximum rate of {MAX_REQUESTS_PER_WINDOW} requests per minute exceeded.",
-                    },
-                    headers={"Retry-After": str(int(record["reset_time"] - now))},
-                )
-            record["count"] += 1
+        allowed, retry_after = check_rate_limit(client_ip)
+        if not allowed:
+            return JSONResponse(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                content={
+                    "error": "Rate Limit Exceeded",
+                    "error_code": "rate_limit_exceeded",
+                    "message": "Maximum rate limit of 60 requests per minute exceeded.",
+                },
+                headers={"Retry-After": str(retry_after or 60)},
+            )
 
     # 2. Process Request
     response: Response = await call_next(request)
@@ -104,26 +108,6 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
-
-    # 4. SEO, OpenGraph & Schema.org JSON-LD Enrichment for HTML views
-    if "text/html" in response.headers.get("content-type", ""):
-        try:
-            body_chunks = [chunk async for chunk in response.body_iterator]
-            body_bytes = b"".join(body_chunks)
-            body_str = body_bytes.decode("utf-8", errors="ignore")
-            if "<head>" in body_str and "<!-- OpenGraph Metadata -->" not in body_str:
-                body_str = body_str.replace("<head>", f"<head>\n{SEO_HEAD_HTML}\n", 1)
-            if "<body" in body_str and "<noscript>" not in body_str:
-                idx = body_str.find("<body")
-                close_idx = body_str.find(">", idx)
-                if close_idx != -1:
-                    body_str = body_str[:close_idx+1] + f"\n{NOSCRIPT_SEMANTIC_BODY}\n" + body_str[close_idx+1:]
-
-            headers = dict(response.headers)
-            headers.pop("content-length", None)
-            return HTMLResponse(content=body_str, status_code=response.status_code, headers=headers)
-        except Exception:
-            pass
 
     return response
 
@@ -143,9 +127,10 @@ async def health_check():
     }
 
 @app.get("/api/audit")
-async def audit_endpoint(url: str = Query(..., description="Target website URL to audit (e.g. 'https://adobe.com')")):
+async def audit_endpoint(request: Request, url: str = Query(..., description="Target website URL to audit (e.g. 'https://adobe.com')")):
     """
     Executes the canonical brand AI-readiness and visitor engagement audit.
+    Guarded against abuse, concurrency spikes, SSRF, and timeouts.
     Conforms strictly to skills/audit-orchestrator/references/audit_schema.json.
     """
     if not url or not url.strip():
@@ -154,18 +139,18 @@ async def audit_endpoint(url: str = Query(..., description="Target website URL t
             detail={"error": "Bad Request", "error_code": "missing_url", "message": "Query parameter 'url' is required."},
         )
 
-    # Validate target against SSRF, loopback, private ranges, credentials, and non-web ports
-    try:
-        clean_url = normalize_url(url.strip())
-    except FetchValidationError as exc:
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    start_time = time.perf_counter()
+    report = execute_guarded_audit(url, client_ip=client_ip)
+    elapsed = time.perf_counter() - start_time
+
+    if report.get("error"):
+        status_code = report.get("status_code", status.HTTP_400_BAD_REQUEST)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "Target Validation Error", "error_code": "ssrf_blocked", "message": str(exc)},
+            status_code=status_code,
+            detail=report,
         )
 
-    start_time = time.perf_counter()
-    report = run_full_audit(clean_url)
-    elapsed = time.perf_counter() - start_time
     report["latency"] = f"{elapsed:.2f}s"
 
     # Recursive schema validation assertion
@@ -264,19 +249,21 @@ async def mcp_info_endpoint():
 async def mcp_rpc_endpoint(request: Request):
     """
     JSON-RPC 2.0 handler for MCP tools/list, tools/call, and initialize.
-    Directly invokes skills/audit-orchestrator/scripts/mcp_server.py.
+    Guarded against abuse, concurrency spikes, SSRF, and timeouts.
     """
     try:
         raw_body = await request.body()
         body_str = raw_body.decode("utf-8")
-        rpc_response = handle_json_rpc(body_str)
-        return rpc_response
+        req_obj = json.loads(body_str) if isinstance(body_str, str) else body_str
     except Exception as exc:
         return {
             "jsonrpc": "2.0",
             "id": None,
             "error": {"code": -32700, "message": f"Parse error: {str(exc)}"},
         }
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    rpc_response = execute_guarded_mcp(req_obj, client_ip=client_ip)
+    return rpc_response
 
 @app.get("/api/benchmarks")
 async def benchmarks_endpoint():

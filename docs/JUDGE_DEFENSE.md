@@ -23,9 +23,9 @@ The web discovery landscape has experienced an irreversible structural shift:
 
 ### 3. Why deterministic AST/DOM analysis instead of an LLM?
 * **Zero Hallucination:** Deterministic heuristics never invent findings or directives. If GPTBot is blocked, the exact `Disallow: /` line in robots.txt is cited.
-* **100% Reproducibility:** Auditing the same URL or DOM fixture yields identical finding IDs, scores, and evidence every single time.
-* **Extreme Speed & Cost:** Analyzing a DOM AST takes `<1ms` with zero token cost or external API latency, enabling continuous pre-commit CI/CD execution.
-* **Offline Resiliency:** The Python engine relies strictly on the standard library (`html.parser`, `urllib`, `re`, `json`) with zero pip dependencies.
+* **Deterministic Reproducibility:** Auditing the same URL or DOM fixture yields identical finding IDs, scores, and evidence every single time.
+* **Extreme Speed & Cost:** Analyzing a local DOM AST takes `<1ms` in benchmark conditions with zero token cost or external API latency, enabling continuous pre-commit CI/CD execution. (Real-world site audits depend on remote network response times).
+* **Offline Resiliency:** The Python engine relies strictly on the standard library (`html.parser`, `urllib`, `re`, `json`) with zero external network dependencies for offline fixture execution.
 
 ---
 
@@ -111,7 +111,20 @@ Scores are bounded between `0.0` and `100.0` with guaranteed baseline floors:
 
 ---
 
-### 14. What would you add in Round 4?
+### 14. What are the key business outcomes?
+1. **AI Search Inclusion:** Guarantees bots can crawl, extract schema, and quote facts into generative answers.
+2. **Post-Click Retention:** Eliminates referral bounce by matching user intent above the fold.
+3. **Continuous Enforcement:** Zero-cost CI/CD regression gating prevents regressions before production deployment.
+
+---
+
+### 15. How should the 16/16 golden benchmark results be interpreted?
+* **Curated Regression Specification:** The 16 golden fixtures constitute a rigorous ground-truth regression test matrix across all core failure modes (robots blocking, SPA hydration gaps, JSON-LD syntax errors, sameAs disambiguation, AEO atomic fact density, and visitor retention).
+* **Regression Guard, Not Statistical Generalization:** The 100% precision and recall metrics reflect complete ground-truth alignment against this labeled regression matrix. It is designed as an architectural regression guard to catch regressions during CI/CD, rather than an unverified statistical claim across the open web.
+
+---
+
+### 16. What would you add in Round 4?
 1. **Multi-page Sitemap Crawler:** Automated depth-2 BFS crawl following `sitemap.xml` to audit an entire enterprise domain's surface.
 2. **Visual Contrast & Viewport Rendering:** Headless browser integration for measuring actual pixel contrast and responsive hero fold geometry on mobile vs desktop.
 3. **Synthetic Perplexity/SearchGPT Benchmark Probe:** Provider API probes to compare predicted ACPI scores against actual model citation frequencies in real-time.

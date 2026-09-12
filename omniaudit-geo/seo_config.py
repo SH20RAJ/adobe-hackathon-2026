@@ -6,7 +6,7 @@ Answer Engine Optimization (AEO), Schema.org JSON-LD graphs, OpenGraph, and Twit
 """
 
 SEO_TITLE = "OmniAudit-GEO — Enterprise Brand AI-Readiness & GEO Engine"
-SEO_DESCRIPTION = "Diagnose website AI discoverability barriers (robots.txt AI bot policies, hydration gaps, Schema.org entity graphs, AEO quotability) and on-site visitor retention in sub-seconds."
+SEO_DESCRIPTION = "Diagnose website AI discoverability barriers (robots.txt AI bot policies, hydration gaps, Schema.org entity graphs, AEO quotability) and on-site visitor retention. Local deterministic AST analysis executes in sub-millisecond benchmark conditions; real website audit latency depends on network and target response time."
 SEO_CANONICAL_URL = "https://omniaudit-geo.onrender.com/"
 SEO_OG_IMAGE = "https://omniaudit-geo.onrender.com/og-image.png"
 
@@ -79,7 +79,7 @@ SCHEMA_JSON_LD = """{
           "name": "What is the AI Citation Probability Index (ACPI)?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "ACPI is an empirical 0-100 metric measuring crawlability, JavaScript hydration parity, Schema.org entity disambiguation, atomic fact density, and trust signals for AI search engines like ChatGPT, Perplexity, and Claude."
+            "text": "ACPI is a deterministic, heuristic-weighted 0-100 score measuring crawlability, JavaScript hydration parity, Schema.org entity disambiguation, atomic fact density, and trust signals for AI search engines like ChatGPT, Perplexity, and Claude."
           }
         },
         {
@@ -87,7 +87,7 @@ SCHEMA_JSON_LD = """{
           "name": "What is the Cognitive Retention Score (CRS)?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "CRS is an empirical 0-100 metric measuring on-site visitor orientation, above-the-fold value proposition clarity, reading ease, and bounce resistance for visitors arriving from AI search referrals."
+            "text": "CRS is a deterministic, heuristic-weighted 0-100 score measuring on-site visitor orientation, above-the-fold value proposition clarity, reading ease, and bounce resistance for visitors arriving from AI search referrals."
           }
         }
       ]

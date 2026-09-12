@@ -9,7 +9,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Tuple, List, Dict, Any
+from typing import Tuple, List, Dict, Any, Optional
 
 import gradio as gr
 
@@ -39,6 +39,11 @@ from audit_runner import (
 from safe_fetch import normalize_url, FetchValidationError
 from eval_benchmarks import run_evals
 from mcp_server import handle_json_rpc, MCP_TOOLS
+from audit_guard import (
+    execute_guarded_audit,
+    execute_guarded_specialist_audit,
+    execute_guarded_mcp,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -186,43 +191,42 @@ def render_proactive_recs(recommendations: List[Dict[str, Any]]) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Backend Handlers using the exact Canonical Skills Scripts
+# Backend Handlers using the Guarded Audit Service Execution Layer
 # ---------------------------------------------------------------------------
 
-def perform_full_audit(url: str) -> Tuple[str, str, str, str, Dict[str, Any]]:
-    """Executes the master audit orchestrator on the target URL."""
-    if not url or not url.strip():
-        return (
-            "<div style='color:#ef4444; font-weight:600; padding:12px; background:rgba(239,68,68,0.1); border-radius:8px;'>Error: Please enter a valid website URL.</div>",
-            "",
-            "<div style='color:#94a3b8;'>Run an audit to view diagnostic findings.</div>",
-            "No recommendations available.",
-            {},
-        )
-
+def _get_client_ip(request: Optional[gr.Request]) -> str:
+    """Extracts client IP from incoming Gradio request context."""
+    if not request:
+        return "local"
     try:
-        clean_url = normalize_url(url.strip())
-    except FetchValidationError as exc:
-        return (
-            f"<div style='color:#ef4444; font-weight:600; padding:12px; border:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.08); border-radius:8px;'>🛡️ SSRF Security Intercept: {exc}</div>",
-            "",
-            "<div style='color:#ef4444;'>Audit blocked by anti-SSRF defense.</div>",
-            "Audit blocked by SSRF defense.",
-            {"error": str(exc), "error_code": "ssrf_blocked"},
-        )
+        fwd = request.headers.get("x-forwarded-for", "")
+        if fwd:
+            return fwd.split(",")[0].strip()
+        if hasattr(request, "client") and request.client and hasattr(request.client, "host"):
+            return str(request.client.host)
+    except Exception:
+        pass
+    return "local"
 
+
+def perform_full_audit(url: str, request: Optional[gr.Request] = None) -> Tuple[str, str, str, str, Dict[str, Any]]:
+    """Executes the master audit orchestrator on the target URL via the guarded execution service."""
+    client_ip = _get_client_ip(request)
     start_time = time.perf_counter()
-    try:
-        report = run_full_audit(clean_url)
-    except Exception as exc:
-        return (
-            f"<div style='color:#ef4444;'>Audit Execution Error: {exc}</div>",
-            "",
-            f"<div style='color:#ef4444;'>Error: {exc}</div>",
-            "Error executing audit.",
-            {"error": str(exc)},
-        )
+    report = execute_guarded_audit(url, client_ip=client_ip)
     elapsed = time.perf_counter() - start_time
+
+    if report.get("error"):
+        err_msg = report.get("error", "Audit failed")
+        err_code = report.get("error_code", "error")
+        return (
+            f"<div style='color:#ef4444; font-weight:600; padding:14px; background:rgba(239,68,68,0.1); border-radius:8px; border:1px solid rgba(239,68,68,0.25);'>"
+            f"🛡️ Security &amp; Execution Guard Notice ({err_code}): {err_msg}</div>",
+            "",
+            f"<div style='color:#ef4444;'>Audit execution halted by guard layer: {err_msg}</div>",
+            "No recommendations generated.",
+            report,
+        )
 
     acpi = report.get("metrics", {}).get("acpi_score", 0.0)
     crs = report.get("metrics", {}).get("crs_score", 0.0)
@@ -232,6 +236,7 @@ def perform_full_audit(url: str) -> Tuple[str, str, str, str, Dict[str, Any]]:
     high = summary.get("high", 0)
     med = summary.get("medium", 0)
     low = summary.get("low", 0)
+    clean_url = report.get("site", url)
 
     # Status Cards HTML
     metrics_html = f"""
@@ -265,62 +270,21 @@ def perform_full_audit(url: str) -> Tuple[str, str, str, str, Dict[str, Any]]:
     return metrics_html, summary_text, findings_html, recs_html, report
 
 
-def perform_specialist_audit(skill_name: str, url: str) -> Tuple[str, str, Dict[str, Any]]:
-    """Invokes individual specialist audit skills directly."""
-    if not url or not url.strip():
-        return "Please enter a valid URL.", "<div style='color:#ef4444;'>No URL provided.</div>", {}
-
-    try:
-        clean_url = normalize_url(url.strip())
-    except FetchValidationError as exc:
-        return f"Target Validation Error: {exc}", f"<div style='color:#ef4444;'>SSRF Blocked: {exc}</div>", {"error": str(exc)}
-
-    fetch_res = fetch_url(clean_url)
-    if fetch_res.get("error"):
-        return f"Fetch Error: {fetch_res['error']}", f"<div style='color:#ef4444;'>Fetch Failed: {fetch_res['error']}</div>", fetch_res
-
-    html = fetch_res.get("html", "")
-    headers = fetch_res.get("headers", {})
-
-    if "Crawl" in skill_name:
-        findings = audit_crawl_render(clean_url, html, headers)
-        desc = "Audited robots.txt crawler permissions across 7 major AI user-agents and checked client-side SPA hydration gaps."
-    elif "Structured" in skill_name:
-        extractor = HTMLContentExtractor()
-        extractor.feed(html)
-        findings = audit_structured_data(clean_url, extractor)
-        desc = "Extracted and validated Schema.org JSON-LD microdata and authoritative sameAs entity disambiguation."
-    elif "Quotability" in skill_name:
-        extractor = HTMLContentExtractor()
-        extractor.feed(html)
-        findings = audit_aeo_quotability(extractor)
-        desc = "Evaluated sentence-level atomic fact density, interrogative heading-to-answer structures, and non-text tabular assets."
-    elif "Freshness" in skill_name:
-        extractor = HTMLContentExtractor()
-        extractor.feed(html)
-        findings = audit_freshness_trust(extractor, html, clean_url)
-        desc = "Audited publication timestamps vs. current year 2026, copyright recency, and author bylines/trust corroboration signals."
-    else:  # On-site
-        extractor = HTMLContentExtractor()
-        extractor.feed(html)
-        findings = audit_on_site_engagement(extractor)
-        desc = "Audited above-the-fold hero value prop clarity, Flesch-Kincaid & ARI readability grades, and CTA specificity."
-
-    enrich_findings_actions(findings)
+def perform_specialist_audit(skill_name: str, url: str, request: Optional[gr.Request] = None) -> Tuple[str, str, Dict[str, Any]]:
+    """Invokes individual specialist audit skills directly via the guarded execution layer."""
+    client_ip = _get_client_ip(request)
+    summary_md, findings, meta = execute_guarded_specialist_audit(skill_name, url, client_ip=client_ip)
+    if meta.get("error"):
+        err_msg = meta.get("error")
+        return summary_md, f"<div style='color:#ef4444; padding:12px; background:rgba(239,68,68,0.1); border-radius:6px;'>🛡️ Guard Notice: {err_msg}</div>", meta
 
     findings_html = render_findings_html(findings)
-    result_meta = {
-        "site": clean_url,
-        "skill": skill_name,
-        "total_findings": len(findings),
-        "findings": findings,
-    }
-    summary_md = f"### {skill_name}\n**Diagnostic Scope:** {desc}\n\n**Total Diagnostic Findings:** `{len(findings)}`"
-    return summary_md, findings_html, result_meta
+    return summary_md, findings_html, meta
 
 
-def perform_live_mcp_call(tool_name: str, target_url: str) -> Tuple[str, str]:
-    """Interactive Live MCP Sandbox Tester."""
+def perform_live_mcp_call(tool_name: str, target_url: str, request: Optional[gr.Request] = None) -> Tuple[str, str]:
+    """Interactive Live MCP Sandbox Tester via the guarded execution layer."""
+    client_ip = _get_client_ip(request)
     if not target_url or not target_url.strip():
         target_url = "https://example.com"
 
@@ -336,12 +300,8 @@ def perform_live_mcp_call(tool_name: str, target_url: str) -> Tuple[str, str]:
         }
     }
     req_json = json.dumps(req_obj, indent=2)
-
-    try:
-        res_obj = handle_json_rpc(req_obj)
-        res_json = json.dumps(res_obj, indent=2)
-    except Exception as exc:
-        res_json = json.dumps({"jsonrpc": "2.0", "id": 1, "error": {"code": -32603, "message": str(exc)}}, indent=2)
+    res_obj = execute_guarded_mcp(req_obj, client_ip=client_ip)
+    res_json = json.dumps(res_obj, indent=2)
 
     return req_json, res_json
 
@@ -359,24 +319,24 @@ def load_benchmarks_data() -> Tuple[str, List[List[str]]]:
     summary_html = f"""
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px;">
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px; text-align: center;">
-            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">BENCHMARKS PASSED</div>
+            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">LABELED FIXTURES</div>
             <div style="font-size: 2rem; font-weight: 800; color: #10b981; margin: 4px 0;">{passed}/{total}</div>
-            <div style="font-size: 0.72rem; color: #10b981;">100% Ground Truth Match</div>
+            <div style="font-size: 0.72rem; color: #10b981;">Regression Suite Pass</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px; text-align: center;">
-            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">PRECISION</div>
+            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">PRECISION (SUITE)</div>
             <div style="font-size: 2rem; font-weight: 800; color: #3b82f6; margin: 4px 0;">{precision:.1f}%</div>
             <div style="font-size: 0.72rem; color: #3b82f6;">Zero False Positives</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px; text-align: center;">
-            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">RECALL</div>
+            <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">RECALL (SUITE)</div>
             <div style="font-size: 2rem; font-weight: 800; color: #8b5cf6; margin: 4px 0;">{recall:.1f}%</div>
             <div style="font-size: 0.72rem; color: #8b5cf6;">Zero False Negatives</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px; text-align: center;">
             <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">F1-SCORE</div>
             <div style="font-size: 2rem; font-weight: 800; color: #ec4899; margin: 4px 0;">{f1:.1f}%</div>
-            <div style="font-size: 0.72rem; color: #ec4899;">Optimal Accuracy</div>
+            <div style="font-size: 0.72rem; color: #ec4899;">Ground Truth Parity</div>
         </div>
         <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 14px; text-align: center;">
             <div style="font-size: 0.78rem; color: #94a3b8; font-weight: 600;">AST LATENCY</div>
@@ -620,7 +580,7 @@ def create_gradio_app() -> gr.Blocks:
             # ===============================================================
             with gr.TabItem("📊 16 Golden Benchmarks", id="tab_benchmarks"):
                 gr.Markdown("""
-                **Deterministic Evaluation Harness:** Evaluates the AST engine against 16 ground-truth golden fixtures across Crawlability, JavaScript Hydration Gaps, Structured Data Disambiguation, AEO Quotability, Freshness Decay, and Visitor Retention.
+                **Deterministic Evaluation Harness:** Evaluates the AST engine against 16 ground-truth labeled regression fixtures across Crawlability, JavaScript Hydration Gaps, Structured Data Disambiguation, AEO Quotability, Freshness Decay, and Visitor Retention. Achieves 100% precision & recall against this curated test suite (regression verification, not an extrapolation over the entire web).
                 """)
                 bench_btn = gr.Button("🔄 Re-run Evaluation Harness", variant="secondary")
                 bench_metrics = gr.HTML(value="")

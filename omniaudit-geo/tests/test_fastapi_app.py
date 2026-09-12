@@ -137,5 +137,26 @@ class TestFastAPIApp(unittest.TestCase):
         self.assertIn("application/ld+json", res_root.text)
         self.assertIn("SoftwareApplication", res_root.text)
 
+    def test_security_headers_and_cors(self):
+        res = self.client.get("/api/health")
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.headers.get("x-content-type-options"), "nosniff")
+        self.assertEqual(res.headers.get("x-frame-options"), "DENY")
+        self.assertEqual(res.headers.get("referrer-policy"), "strict-origin-when-cross-origin")
+
+    def test_audit_guard_direct(self):
+        from audit_guard import check_rate_limit, execute_guarded_audit
+        # Verify rate limiting behavior
+        ip = "198.51.100.42"
+        allowed, retry = check_rate_limit(ip)
+        self.assertTrue(allowed)
+        self.assertIsNone(retry)
+
+        # Verify guarded audit on SSRF target
+        res = execute_guarded_audit("http://169.254.169.254/latest/meta-data/")
+        self.assertIn("error", res)
+        self.assertEqual(res["error_code"], "ssrf_blocked")
+        self.assertEqual(res["status_code"], 400)
+
 if __name__ == "__main__":
     unittest.main()

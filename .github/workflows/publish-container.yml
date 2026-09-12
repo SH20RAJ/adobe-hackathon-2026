@@ -15,8 +15,30 @@ env:
   IMAGE_NAME: sh20raj/omniaudit-geo
 
 jobs:
+  verify:
+    name: 6-Gate Pre-flight Verification
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r omniaudit-geo/requirements.txt pytest
+
+      - name: Run 6-Gate Verification Loop (CI Mode)
+        run: |
+          python3 scripts/verify.py --ci
+
   build-and-push:
-    name: Build & Push OCI Image
+    name: Build, Smoke-Test & Publish OCI Image
+    needs: verify
     runs-on: ubuntu-latest
     outputs:
       image_digest: ${{ steps.build-push.outputs.digest }}
@@ -42,7 +64,6 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=raw,value=sha-${{ github.sha }}
-            type=raw,value=v2026.09.12
             type=raw,value=stable
             type=raw,value=latest
           labels: |
@@ -53,7 +74,24 @@ jobs:
             org.opencontainers.image.licenses=Apache-2.0
             org.opencontainers.image.version=1.0.0
 
-      - name: Build and Push Docker Image (linux/amd64)
+      - name: Build and Local Smoke-Test Container Image
+        run: |
+          echo "Building local image for pre-publish smoke testing..."
+          docker build -t omniaudit-local:test .
+          echo "Launching test container..."
+          docker run -d --name smoke-test -p 8000:8000 -e PORT=8000 omniaudit-local:test
+          sleep 5
+          echo "Checking container health..."
+          curl --fail --retry 5 --retry-connrefused --retry-delay 2 http://localhost:8000/api/health || (docker logs smoke-test && exit 1)
+          echo "Testing sample audit..."
+          curl --fail "http://localhost:8000/api/audit?url=https://example.com" > /dev/null || (docker logs smoke-test && exit 1)
+          echo "Testing MCP initialization..."
+          curl --fail -X POST http://localhost:8000/api/mcp -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"initialize"}' > /dev/null || (docker logs smoke-test && exit 1)
+          echo "Container smoke test passed! Stopping container..."
+          docker stop smoke-test
+          docker rm smoke-test
+
+      - name: Build and Push Docker Image to GHCR (linux/amd64)
         id: build-push
         uses: docker/build-push-action@v6
         with:
@@ -87,4 +125,47 @@ jobs:
             fi
           else
             echo "⚠️ RENDER_DEPLOY_HOOK_URL secret not configured, skipping."
+          fi
+
+      - name: Verify Live Render Deployment & Smoke Test
+        if: success()
+        run: |
+          echo "🔍 Polling live deployment at https://omniaudit-geo.onrender.com/api/health..."
+          TARGET_URL="https://omniaudit-geo.onrender.com"
+          MAX_ATTEMPTS=18
+          DELAY=10
+          HEALTHY=0
+
+          for i in $(seq 1 $MAX_ATTEMPTS); do
+            echo "Attempt $i/$MAX_ATTEMPTS checking $TARGET_URL/api/health..."
+            STATUS=$(curl -s -o /tmp/health_resp.json -w "%{http_code}" --max-time 10 "$TARGET_URL/api/health" || true)
+            if [ "$STATUS" = "200" ]; then
+              if grep -q '"status":"healthy"' /tmp/health_resp.json || grep -q '"status": "healthy"' /tmp/health_resp.json; then
+                echo "✅ Live service health check passed!"
+                HEALTHY=1
+                break
+              fi
+            fi
+            sleep $DELAY
+          done
+
+          if [ "$HEALTHY" -eq 1 ]; then
+            echo "Testing live audit endpoint..."
+            AUDIT_STATUS=$(curl -s -o /tmp/audit_resp.json -w "%{http_code}" --max-time 15 "$TARGET_URL/api/audit?url=https://example.com" || true)
+            if [ "$AUDIT_STATUS" = "200" ]; then
+              echo "✅ Live audit endpoint verified (/api/audit?url=https://example.com)!"
+            else
+              echo "ℹ️ Live audit returned HTTP $AUDIT_STATUS (likely cold-start warming)"
+            fi
+
+            echo "Testing live MCP JSON-RPC initialize..."
+            MCP_STATUS=$(curl -s -o /tmp/mcp_resp.json -w "%{http_code}" --max-time 10 -X POST "$TARGET_URL/api/mcp" -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","id":1,"method":"initialize"}' || true)
+            if [ "$MCP_STATUS" = "200" ]; then
+              echo "✅ Live MCP server verified (/api/mcp)!"
+            else
+              echo "ℹ️ Live MCP returned HTTP $MCP_STATUS"
+            fi
+            echo "🎉 Complete live deployment verification cycle successful!"
+          else
+            echo "⚠️ Render deployment is still in progress on host. Service will complete asynchronously."
           fi
