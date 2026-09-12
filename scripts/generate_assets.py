@@ -97,13 +97,13 @@ def create_og_image():
         font_sub = ImageFont.truetype("/System/Library/Fonts/SFPro-Medium.otf", 26)
         font_small = ImageFont.truetype("/System/Library/Fonts/SFPro-Regular.otf", 18)
         font_mono = ImageFont.truetype("/System/Library/Fonts/SFMono-Bold.otf", 20)
-    except:
+    except (OSError, Exception):
         try:
             font_title = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 56)
             font_sub = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 26)
             font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 18)
             font_mono = ImageFont.truetype("/System/Library/Fonts/Courier.dfont", 20)
-        except:
+        except (OSError, Exception):
             font_title = font_sub = font_small = font_mono = ImageFont.load_default()
             
     # Draw typography

@@ -149,7 +149,7 @@ python3 scripts/verify.py --ci
 ```bash
 python3 scripts/eval_benchmarks.py
 ```
-> Evaluates all 16 Golden Benchmarks with latency breakdown (<0.5ms/site), scoring precision (100.0%), and beyond-defect proactive recommendations in ~6ms.
+> Evaluates all 16 Golden Benchmarks against labeled ground truth fixtures with benchmark precision/recall (100.0% on fixture suite) and sub-millisecond local engine execution latency (~0.5ms/site local AST execution; real-world audit latency depends on network target response time).
 
 ### 4. Run FastAPI Web Control Plane & MCP Server Locally:
 ```bash
@@ -172,6 +172,27 @@ uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
   # Self-test all 7 tools:
   python3 skills/audit-orchestrator/scripts/mcp_server.py --test
   ```
+
+### 6. Container Deployment (Docker, GHCR & DigitalOcean App Platform):
+- **Container Registry:** `ghcr.io/sh20raj/omniaudit-geo`
+- **Run Pre-built OCI Image:**
+  ```bash
+  docker run --rm -p 8000:8000 -e PORT=8000 ghcr.io/sh20raj/omniaudit-geo:stable
+  ```
+- **Build & Run Locally:**
+  ```bash
+  docker build -t omniaudit-geo .
+  docker run --rm -p 8000:8000 -e PORT=8000 omniaudit-geo
+  ```
+- **Health Probe:**
+  ```bash
+  curl http://localhost:8000/api/health
+  ```
+- **DigitalOcean App Platform Deployment:**
+  - **Component Type:** Web Service
+  - **Source:** GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`)
+  - **HTTP Port:** `8000`
+  - **Health Check Route:** `/api/health`
 
 ---
 

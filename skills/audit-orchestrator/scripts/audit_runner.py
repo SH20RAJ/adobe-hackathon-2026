@@ -15,6 +15,7 @@ import urllib.error
 import urllib.parse
 from datetime import datetime, timezone
 from html.parser import HTMLParser
+from typing import Optional
 
 ORCHESTRATOR_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ORCHESTRATOR_SCRIPT_DIR not in sys.path:

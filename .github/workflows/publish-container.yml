@@ -1,0 +1,73 @@
+name: Build and Publish Container to GHCR
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: sh20raj/omniaudit-geo
+
+jobs:
+  build-and-push:
+    name: Build & Push OCI Image
+    runs-on: ubuntu-latest
+    outputs:
+      image_digest: ${{ steps.build-push.outputs.digest }}
+      image_tags: ${{ steps.meta.outputs.tags }}
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker Metadata & OCI Labels
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=sha-${{ github.sha }}
+            type=raw,value=v2026.09.12
+            type=raw,value=stable
+            type=raw,value=latest
+          labels: |
+            org.opencontainers.image.title=OmniAudit-GEO
+            org.opencontainers.image.description=Autonomous Brand AI-Readiness, Discoverability (ACPI) and On-site Retention (CRS) Engine
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=Apache-2.0
+            org.opencontainers.image.version=1.0.0
+
+      - name: Build and Push Docker Image (linux/amd64)
+        id: build-push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Emit Image Digest for Immutable Deployment
+        run: |
+          echo "============================================================"
+          echo "IMAGE DIGEST: ${{ steps.build-push.outputs.digest }}"
+          echo "IMAGE REF: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@${{ steps.build-push.outputs.digest }}"
+          echo "DEPLOYMENT TAG: sha-${{ github.sha }}"
+          echo "============================================================"
