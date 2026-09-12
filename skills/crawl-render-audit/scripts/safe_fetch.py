@@ -16,8 +16,20 @@ _LOCAL_HOSTNAMES = {
     "localhost.localdomain",
     "ip6-localhost",
     "ip6-loopback",
+    "local",
+    "broadcasthost",
+    "0.0.0.0",
 }
-_LOCAL_SUFFIXES = (".local", ".internal", ".lan", ".home.arpa")
+_LOCAL_SUFFIXES = (
+    ".local",
+    ".internal",
+    ".lan",
+    ".home.arpa",
+    ".localhost",
+    ".test",
+    ".example",
+    ".invalid",
+)
 _REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 
 
@@ -45,12 +57,41 @@ def normalize_url(url):
     hostname = parsed.hostname.rstrip(".").lower()
     if hostname in _LOCAL_HOSTNAMES or hostname.endswith(_LOCAL_SUFFIXES):
         raise FetchValidationError("local hostname is not allowed")
+
+    # Reject integer/numeric representations of IPs (e.g. 2130706433 -> 127.0.0.1)
+    if hostname.isdigit():
+        try:
+            num = int(hostname)
+            literal_num_ip = ipaddress.ip_address(num)
+            if (
+                not literal_num_ip.is_global
+                or literal_num_ip.is_loopback
+                or literal_num_ip.is_private
+                or literal_num_ip.is_link_local
+            ):
+                raise FetchValidationError("non-public IP address is not allowed")
+        except (ValueError, OverflowError):
+            raise FetchValidationError("malformed numeric IP hostname")
+
     try:
         literal_ip = ipaddress.ip_address(hostname)
     except ValueError:
         literal_ip = None
-    if literal_ip is not None and not literal_ip.is_global:
-        raise FetchValidationError("non-public IP address is not allowed")
+    if literal_ip is not None:
+        if isinstance(literal_ip, ipaddress.IPv6Address) and literal_ip.ipv4_mapped:
+            mapped = literal_ip.ipv4_mapped
+            if not mapped.is_global or mapped.is_loopback or mapped.is_private or mapped.is_link_local:
+                raise FetchValidationError("non-public IP address is not allowed")
+        if (
+            not literal_ip.is_global
+            or literal_ip.is_loopback
+            or literal_ip.is_private
+            or literal_ip.is_link_local
+            or literal_ip.is_multicast
+            or literal_ip.is_reserved
+            or literal_ip.is_unspecified
+        ):
+            raise FetchValidationError("non-public IP address is not allowed")
     try:
         port = parsed.port
     except ValueError as exc:
@@ -84,6 +125,10 @@ def _validate_resolved_addresses(hostname, port):
             ip = ipaddress.ip_address(ip_text)
         except ValueError as exc:
             raise FetchValidationError("hostname resolved to an invalid address") from exc
+        if isinstance(ip, ipaddress.IPv6Address) and ip.ipv4_mapped:
+            mapped = ip.ipv4_mapped
+            if not mapped.is_global or mapped.is_loopback or mapped.is_private or mapped.is_link_local:
+                raise FetchValidationError("hostname resolved to a non-public address")
         if (
             not ip.is_global
             or ip.is_loopback
