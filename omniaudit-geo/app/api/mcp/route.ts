@@ -1,9 +1,21 @@
 /**
- * Model Context Protocol (MCP) Remote Endpoint for OmniAudit-GEO
- * Protocol Version: 2024-11-05 (JSON-RPC 2.0)
- *
- * Synchronized with skills/audit-orchestrator/scripts/mcp_server.py
+ * Model Context Protocol (MCP) Remote Endpoint for OmniAudit-GEO.
+ * Protocol Version: 2024-11-05 (JSON-RPC 2.0).
+ * True adapter over the canonical audit engine, with exact parity to Python mcp_server.py.
  */
+
+import {
+  runFullAudit,
+  safeFetch,
+  HTMLContentExtractor,
+  auditCrawlRender,
+  auditStructuredData,
+  auditAeoQuotability,
+  auditFreshnessTrust,
+  auditOnSiteEngagement,
+  enrichFindingsActions,
+  validateTargetUrl,
+} from "@/lib/engine";
 
 const MCP_TOOLS = [
   {
@@ -112,138 +124,161 @@ const MCP_TOOLS = [
   },
 ] as const;
 
-export async function GET() {
-  const info = {
-    name: "omniaudit-geo",
-    version: "1.0.0",
-    protocolVersion: "2024-11-05",
-    description: "Adobe OmniAudit GEO: Enterprise Brand AI-Readiness & GEO Audit MCP Server on Cloudflare Workers",
-    endpoint: "https://omniaudit-geo.shraj.workers.dev/api/mcp",
-    tools: MCP_TOOLS,
-  };
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  "Content-Type": "application/json; charset=utf-8",
+};
 
-  return Response.json(info, {
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+export async function OPTIONS() {
+  return new Response(null, { status: 204, headers: CORS_HEADERS });
+}
+
+export async function GET() {
+  return Response.json(
+    {
+      name: "omniaudit-geo-mcp-server",
+      version: "1.0.0",
+      protocolVersion: "2024-11-05",
+      description: "OmniAudit-GEO: Brand AI-Readiness & GEO Audit MCP Server",
+      endpoint: "https://omniaudit-geo.shraj.workers.dev/api/mcp",
+      tools: MCP_TOOLS,
     },
-  });
+    { headers: CORS_HEADERS }
+  );
 }
 
 export async function POST(request: Request) {
+  let body: Record<string, any>;
   try {
-    const body = (await request.json()) as Record<string, any>;
-    const { id, method, params } = body;
+    body = (await request.json()) as Record<string, any>;
+  } catch (err) {
+    return Response.json(
+      {
+        jsonrpc: "2.0",
+        id: null,
+        error: { code: -32700, message: "Parse error: Invalid JSON payload" },
+      },
+      { status: 400, headers: CORS_HEADERS }
+    );
+  }
 
-    // JSON-RPC 2.0 initialize
-    if (method === "initialize") {
+  const { id = null, method, params } = body;
+
+  // JSON-RPC 2.0 initialize
+  if (method === "initialize") {
+    return Response.json(
+      {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          protocolVersion: "2024-11-05",
+          capabilities: { tools: {} },
+          serverInfo: {
+            name: "omniaudit-geo-mcp-server",
+            version: "1.0.0",
+          },
+        },
+      },
+      { headers: CORS_HEADERS }
+    );
+  }
+
+  // JSON-RPC 2.0 tools/list
+  if (method === "tools/list") {
+    return Response.json(
+      {
+        jsonrpc: "2.0",
+        id,
+        result: { tools: MCP_TOOLS },
+      },
+      { headers: CORS_HEADERS }
+    );
+  }
+
+  // JSON-RPC 2.0 tools/call
+  if (method === "tools/call") {
+    const toolName = params?.name;
+    const targetUrl = params?.arguments?.url || "https://adobe.com";
+
+    const matchedTool = MCP_TOOLS.find((t) => t.name === toolName);
+    if (!matchedTool) {
       return Response.json(
         {
           jsonrpc: "2.0",
           id,
-          result: {
-            protocolVersion: "2024-11-05",
-            capabilities: {
-              tools: {},
-            },
-            serverInfo: {
-              name: "omniaudit-geo",
-              version: "1.0.0",
-            },
-          },
+          error: { code: -32601, message: `Tool '${toolName}' not found` },
         },
-        {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        }
+        { status: 404, headers: CORS_HEADERS }
       );
     }
 
-    // JSON-RPC 2.0 tools/list
-    if (method === "tools/list") {
+    const validation = validateTargetUrl(targetUrl);
+    if (!validation.valid || !validation.normalized) {
       return Response.json(
         {
           jsonrpc: "2.0",
           id,
-          result: {
-            tools: MCP_TOOLS,
+          error: {
+            code: -32602,
+            message: `Invalid URL argument: ${validation.error}`,
           },
         },
-        {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        }
+        { status: 400, headers: CORS_HEADERS }
       );
     }
+    const cleanUrl = validation.normalized;
 
-    // JSON-RPC 2.0 tools/call
-    if (method === "tools/call") {
-      const toolName = params?.name;
-      const targetUrl = params?.arguments?.url || "https://adobe.com";
+    try {
+      let resultData: any;
 
-      const matchedTool = MCP_TOOLS.find((t) => t.name === toolName);
-      if (!matchedTool) {
-        return Response.json(
-          {
-            jsonrpc: "2.0",
-            id,
-            error: { code: -32601, message: `Tool '${toolName}' not found` },
-          },
-          {
-            status: 404,
-            headers: { "Access-Control-Allow-Origin": "*" },
-          }
-        );
-      }
-
-      // Invoke internal audit API
-      const origin = new URL(request.url).origin;
-      const auditRes = await fetch(`${origin}/api/audit?url=${encodeURIComponent(targetUrl)}`);
-      const report = (await auditRes.json()) as any;
-
-      let responseText = "";
       if (toolName === "audit_website" || toolName === "audit_brand_ai_readiness") {
-        responseText = `## Adobe OmniAudit GEO Report for ${report.site}
-- **ACPI Score (AI Citation Probability):** ${report.summary?.acpi_score ?? "N/A"} / 100
-- **CRS Score (Cognitive Retention):** ${report.summary?.crs_score ?? "N/A"} / 100
-- **Total Findings:** ${report.summary?.total_findings ?? report.findings?.length ?? 0} (${report.summary?.critical ?? 0} critical, ${report.summary?.high ?? 0} high)
-
-### Key Findings:
-${(report.findings || [])
-  .map(
-    (f: any) =>
-      `* **[${f.severity.toUpperCase()}] ${f.title}**: ${f.evidence}\n  * Remediation: ${f.suggested_action?.summary || f.suggested_action?.title}`
-  )
-  .join("\n")}
-`;
+        resultData = await runFullAudit(cleanUrl);
       } else {
-        // Filter findings relevant to sub-audit
-        const categoryMap: Record<string, string[]> = {
-          inspect_robots_and_rendering: ["crawlability", "hydration", "crawlability_ai_permissions", "crawlability_headers"],
-          inspect_structured_data: ["structured", "schema", "structured_entity", "entity"],
-          inspect_aeo_quotability: ["quotability", "aeo", "atomic", "aeo_quotability"],
-          inspect_freshness_trust: ["freshness", "trust", "temporal", "freshness_trust"],
-          inspect_on_site_retention: ["retention", "engagement", "readability", "hero"],
-        };
+        // Sub-audit execution directly invoking specialist analyzer
+        const fetchRes = await safeFetch(cleanUrl, { timeoutMs: 5000, requireHtml: true });
+        let domain = "";
+        try {
+          domain = new URL(cleanUrl).hostname;
+        } catch {
+          domain = cleanUrl;
+        }
 
-        const allowedPrefixes = categoryMap[toolName] || [];
-        const filteredFindings = (report.findings || []).filter((f: any) =>
-          allowedPrefixes.some((prefix) => (f.category || "").toLowerCase().includes(prefix))
-        );
+        if (fetchRes.error) {
+          resultData = {
+            site: domain,
+            tool: toolName,
+            error: fetchRes.error,
+            findings: [],
+          };
+        } else {
+          const html = fetchRes.html;
+          const headers = fetchRes.headers;
+          const extractor = new HTMLContentExtractor();
+          extractor.feed(html);
 
-        responseText = `## Tool: ${toolName} for ${report.site}
-Total Relevant Findings: ${filteredFindings.length}
+          let findings: any[] = [];
+          if (toolName === "inspect_robots_and_rendering") {
+            findings = await auditCrawlRender(cleanUrl, html, headers);
+          } else if (toolName === "inspect_structured_data") {
+            findings = auditStructuredData(cleanUrl, extractor);
+          } else if (toolName === "inspect_aeo_quotability") {
+            findings = auditAeoQuotability(extractor);
+          } else if (toolName === "inspect_freshness_trust") {
+            findings = auditFreshnessTrust(extractor, html, cleanUrl);
+          } else if (toolName === "inspect_on_site_retention") {
+            findings = auditOnSiteEngagement(extractor);
+          }
 
-${
-  filteredFindings.length === 0
-    ? "No critical defects detected for this diagnostic domain."
-    : filteredFindings
-        .map(
-          (f: any) =>
-            `* **[${f.severity.toUpperCase()}] ${f.title}**: ${f.evidence}\n  * Fix: ${f.suggested_action?.summary || f.suggested_action?.title}`
-        )
-        .join("\n")
-}
-`;
+          enrichFindingsActions(findings);
+          resultData = {
+            site: domain,
+            tool: toolName,
+            total_findings: findings.length,
+            findings,
+          };
+        }
       }
 
       return Response.json(
@@ -254,50 +289,31 @@ ${
             content: [
               {
                 type: "text",
-                text: responseText,
+                text: JSON.stringify(resultData, null, 2),
               },
             ],
           },
         },
+        { headers: CORS_HEADERS }
+      );
+    } catch (err: any) {
+      return Response.json(
         {
-          headers: { "Access-Control-Allow-Origin": "*" },
-        }
+          jsonrpc: "2.0",
+          id,
+          error: { code: -32603, message: "Internal tool execution failed" },
+        },
+        { status: 500, headers: CORS_HEADERS }
       );
     }
-
-    return Response.json(
-      {
-        jsonrpc: "2.0",
-        id,
-        error: { code: -32601, message: `Method '${method}' not found` },
-      },
-      {
-        status: 404,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }
-    );
-  } catch (err: any) {
-    return Response.json(
-      {
-        jsonrpc: "2.0",
-        id: null,
-        error: { code: -32603, message: err.message || "Internal server error" },
-      },
-      {
-        status: 500,
-        headers: { "Access-Control-Allow-Origin": "*" },
-      }
-    );
   }
-}
 
-export async function OPTIONS() {
-  return new Response(null, {
-    status: 204,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+  return Response.json(
+    {
+      jsonrpc: "2.0",
+      id,
+      error: { code: -32601, message: `Method '${method}' not found` },
     },
-  });
+    { status: 404, headers: CORS_HEADERS }
+  );
 }

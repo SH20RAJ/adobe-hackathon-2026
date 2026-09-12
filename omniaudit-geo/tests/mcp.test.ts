@@ -6,7 +6,7 @@ describe("Model Context Protocol (MCP) Edge API", () => {
     const res = await GET();
     expect(res.status).toBe(200);
     const data = (await res.json()) as any;
-    expect(data.name).toBe("omniaudit-geo");
+    expect(data.name).toBe("omniaudit-geo-mcp-server");
     expect(data.protocolVersion).toBe("2024-11-05");
     expect(Array.isArray(data.tools)).toBe(true);
     expect(data.tools.length).toBe(7);
@@ -37,7 +37,7 @@ describe("Model Context Protocol (MCP) Edge API", () => {
     const data = (await res.json()) as any;
     expect(data.jsonrpc).toBe("2.0");
     expect(data.id).toBe(1);
-    expect(data.result.serverInfo.name).toBe("omniaudit-geo");
+    expect(data.result.serverInfo.name).toBe("omniaudit-geo-mcp-server");
     expect(data.result.protocolVersion).toBe("2024-11-05");
   });
 
