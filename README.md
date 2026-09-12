@@ -15,6 +15,60 @@
 1. **Off-Site AI Discoverability (GEO/AEO):** Diagnosing why AI search assistants (ChatGPT Search, Perplexity, Claude, Google AI Overviews) fail to crawl, render, understand, trust, and quote a brand.
 2. **On-Site Visitor Engagement:** Diagnosing why visitors referred from AI search engines fail to orient themselves and bounce upon arrival.
 
+---
+
+## 📦 Marketplace Skills & Orchestration Composition
+
+As required by the Adobe University Hackathon 2026 Round 3 Development specification, this repository is organized as an `agentskills.io` compliant Agent Skill Marketplace defined by [`marketplace.json`](./marketplace.json).
+
+### What Each Skill Does
+
+1. **`audit-orchestrator` (Master Entrypoint):**
+   - **Path:** [`skills/audit-orchestrator`](./skills/audit-orchestrator)
+   - **Role:** Master dispatcher and aggregator. Composes all specialist skills, calculates composite scores (**ACPI** - AI Crawler & Parser Index, **CRS** - Click-to-Retention Score), normalizes findings, and outputs the standardized, schema-validated JSON audit report.
+2. **`crawl-render-audit`:**
+   - **Path:** [`skills/crawl-render-audit`](./skills/crawl-render-audit)
+   - **Role:** Audits `robots.txt` crawler policies across 7 major AI crawler user-agents (GPTBot, ClaudeBot, PerplexityBot, Applebot, etc.), verifies HTTP response headers (`X-Robots-Tag`, canonicals), and detects client-side JavaScript hydration gaps (SPA empty shells vs. SSR/SSG content).
+3. **`structured-entity-audit`:**
+   - **Path:** [`skills/structured-entity-audit`](./skills/structured-entity-audit)
+   - **Role:** Extracts and validates Schema.org JSON-LD microdata graphs (`Organization`, `Product`, `FAQPage`, etc.) and verifies entity disambiguation via authoritative `sameAs` links (Wikidata, Wikipedia, LinkedIn, Crunchbase).
+4. **`aeo-quotability-audit`:**
+   - **Path:** [`skills/aeo-quotability-audit`](./skills/aeo-quotability-audit)
+   - **Role:** Evaluates deterministic content quotability for LLM answer synthesis. Measures atomic fact density (numbers, statistics, percentages, currencies), interrogative heading-to-answer structures, and audits facts locked in inaccessible non-text assets (missing `th` table headers, missing image `alt` attributes).
+5. **`freshness-corroboration-audit`:**
+   - **Path:** [`skills/freshness-corroboration-audit`](./skills/freshness-corroboration-audit)
+   - **Role:** Audits temporal signals (publication and modification timestamps vs. current year 2026, copyright freshness) and inspects on-page publisher trust and authority corroboration markers (author bylines, editorial policies, contact details, privacy policies).
+6. **`on-site-engagement-audit`:**
+   - **Path:** [`skills/on-site-engagement-audit`](./skills/on-site-engagement-audit)
+   - **Role:** Evaluates post-click visitor retention and bounce risk. Inspects above-the-fold hero value proposition clarity, calculates Flesch-Kincaid Reading Ease & ARI readability grades, and checks call-to-action (CTA) specificity and form accessibility.
+
+### How the Entry Point Composes Them
+
+```text
+                                  ┌──────────────────────────┐
+                                  │   Target URL / Domain    │
+                                  └─────────────┬────────────┘
+                                                │
+                                                ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ ENTRYPOINT: skills/audit-orchestrator (scripts/audit_runner.py & scripts/mcp_server.py)│
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1. SSRF-Safe Bounded Fetch: Fetches HTML and robots.txt via safe_fetch.py              │
+│ 2. Pipeline Dispatch: Executes specialist skills with in-memory parsed DOM & headers   │
+│    ├── crawl-render-audit           ──> robots AI bot rules + JS hydration gap check   │
+│    ├── structured-entity-audit      ──> JSON-LD extraction + sameAs authority checks   │
+│    ├── aeo-quotability-audit        ──> Atomic fact density + tabular/heading analysis │
+│    ├── freshness-corroboration-audit──> Date decay + publisher trust corroboration     │
+│    └── on-site-engagement-audit     ──> Readability + CTA clarity + bounce risk        │
+│ 3. Score Synthesis & Normalization:                                                    │
+│    ├── ACPI (AI Crawler & Parser Index)   = f(Crawlability, Entity, AEO, Freshness)    │
+│    └── CRS (Click-to-Retention Score)     = f(Hero Clarity, Readability, CTA Action)   │
+│ 4. Output Generation: Emits deterministic, validated JSON conforming to audit_schema.json│
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
 ## 👥 Team & Engineering Ownership
 
 - **Shaswat Raj (@sh20raj):** Original product direction and challenge framing; marketplace and MCP foundation; initial skill decomposition, architecture, documentation, Cloudflare/Next.js showcase, GitHub Pages presentation, and deployment/distribution work.
