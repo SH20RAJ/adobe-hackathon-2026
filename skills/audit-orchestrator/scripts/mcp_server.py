@@ -194,9 +194,12 @@ def execute_tool(name: str, arguments: dict) -> dict:
         "findings": findings,
     }
 
-def handle_json_rpc(request_str: str) -> dict:
+def handle_json_rpc(request_input) -> dict:
     try:
-        req = json.loads(request_str)
+        if isinstance(request_input, dict):
+            req = request_input
+        else:
+            req = json.loads(request_input)
         method = req.get("method")
         req_id = req.get("id")
 
