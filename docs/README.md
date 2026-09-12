@@ -23,7 +23,6 @@ Welcome to the comprehensive strategy, architecture, and research documentation 
 
 ---
 
-## 🎯 Quick Links & Live Deployments
-* **Live Showcase & Pitch Page:** [https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)
+## 🎯 Quick Links & Challenge Context
 * **Unstop Hackathon Portal:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
 * **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))

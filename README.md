@@ -2,8 +2,7 @@
 
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission**
 > **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
-> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
-> **Live Showcase & Pitch:** [sh20raj.github.io/adobe-hackathon-2026](https://sh20raj.github.io/adobe-hackathon-2026/)
+> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
 
 ---
 
@@ -77,7 +76,7 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 
 ---
 
-## 🌐 Web Control Plane, API & Live Environments
+## 🌐 Web Control Plane, API & Container Deployment
 
 * **Pure Python Web Control Plane & MCP Server (`omniaudit-geo`):**
   * Built 100% in Python using **FastAPI** and **Jinja2 SSR** (Zero React, Zero JS build step).
@@ -85,9 +84,7 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
   * Real-time live auditing API at `GET /api/audit?url=<URL>`.
   * Remote Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` and `GET /mcp`.
   * Clean, ultra-fast **Adobe Spectrum UI/UX** design system rendered server-side in sub-milliseconds.
-
-* **Live Showcase & Pitch Page (GitHub Pages):**  
-  👉 **[https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)**
+  * Containerized for DigitalOcean App Platform via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
 
 ---
 
@@ -98,9 +95,9 @@ adobe-hackathon-2026/
 ├── marketplace.json                    <- Top-level agentskills.io Marketplace Manifest
 ├── README.md                           <- Documentation & Quickstart (This file)
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory
-├── CLAUDE.md                           <- Claude Code Operational Protocol
-├── index.html                          <- Interactive Pitch & Showcase Dashboard
-├── .github/workflows/deploy-pages.yml  <- Automated GitHub Pages CI/CD
+├── Dockerfile                          <- Production Containerfile (Python 3.12 slim, non-root)
+├── .github/workflows/verify.yml        <- 6-Gate Automated Verification CI Workflow
+├── .github/workflows/publish-container.yml <- GHCR Linux AMD64 Container Publisher
 ├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane & MCP Server
 │   ├── main.py                         <- FastAPI App, REST API & JSON-RPC 2.0 MCP Server
 │   ├── templates/                      <- Server-Side Rendered (SSR) Jinja2 Templates
