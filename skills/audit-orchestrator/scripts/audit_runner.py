@@ -47,6 +47,7 @@ class HTMLContentExtractor(HTMLParser):
         self.links = []
         self.meta_tags = {}
         self.current_tag = None
+        self._current_heading_tag = None
         self.in_script = False
         self.script_type = ""
         self.script_buffer = []
@@ -136,6 +137,7 @@ class HTMLContentExtractor(HTMLParser):
             if href:
                 self.links.append(href)
         elif tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+            self._current_heading_tag = tag
             self.headings.append({"level": tag, "text": ""})
         if tag in {"p", "blockquote", "li", "dt", "dd"}:
             self._block_tag = tag
@@ -174,6 +176,14 @@ class HTMLContentExtractor(HTMLParser):
                 return region
         return "content"
 
+    def assert_invariants(self):
+        """Assert state machine invariants remain non-negative."""
+        assert self._hidden_depth >= 0, f"hidden_depth negative: {self._hidden_depth}"
+        assert self._hidden_interface_depth >= 0, f"hidden_interface_depth negative: {self._hidden_interface_depth}"
+        assert self._navigation_depth >= 0, f"navigation_depth negative: {self._navigation_depth}"
+        for r, d in self._region_depths.items():
+            assert d >= 0, f"region {r} depth negative: {d}"
+
     def handle_endtag(self, tag):
         if tag == "script":
             self.in_script = False
@@ -191,34 +201,51 @@ class HTMLContentExtractor(HTMLParser):
             self._block_tag = None
             self._block_buffer = []
         if tag in {"a", "button"} and self.action_stacks:
-            action = self.action_stacks.pop()
-            action["label"] = " ".join(
-                part for part in [action["label"], " ".join(action.pop("text", []))]
-                if part
-            ).strip()
-            self.action_candidates.append(action)
+            # Match last action matching tag
+            action_idx = None
+            for i in range(len(self.action_stacks) - 1, -1, -1):
+                if self.action_stacks[i]["tag"] == tag:
+                    action_idx = i
+                    break
+            if action_idx is not None:
+                action = self.action_stacks.pop(action_idx)
+                action["label"] = " ".join(
+                    part for part in [action["label"], " ".join(action.pop("text", []))]
+                    if part
+                ).strip()
+                self.action_candidates.append(action)
         if tag == "form" and self.form_stacks:
             self.forms.append(self.form_stacks.pop())
-        if tag == "nav" and self._navigation_depth:
-            self._navigation_depth -= 1
-        if tag in self._region_depths and self._region_depths[tag]:
-            self._region_depths[tag] -= 1
-        if self._element_stack and self._element_stack[-1][0] == tag:
-            _, is_hidden, is_interface = self._element_stack.pop()
-        else:
-            is_hidden = False
-            is_interface = False
-            if is_hidden:
-                self._hidden_depth -= 1
-                if is_interface:
-                    self._hidden_interface_depth -= 1
+        if tag == "nav":
+            self._navigation_depth = max(0, self._navigation_depth - 1)
+        if tag in self._region_depths:
+            self._region_depths[tag] = max(0, self._region_depths[tag] - 1)
+
+        # Robust stack unwinding for matching tag (handles malformed nesting)
+        match_idx = None
+        for i in range(len(self._element_stack) - 1, -1, -1):
+            if self._element_stack[i][0] == tag:
+                match_idx = i
+                break
+
+        if match_idx is not None:
+            while len(self._element_stack) > match_idx:
+                _, is_hidden, is_interface = self._element_stack.pop()
+                if is_hidden:
+                    self._hidden_depth = max(0, self._hidden_depth - 1)
+                    if is_interface:
+                        self._hidden_interface_depth = max(0, self._hidden_interface_depth - 1)
+
+        if tag in ["h1", "h2", "h3", "h4", "h5", "h6"] and tag == self._current_heading_tag:
+            self._current_heading_tag = None
+        self.assert_invariants()
         self.current_tag = None
 
     def handle_data(self, data):
         if self.in_script:
             self.script_buffer.append(data)
         elif (
-            self.current_tag not in ["style", "noscript", "svg"]
+            self.current_tag not in ["style", "noscript", "svg", "template"]
             and self._hidden_depth == 0
         ):
             cleaned = data.strip()
@@ -229,9 +256,11 @@ class HTMLContentExtractor(HTMLParser):
                     self.text_chunks.append(cleaned)
                 if self._block_tag:
                     self._block_buffer.append(cleaned)
-                if self.headings and self.current_tag in ["h1", "h2", "h3", "h4", "h5", "h6"]:
+                if self.headings and self._current_heading_tag:
                     if not self.headings[-1]["text"]:
                         self.headings[-1]["text"] = cleaned
+                    else:
+                        self.headings[-1]["text"] += " " + cleaned
         elif data.strip():
             word_count = len(data.split())
             self.hidden_text_words += word_count
