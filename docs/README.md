@@ -24,5 +24,6 @@ Welcome to the comprehensive strategy, architecture, and research documentation 
 ---
 
 ## 🎯 Quick Links & Challenge Context
+* **Live Web Demo & API:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
 * **Unstop Hackathon Portal:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
 * **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))

@@ -2,7 +2,8 @@
 
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission**
 > **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
-> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
+> **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
+> **Live Web Demo & API:** [omniaudit-geo.onrender.com](https://omniaudit-geo.onrender.com/)
 
 ---
 
@@ -84,7 +85,12 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
   * Real-time live auditing API at `GET /api/audit?url=<URL>`.
   * Remote Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` and `GET /mcp`.
   * Clean, ultra-fast **Adobe Spectrum UI/UX** design system rendered server-side in sub-milliseconds.
-  * Containerized for DigitalOcean App Platform via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
+  * Containerized for DigitalOcean App Platform and cloud runtimes via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
+  * **Live Production Instance:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
+    * Audit Console: `https://omniaudit-geo.onrender.com/audit`
+    * Benchmarks Matrix: `https://omniaudit-geo.onrender.com/benchmarks`
+    * MCP Server Endpoint: `https://omniaudit-geo.onrender.com/api/mcp`
+    * Interactive API Docs: `https://omniaudit-geo.onrender.com/docs`
 
 ---
 
