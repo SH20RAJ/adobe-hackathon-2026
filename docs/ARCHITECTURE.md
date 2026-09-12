@@ -122,22 +122,31 @@ graph TD
 
 ## 4. Algorithmic Formulations: ACPI & CRS Scoring Engine
 
-To provide quantitative rigor, OmniAudit-GEO implements two proprietary mathematical scoring indices:
+To provide quantitative rigor and explainability, OmniAudit-GEO implements a deterministic, component-weighted scoring engine grounded in empirical AST measurements:
 
 ### 4.1 AI Citation Probability Index (ACPI, 0–100)
-$$\text{ACPI} = \max(5, \min(100, 100 - 30C - 15H - 5M))$$
+$$\text{ACPI} = 0.30 \cdot C_{\text{crawl}} + 0.15 \cdot R_{\text{render}} + 0.20 \cdot E_{\text{entity}} + 0.20 \cdot Q_{\text{quotability}} + 0.15 \cdot T_{\text{freshness}}$$
 
-Where:
-* $C$, $H$, and $M$: counts of critical, high, and medium findings in the report.
-* The score is a deterministic severity-weighted indicator; it is not a probability of citation or a claim about model behavior.
+Where components are derived from empirical page features:
+* **$C_{\text{crawl}}$ (Crawlability):** Direct AI crawler permissions in `robots.txt` and HTTP header directives (`X-Robots-Tag`).
+* **$R_{\text{render}}$ (Renderability):** Ratio of server-rendered static HTML vs. client-rendered JavaScript hydration dependencies.
+* **$E_{\text{entity}}$ (Entity Clarity):** Schema.org graph completeness, recognized entity types, and authoritative `sameAs` entity links.
+* **$Q_{\text{quotability}}$ (Quotability):** Atomic fact density, question-and-answer headings, and accessible tables vs. facts locked in non-text images.
+* **$T_{\text{freshness}}$ (Freshness & Trust):** Temporal signal decay, author byline presence, and on-page corroboration citations.
 
 ### 4.2 Cognitive Retention Score (CRS, 0–100)
-$$\text{CRS} = \max(10, \min(100, 100 - 20H - 10M))$$
+$$\text{CRS} = 0.35 \cdot O_{\text{orientation}} + 0.25 \cdot I_{\text{intent}} + 0.20 \cdot R_{\text{readability}} + 0.20 \cdot A_{\text{actionability}}$$
 
-Where:
-* $H$: number of high-severity findings.
-* $M$: number of medium-severity findings.
-* The score is a deterministic report-level indicator, not a conversion or readability prediction.
+Where components measure post-referral user orientation:
+* **$O_{\text{orientation}}$ (Orientation):** 5-second above-the-fold hero value proposition clarity, H1 conciseness, and meta context.
+* **$I_{\text{intent}}$ (Intent Continuity):** Contextual alignment between referred query concepts, page taxonomy, and absence of hard paywalls.
+* **$R_{\text{readability}}$ (Readability):** Bounded Flesch-Kincaid Reading Ease, Automated Readability Index (ARI), and cognitive layout hierarchy.
+* **$A_{\text{actionability}}$ (Actionability):** Prominence of specific primary/secondary call-to-action paths and accessible input controls.
+
+**Invariants:**
+* Scores are strictly floored and bounded: $\text{ACPI} \in [5.0, 100.0]$ and $\text{CRS} \in [10.0, 100.0]$.
+* Root-cause deduplication: Subsequent findings for the same root cause apply diminishing penalties (50% damping) to prevent cascading double-penalties.
+* Proactive recommendations have strictly zero negative penalty impact on scores.
 
 ---
 

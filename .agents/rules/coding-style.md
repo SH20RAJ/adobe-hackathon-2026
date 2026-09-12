@@ -6,7 +6,7 @@
 3. **Explicit Error States:** Never swallow exceptions or use bare `except: pass`. If an inspection fails due to network or malformed HTML, emit `status: "unknown"` with an actionable `failure_reason`.
 4. **Deterministic Math:** Score calculations for ACPI (0–100) and CRS (0–100) must be deterministic and bounded in `[0.0, 100.0]`.
 
-## TypeScript & Web Application (`omniaudit-geo/`)
-1. **Adobe Spectrum Alignment:** Follow Adobe Spectrum Design Principles: Clear, Focused, Accessible, and Harmonious.
-2. **Zero Runtime Side Effects:** Keep server components clean and deterministic.
-3. **Clean Code:** Remove temporary `console.log` statements before committing code.
+## FastAPI Web Control Plane & Templates (`omniaudit-geo/`)
+1. **Adobe Spectrum Alignment:** Follow Adobe Spectrum Design Principles: Clear, Focused, Accessible, and Harmonious using semantic HTML and vanilla CSS tokens.
+2. **Zero Runtime Side Effects:** Keep route handlers clean, synchronous or async without blocking, and deterministic.
+3. **Clean Code:** Ensure all routes handle validation and exceptions cleanly.

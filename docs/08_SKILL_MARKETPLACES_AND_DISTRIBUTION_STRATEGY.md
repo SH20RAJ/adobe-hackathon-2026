@@ -67,12 +67,13 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 
 ---
 
-### 2.4 Cloudflare Workers AI & App Marketplace
-* **Description:** Global edge compute platform with zero cold starts.
+### 2.4 Cloud & Container Distribution (Docker / DigitalOcean)
+* **Description:** Production-ready containerized FastAPI application with native SSR and live JSON-RPC MCP adapter.
 * **Live Deployment:** **[https://omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)**
 * **Features:**
-  * Runs serverless edge auditing using Cloudflare Workers global network.
-  * Sub-50ms TTFB across 330+ edge locations worldwide.
+  * Runs production FastAPI control plane with multi-worker concurrency.
+  * Packaged via minimal `Dockerfile` (Python 3.12-slim, non-root user) and `docker-compose.yml`.
+  * DigitalOcean App Platform native specification in `.do/app.yaml`.
 
 ---
 
@@ -96,7 +97,7 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 | Distribution Channel | Target Platform | Manifest / Config File | Status |
 | :--- | :--- | :--- | :--- |
 | **Official Hackathon Round 3** | Adobe Submission Portal (Unstop) | `marketplace.json` + `skills/` ZIP | **Ready (`≤ 50 MB`)** |
-| **Cloudflare Edge App** | Cloudflare Workers (`vinext`) | `omniaudit-geo/wrangler.jsonc` | **Live: `omniaudit-geo.shraj.workers.dev`** |
+| **Web Control Plane & MCP** | Docker / DigitalOcean App Platform | `omniaudit-geo/Dockerfile` | **Ready (FastAPI SSR)** |
 | **Model Context Protocol** | Claude Desktop / Cursor / Antigravity | `skills/audit-orchestrator/scripts/mcp_server.py` | **Ready (JSON-RPC)** |
 | **GitHub Pages Showcase** | Web Showcase & Pitch UI | `.github/workflows/deploy-pages.yml` | **Live: `sh20raj.github.io/adobe-hackathon-2026`** |
 | **agentskills.io** | Open Agent Ecosystem | `skills/*/SKILL.md` | **100% Spec Compliant** |

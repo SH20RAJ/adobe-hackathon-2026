@@ -10,5 +10,5 @@
 - Prefer deterministic calculations over generative LLM calls for parsing and scoring.
 
 ## 3. Web Control Plane Performance
-- Keep the Cloudflare Workers / Next.js bundle minimal and tree-shaken.
-- Use Edge-compatible modules.
+- Keep the FastAPI server lightweight with zero blocking I/O on async event loops.
+- Jinja2 templates are rendered server-side with zero client-side JavaScript bundling overhead.

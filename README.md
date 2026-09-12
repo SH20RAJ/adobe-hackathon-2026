@@ -144,7 +144,7 @@ python3 scripts/final_check.py
 ```bash
 python3 scripts/verify.py --ci
 ```
-> Runs 152 unit and benchmark tests across 6 gates: Hostile SSRF Defense, Specialist unit tests, 16 Golden Benchmarks matrix, Recursive Schema integrity, FastAPI control plane tests, and Marketplace package sandbox verification.
+> Runs 164 unit and benchmark tests across 6 gates: Hostile SSRF Defense, Specialist unit tests, 16 Golden Benchmarks matrix, Recursive Schema integrity, FastAPI control plane tests, and Marketplace package sandbox verification.
 
 ### 3. Standalone 16 Golden Benchmarks Evaluation Harness:
 ```bash

@@ -8,7 +8,7 @@ The OmniAudit-GEO technology stack was chosen to provide:
 1. **Zero External Dependency & Portability:** Self-contained runtime executing inside an offline sandbox without requiring API keys or heavyweight dependencies.
 2. **Bounded Determinism:** Synchronous standard-library fetching and AST parsers with explicit response, redirect, and timeout bounds.
 3. **Emerging AI Industry Standards:** Native compliance with `agentskills.io` and the Model Context Protocol (MCP).
-4. **Portable Integration:** An MCP adapter and a separate Cloudflare Workers showcase, with deployment-specific observability handled by the host.
+4. **Portable Integration:** An MCP adapter and a containerized FastAPI control plane, with deployment-specific observability handled by the host.
 
 ---
 

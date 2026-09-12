@@ -100,13 +100,13 @@ Scores are bounded between `0.0` and `100.0` with guaranteed baseline floors:
 * OmniAudit-GEO implements the official Anthropic MCP specification (JSON-RPC 2.0 version `2024-11-05`).
 * Exposes all 6 modular tools natively to Cursor, Claude Desktop, and Antigravity agents:
   `audit_website`, `inspect_robots_and_rendering`, `inspect_structured_data`, `inspect_aeo_quotability`, `inspect_freshness_trust`, and `inspect_on_site_retention`.
-* Runs both as a local Python stdio server and as a remote Edge endpoint on Cloudflare Workers (`/api/mcp`).
+* Runs both as a local Python stdio server (`skills/audit-orchestrator/scripts/mcp_server.py`) and as a remote JSON-RPC 2.0 endpoint on the FastAPI control plane (`/mcp` and `/api/mcp`).
 
 ---
 
 ### 13. How would this scale in production?
 * The deterministic engine executes in `<1ms` of CPU time.
-* Deployed as serverless Cloudflare Workers with Edge caching, each regional node can process tens of thousands of audits per second.
+* Deployed via lightweight production Docker containers (e.g. DigitalOcean App Platform / Droplets) or high-concurrency serverless runtimes, each node can process thousands of audits per second with sub-millisecond AST latency.
 * Can be scheduled as an automated GitHub Action or pre-push hook to prevent regressions in AI discoverability during web deployments.
 
 ---
