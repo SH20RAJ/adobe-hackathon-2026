@@ -96,13 +96,13 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 ## 🌐 Web Control Plane, API & Container Deployment
 
 * **Pure Python Control Plane, Gradio UI & MCP Server (`omniaudit-geo`):**
-  * Built 100% in Python using **Gradio 6**, **FastAPI**, and **Jinja2 SSR** (Zero React, Zero JS build step).
+  * Built 100% in Python using **Gradio 6** and **FastAPI** (Zero React, Zero JS build step).
   * Direct Python AST & heuristic imports directly from canonical skill scripts (`audit_runner.py`, `mcp_server.py`, `safe_fetch.py`).
-  * **Enterprise Gradio Frontend:** Mounted directly at root `/` with 5 enterprise tabs: Master Brand Audit, Specialist Diagnostics, 16 Golden Benchmarks Matrix, Skill Marketplace Manifest, and MCP & API Docs.
+  * **Enterprise Gradio Frontend:** Mounted directly at root `/` with 5 enterprise tabs: Master Brand Audit, Specialist Diagnostics, 16 Golden Benchmarks Matrix, Skill Marketplace Manifest, and Multi-Agent MCP Integration.
   * **Standalone Launcher:** Run locally or deploy anywhere via `python3 app.py` (port 7860).
   * Real-time live auditing API at `GET /api/audit?url=<URL>`.
   * Remote Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` and `GET /mcp`.
-  * Clean, ultra-fast **Adobe Spectrum UI/UX** design system rendered server-side in sub-milliseconds.
+  * High-contrast, accessibility-hardened modern design system rendered in sub-milliseconds.
   * Containerized for DigitalOcean App Platform, Render, and cloud runtimes via GitHub Container Registry (`ghcr.io/sh20raj/omniaudit-geo`).
   * **Live Production Instance:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
     * Gradio Enterprise UI: `https://omniaudit-geo.onrender.com/`
@@ -125,9 +125,9 @@ adobe-hackathon-2026/
 ├── .github/workflows/publish-container.yml <- GHCR Linux AMD64 Container Publisher
 ├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane & MCP Server
 │   ├── main.py                         <- FastAPI App, REST API & JSON-RPC 2.0 MCP Server
-│   ├── templates/                      <- Server-Side Rendered (SSR) Jinja2 Templates
-│   ├── static/                         <- Vanilla CSS Design System & Static Brand Assets
-│   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Jinja2
+│   ├── gradio_ui.py                    <- Enterprise Gradio 6 Frontend Application
+│   ├── public/                         <- Brand Assets & Favicons
+│   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Gradio
 │   └── tests/                          <- TestClient test suite for API & MCP endpoints
 ├── docs/                               <- Master Architecture, Pitch & Defense Guides
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Engine

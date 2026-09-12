@@ -71,8 +71,8 @@ adobe-hackathon-2026/
 │   └── on-site-engagement-audit/       <- Value prop clarity, readability & bounce risk
 └── omniaudit-geo/                      <- Pure Python FastAPI Web Control Plane & MCP Server
     ├── main.py                         <- FastAPI app, REST API & JSON-RPC 2.0 MCP server
-    ├── templates/                      <- Server-Side Rendered (SSR) Jinja2 templates
-    ├── static/                         <- Vanilla CSS design tokens & static brand assets
+    ├── gradio_ui.py                    <- Enterprise Gradio 6 frontend application
+    ├── public/                         <- Brand assets & favicons
     └── tests/                          <- TestClient test suite for API & MCP endpoints
 ```
 

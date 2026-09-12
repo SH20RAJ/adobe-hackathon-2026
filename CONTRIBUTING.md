@@ -60,7 +60,7 @@ When submitting code to OmniAudit-GEO, the following invariants **must never be 
 2. **Mandatory SSRF Protection:** All external network fetches must route through `safe_fetch.py` (rejecting loopback, link-local metadata, RFC 1918 private subnets, non-web ports, and DNS rebinding).
 3. **Canonical Python AST / DOM Engine:** Core heuristics must remain deterministic and executable offline using Python standard library parsers (`html.parser`, `urllib`, `re`, `json`).
 4. **Schema Compliance:** The composite output from `run_full_audit()` must strictly validate against `skills/audit-orchestrator/references/audit_schema.json`.
-5. **No Client-Side React/JS Runtime Dependencies:** The web control plane uses pure FastAPI and Jinja2 SSR with native CSS.
+5. **No Client-Side React/JS Runtime Dependencies:** The web control plane uses pure FastAPI and Gradio 6 without external JavaScript toolchains.
 
 ---
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 OmniAudit-GEO — Fast, Deterministic Web Control Plane & MCP API.
-Powered by FastAPI & Jinja2 SSR. Shares the exact same canonical Python audit engine,
+Powered by FastAPI & Gradio 6. Shares the exact same canonical Python audit engine,
 safe_fetch, and MCP server as the CLI and skills marketplace.
 100% pure Python. Zero React, zero JavaScript build dependencies.
 """
@@ -16,8 +16,6 @@ from typing import Optional
 from fastapi import FastAPI, Request, Response, Query, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 # Add repository root and skill directories to sys.path to ensure unified source of truth
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -63,14 +61,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-TEMPLATES_DIR = Path(__file__).resolve().parent / "templates"
-STATIC_DIR = Path(__file__).resolve().parent / "static"
 PUBLIC_DIR = Path(__file__).resolve().parent / "public"
-
-templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
-
-if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # In-memory rate limiting per client IP (60 requests per minute)
 RATE_LIMIT_WINDOW_SECONDS = 60
@@ -273,51 +264,67 @@ async def benchmarks_endpoint():
     return results
 
 # -------------------------------------------------------------
-# Server-Side Rendered (SSR) HTML Pages
+# Web Navigation & Redirect Handlers (Frontend is Pure Gradio)
 # -------------------------------------------------------------
+
+REDIRECT_HTML_CONTENT = """<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>OmniAudit-GEO — AI Discoverability & GEO Engine</title>
+  <meta http-equiv="refresh" content="0; url=/">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0b0f19;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      text-align: center;
+      padding: 2.5rem;
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    a {
+      color: #38bdf8;
+      text-decoration: none;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>OmniAudit-GEO</h2>
+    <p>Navigating to the unified Gradio interface...</p>
+    <p><a href="/">Click here to open OmniAudit-GEO</a></p>
+  </div>
+  <script>window.location.replace('/');</script>
+</body>
+</html>
+"""
 
 @app.get("/audit", response_class=HTMLResponse)
 async def serve_audit(request: Request, url: Optional[str] = None):
-    report = None
-    error = None
-    if url and url.strip():
-        try:
-            clean_url = normalize_url(url.strip())
-            report = run_full_audit(clean_url)
-        except FetchValidationError as fve:
-            error = f"Security / Validation Rejection: {fve}"
-        except Exception as exc:
-            error = f"Audit Execution Error: {exc}"
-
-    return templates.TemplateResponse(
-        request=request,
-        name="audit.html",
-        context={"active_page": "audit", "target_url": url, "report": report, "error": error},
-    )
+    return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
 @app.get("/benchmarks", response_class=HTMLResponse)
 async def serve_benchmarks(request: Request):
-    bench_data = run_evals(return_dict=True)
-    return templates.TemplateResponse(
-        request=request,
-        name="benchmarks.html",
-        context={"active_page": "benchmarks", "bench_data": bench_data},
-    )
+    return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
 @app.get("/marketplace", response_class=HTMLResponse)
 async def serve_marketplace(request: Request):
-    manifest_file = REPO_ROOT / "marketplace.json"
-    with open(manifest_file, "r", encoding="utf-8") as f:
-        manifest = json.load(f)
-    return templates.TemplateResponse(
-        request=request,
-        name="marketplace.html",
-        context={"active_page": "marketplace", "skills": manifest.get("skills", [])},
-    )
+    return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
 @app.get("/docs", response_class=HTMLResponse)
 async def serve_docs(request: Request):
-    return templates.TemplateResponse(request=request, name="documentation.html", context={"active_page": "docs"})
+    return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
 # Public static root files (favicons, logos, manifests)
 @app.get("/favicon.ico")

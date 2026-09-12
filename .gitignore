@@ -7,6 +7,8 @@ node_modules/
 dist/
 build/
 *.zip
+!omniaudit-geo-marketplace.zip
 .venv/
 env/
 .env
+
