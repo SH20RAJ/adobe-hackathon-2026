@@ -1,0 +1,55 @@
+# ==============================================================================
+# OmniAudit-GEO Robots Directives (AI-First & GEO-Friendly)
+# Adobe University Hackathon 2026 — Enterprise Brand AI-Readiness Marketplace
+# ==============================================================================
+
+User-agent: *
+Allow: /
+Disallow: /api/mcp
+
+# Explicitly Welcome AI Assistant Crawlers & Search Engines (GEO / AEO)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+User-agent: Omgilibot
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# Sitemap & LLM Declarations
+Sitemap: https://omniaudit-geo.onrender.com/sitemap.xml
+# LLMs specification: https://omniaudit-geo.onrender.com/llms.txt

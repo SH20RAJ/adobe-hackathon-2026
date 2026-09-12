@@ -1,0 +1,27 @@
+# OmniAudit-GEO — Brand AI-Readiness & GEO Engine
+> The open-standard Agent Skill Marketplace auditing website AI Discoverability (ACPI) and On-Site Visitor Retention (CRS).
+
+## Overview
+OmniAudit-GEO is an enterprise agent skills marketplace compliant with the `agentskills.io` standard and Anthropic Model Context Protocol (MCP). It equips AI assistants with tools to diagnose why web properties are ignored or distorted by AI search engines (Perplexity, ChatGPT Search, Claude, Google AI Overviews) and why referred visitors bounce.
+
+## Key Capabilities
+- **Crawl & Render Diagnostics:** Analyzes robots.txt user-agent policies and client-side JavaScript hydration gaps.
+- **Structured Entity Verification:** Validates Schema.org JSON-LD and authoritative `sameAs` entity graphs.
+- **AEO & Quotability:** Measures atomic fact density, question-answer matching, and tables/images without text equivalents.
+- **Temporal Freshness & Trust:** Scans copyright years, timestamps, author bylines, and corroboration markers.
+- **On-Site Engagement:** Evaluates above-the-fold value propositions, reading ease, and action path discoverability.
+
+## Quantitative Metrics
+- **ACPI (AI Citation Probability Index, 0–100):** Severity-weighted heuristic for AI discoverability findings.
+- **CRS (Cognitive Retention Score, 0–100):** Orientation clarity and bounce resistance score.
+
+## Primary APIs
+- `GET https://omniaudit-geo.onrender.com/api/audit?url={target_url}`: Runs master audit and returns composite JSON report.
+- `POST https://omniaudit-geo.onrender.com/api/mcp`: Anthropic Model Context Protocol JSON-RPC 2.0 endpoint (tools: `audit_website`, `inspect_robots_and_rendering`, `validate_structured_data`, etc.).
+- `GET https://omniaudit-geo.onrender.com/api/benchmarks`: Runs 16 Golden Fixtures matrix.
+- `GET https://omniaudit-geo.onrender.com/api/health`: Health probe.
+
+## Repository & Documentation
+- Web UI: https://omniaudit-geo.onrender.com/
+- GitHub: https://github.com/SH20RAJ/adobe-hackathon-2026
+- Marketplace Manifest: https://github.com/SH20RAJ/adobe-hackathon-2026/blob/main/marketplace.json

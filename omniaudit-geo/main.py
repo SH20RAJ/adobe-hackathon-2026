@@ -43,6 +43,7 @@ from safe_fetch import normalize_url, FetchValidationError
 from mcp_server import handle_json_rpc, MCP_TOOLS
 from schema_validator import validate_report
 from eval_benchmarks import run_evals
+from seo_config import SEO_HEAD_HTML, NOSCRIPT_SEMANTIC_BODY, SEO_TITLE, SEO_DESCRIPTION
 
 app = FastAPI(
     title="OmniAudit-GEO — Brand AI-Readiness & GEO Engine",
@@ -103,6 +104,26 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, proxy-revalidate"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+
+    # 4. SEO, OpenGraph & Schema.org JSON-LD Enrichment for HTML views
+    if "text/html" in response.headers.get("content-type", ""):
+        try:
+            body_chunks = [chunk async for chunk in response.body_iterator]
+            body_bytes = b"".join(body_chunks)
+            body_str = body_bytes.decode("utf-8", errors="ignore")
+            if "<head>" in body_str and "<!-- OpenGraph Metadata -->" not in body_str:
+                body_str = body_str.replace("<head>", f"<head>\n{SEO_HEAD_HTML}\n", 1)
+            if "<body" in body_str and "<noscript>" not in body_str:
+                idx = body_str.find("<body")
+                close_idx = body_str.find(">", idx)
+                if close_idx != -1:
+                    body_str = body_str[:close_idx+1] + f"\n{NOSCRIPT_SEMANTIC_BODY}\n" + body_str[close_idx+1:]
+
+            headers = dict(response.headers)
+            headers.pop("content-length", None)
+            return HTMLResponse(content=body_str, status_code=response.status_code, headers=headers)
+        except Exception:
+            pass
 
     return response
 
@@ -267,44 +288,53 @@ async def benchmarks_endpoint():
 # Web Navigation & Redirect Handlers (Frontend is Pure Gradio)
 # -------------------------------------------------------------
 
-REDIRECT_HTML_CONTENT = """<!DOCTYPE html>
+REDIRECT_HTML_CONTENT = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>OmniAudit-GEO — AI Discoverability & GEO Engine</title>
   <meta http-equiv="refresh" content="0; url=/">
+{SEO_HEAD_HTML}
   <style>
-    body {
+    body {{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background: #0b0f19;
       color: #f8fafc;
       display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      min-height: 100vh;
       margin: 0;
-    }
-    .card {
+      padding: 1rem;
+      box-sizing: border-box;
+    }}
+    .card {{
       text-align: center;
       padding: 2.5rem;
       background: #111827;
       border: 1px solid #1f2937;
       border-radius: 12px;
       box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-    }
-    a {
+      max-width: 480px;
+      width: 100%;
+    }}
+    a {{
       color: #38bdf8;
       text-decoration: none;
       font-weight: 600;
-    }
+    }}
+    a:hover {{
+      text-decoration: underline;
+    }}
   </style>
 </head>
 <body>
   <div class="card">
-    <h2>OmniAudit-GEO</h2>
-    <p>Navigating to the unified Gradio interface...</p>
+    <h2 style="margin-top:0; color:#ffffff;">OmniAudit<span style="color:#eb1000;">.GEO</span></h2>
+    <p style="color:#94a3b8; line-height:1.5;">Navigating to the unified Gradio interface...</p>
     <p><a href="/">Click here to open OmniAudit-GEO</a></p>
   </div>
+{NOSCRIPT_SEMANTIC_BODY}
   <script>window.location.replace('/');</script>
 </body>
 </html>
@@ -326,7 +356,7 @@ async def serve_marketplace(request: Request):
 async def serve_docs(request: Request):
     return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
-# Public static root files (favicons, logos, manifests)
+# Public static root files (favicons, logos, manifests, SEO robots & sitemaps)
 @app.get("/favicon.ico")
 async def serve_favicon():
     f = PUBLIC_DIR / "favicon.ico"
@@ -352,6 +382,37 @@ async def serve_manifest():
     f = PUBLIC_DIR / "manifest.json"
     return FileResponse(f, media_type="application/json") if f.is_file() else Response(status_code=404)
 
+@app.get("/robots.txt", response_class=FileResponse)
+async def serve_robots():
+    f = PUBLIC_DIR / "robots.txt"
+    return FileResponse(f, media_type="text/plain; charset=utf-8") if f.is_file() else Response(status_code=404)
+
+@app.get("/sitemap.xml", response_class=FileResponse)
+async def serve_sitemap():
+    f = PUBLIC_DIR / "sitemap.xml"
+    return FileResponse(f, media_type="application/xml; charset=utf-8") if f.is_file() else Response(status_code=404)
+
+@app.get("/llms.txt", response_class=FileResponse)
+async def serve_llms():
+    f = PUBLIC_DIR / "llms.txt"
+    return FileResponse(f, media_type="text/markdown; charset=utf-8") if f.is_file() else Response(status_code=404)
+
+@app.get("/apple-touch-icon.png")
+@app.get("/apple-touch-icon-precomposed.png")
+async def serve_apple_touch_icon():
+    f = PUBLIC_DIR / "apple-touch-icon.png"
+    return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
+
+@app.get("/icon-192.png")
+async def serve_icon_192():
+    f = PUBLIC_DIR / "icon-192.png"
+    return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
+
+@app.get("/icon-512.png")
+async def serve_icon_512():
+    f = PUBLIC_DIR / "icon-512.png"
+    return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
+
 # -------------------------------------------------------------
 # Pure Gradio Frontend Mounting (Root / and Standalone)
 # -------------------------------------------------------------
@@ -359,7 +420,13 @@ import gradio as gr
 from gradio_ui import create_gradio_app
 
 gradio_blocks = create_gradio_app()
-app = gr.mount_gradio_app(app, gradio_blocks, path="/")
+app = gr.mount_gradio_app(
+    app,
+    gradio_blocks,
+    path="/",
+    head=SEO_HEAD_HTML,
+    favicon_path=str(PUBLIC_DIR / "favicon.svg"),
+)
 
 if __name__ == "__main__":
     import uvicorn

@@ -108,5 +108,34 @@ class TestFastAPIApp(unittest.TestCase):
             self.assertIn("text/html", res.headers["content-type"])
             self.assertIn("OmniAudit", res.text)
 
+    def test_seo_and_static_routes(self):
+        # 1. robots.txt
+        res_robots = self.client.get("/robots.txt")
+        self.assertEqual(res_robots.status_code, 200)
+        self.assertIn("GPTBot", res_robots.text)
+        self.assertIn("ClaudeBot", res_robots.text)
+        self.assertIn("Sitemap:", res_robots.text)
+
+        # 2. sitemap.xml
+        res_sitemap = self.client.get("/sitemap.xml")
+        self.assertEqual(res_sitemap.status_code, 200)
+        self.assertIn("<urlset", res_sitemap.text)
+        self.assertIn("omniaudit-geo.onrender.com", res_sitemap.text)
+
+        # 3. llms.txt
+        res_llms = self.client.get("/llms.txt")
+        self.assertEqual(res_llms.status_code, 200)
+        self.assertIn("OmniAudit-GEO", res_llms.text)
+        self.assertIn("/api/audit", res_llms.text)
+        self.assertIn("/api/mcp", res_llms.text)
+
+        # 4. OpenGraph and Schema.org on root /
+        res_root = self.client.get("/")
+        self.assertEqual(res_root.status_code, 200)
+        self.assertIn("og:title", res_root.text)
+        self.assertIn("canonical", res_root.text)
+        self.assertIn("application/ld+json", res_root.text)
+        self.assertIn("SoftwareApplication", res_root.text)
+
 if __name__ == "__main__":
     unittest.main()

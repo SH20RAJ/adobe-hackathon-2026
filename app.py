@@ -22,10 +22,16 @@ for p in [
         sys.path.insert(0, p)
 
 from gradio_ui import create_gradio_app
+from seo_config import SEO_HEAD_HTML
 
 demo = create_gradio_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 7860))
     print(f"🚀 Starting OmniAudit-GEO Gradio UI on http://localhost:{port}")
-    demo.launch(server_name="0.0.0.0", server_port=port)
+    demo.launch(
+        server_name="0.0.0.0",
+        server_port=port,
+        head=SEO_HEAD_HTML,
+        favicon_path=str(REPO_ROOT / "omniaudit-geo" / "public" / "favicon.svg"),
+    )

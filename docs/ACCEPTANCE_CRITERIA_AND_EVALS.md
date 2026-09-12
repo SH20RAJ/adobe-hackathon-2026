@@ -89,7 +89,7 @@ Any proposed change to the codebase must pass all 6 Verification Gates via `pyth
    └── 100% compliance against BrandAIReadinessAuditReport and SpecialistAuditResult schemas
 
 [Gate 5: FastAPI Web Control Plane & MCP Server]
-   └── 8 unit tests passing across all endpoints, 26 routes cleanly mounted, JSON-RPC 2.0 verified
+   └── 9 unit tests passing across all endpoints, 33 routes cleanly mounted, JSON-RPC 2.0 verified
 
 [Gate 6: Marketplace Package & Sandbox Verification]
    └── Clean assembly of marketplace.json, README.md, skills/ into omniaudit-geo-marketplace.zip & sandbox verification
