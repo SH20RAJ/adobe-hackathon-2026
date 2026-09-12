@@ -67,12 +67,12 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 
 ---
 
-### 2.4 Cloud & Container Distribution (Docker / DigitalOcean)
-* **Description:** Production-ready containerized FastAPI application with native SSR and live JSON-RPC MCP adapter.
+### 2.4 Cloud & Container Distribution (Docker / DigitalOcean / Render)
+* **Description:** Production-ready containerized FastAPI application with native Gradio 6 reactive UI and live JSON-RPC MCP adapter.
 * **Features:**
-  * Runs production FastAPI control plane with multi-worker concurrency.
+  * Runs production FastAPI control plane with Gradio 6 interface and multi-worker concurrency.
   * Packaged via minimal `Dockerfile` (Python 3.12-slim, non-root user) and `docker-compose.yml`.
-  * DigitalOcean App Platform native specification in `.do/app.yaml`.
+  * DigitalOcean App Platform native specification in `.do/app.yaml` and Render Web Service configuration.
 
 ---
 
@@ -95,8 +95,8 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 
 | Distribution Channel | Target Platform | Manifest / Config File | Status |
 | :--- | :--- | :--- | :--- |
-| **Official Hackathon Round 3** | Adobe Submission Portal (Unstop) | `marketplace.json` + `skills/` ZIP | **Ready (`≤ 50 MB`)** |
-| **Web Control Plane & MCP** | Docker / DigitalOcean App Platform | `Dockerfile` & `.do/app.yaml` | **Ready (FastAPI SSR)** |
+| **Official Hackathon Round 3** | Adobe Submission Portal (Unstop) | `omniaudit-geo-marketplace.zip` (`marketplace.json` + `skills/`) | **Ready (`0.08 MB / ≤ 50 MB`)** |
+| **Web Control Plane & MCP** | Docker / DigitalOcean / Render | `Dockerfile` & `.do/app.yaml` | **Ready (Gradio 6 + FastAPI)** |
 | **Model Context Protocol** | Claude Desktop / Cursor / Antigravity | `skills/audit-orchestrator/scripts/mcp_server.py` | **Ready (JSON-RPC)** |
 | **GHCR Container Registry** | OCI Linux AMD64 Container Image | `.github/workflows/publish-container.yml` | **Published: `ghcr.io/sh20raj/omniaudit-geo`** |
 | **agentskills.io** | Open Agent Ecosystem | `skills/*/SKILL.md` | **100% Spec Compliant** |

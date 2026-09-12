@@ -261,6 +261,7 @@ We welcome contributions from developers, researchers, and AI practitioners! Omn
 
 ## 📅 Submission Metadata
 * **Submission Deadline:** September 13, 2026, 11:59 PM IST
-* **Format:** ZIP archive (`≤ 50 MB`) of the marketplace root directory
-* **Performance:** bounded HTTP responses, redirects, and timeouts; runtime depends on the target response and network.
+* **Official Submission Package:** [`omniaudit-geo-marketplace.zip`](./omniaudit-geo-marketplace.zip) (`0.08 MB / ≤ 50 MB`, strictly containing `marketplace.json`, `README.md`, `skills/`)
+* **Packaging & Verification Script:** `python3 scripts/package_submission.py`
+* **Performance:** Bounded HTTP responses, redirects, and timeouts; runtime depends on the target response and network.
 * **License:** Apache-2.0

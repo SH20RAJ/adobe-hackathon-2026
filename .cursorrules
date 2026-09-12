@@ -4,7 +4,7 @@
 1. **Zero External API Dependencies:** The core Python audit engine must run 100% offline using the Python standard library (`urllib.request`, `html.parser`, `re`, `json`, `math`).
 2. **SSRF Protection:** All URL fetches must route through `skills/crawl-render-audit/scripts/safe_fetch.py`. Never fetch private subnets or loopback.
 3. **Read-Only Crawling:** Use only `GET` or `HEAD`. Never mutate state via HTTP.
-4. **Adobe Spectrum UI:** The FastAPI web app in `omniaudit-geo` must adhere to Adobe Spectrum design principles: clear contrast, focused views, minimal noise.
+4. **High-Contrast Design System:** The Gradio 6 / FastAPI web app in `omniaudit-geo` must adhere to clean design principles: high contrast cards, responsive layout, and clear diagnostic evidence disclosure.
 
 ## Core Verification Command
 Before finishing any task, run:
@@ -14,7 +14,8 @@ python3 scripts/verify.py
 
 ## Relevant Files
 - Root marketplace manifest: `marketplace.json`
+- Submittable archive: `omniaudit-geo-marketplace.zip`
 - Python audit orchestrator: `skills/audit-orchestrator/scripts/audit_runner.py`
 - Test suites: `skills/audit-orchestrator/tests` and `skills/crawl-render-audit/tests`
-- Web app: `omniaudit-geo/main.py`
+- Web app: `omniaudit-geo/main.py` and `omniaudit-geo/gradio_ui.py`
 - Acceptance criteria: `docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`

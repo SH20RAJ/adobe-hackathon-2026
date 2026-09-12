@@ -45,6 +45,13 @@ adobe-hackathon-2026/
 │   ├── PITCH.md                        <- Executive Presentation & Pitch Deck
 │   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
 │   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md
+├── omniaudit-geo-marketplace.zip       <- Official Submittable Archive (≤ 50 MB, agentskills.io compliant)
+├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane, Gradio 6 UI & MCP Server
+│   ├── main.py                         <- FastAPI REST API & JSON-RPC 2.0 MCP Server
+│   ├── gradio_ui.py                    <- Enterprise Gradio 6 Frontend Application
+│   ├── public/                         <- Brand Assets & Favicons
+│   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Gradio
+│   └── tests/                          <- TestClient test suite for API & MCP endpoints
 └── skills/                             <- The Submittable Marketplace Skills
     ├── audit-orchestrator/             <- [ENTRYPOINT] Master Dispatcher & Aggregator
     ├── crawl-render-audit/             <- robots.txt AI Bot Permissions & Hydration Gaps

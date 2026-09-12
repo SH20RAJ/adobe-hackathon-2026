@@ -9,6 +9,8 @@ Welcome to the comprehensive strategy, architecture, and research documentation 
 | File | Description | Focus Area |
 | :--- | :--- | :--- |
 | **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Master system topology for a six-skill marketplace (one orchestrator + five diagnostic skills), and ACPI/CRS formulas. | Master System Architecture |
+| **[ACCEPTANCE_CRITERIA_AND_EVALS.md](./ACCEPTANCE_CRITERIA_AND_EVALS.md)** | Formal system requirements, AC-SYS criteria, and 6-gate verification definitions. | Requirements & Quality Gates |
+| **[JUDGE_DEFENSE.md](./JUDGE_DEFENSE.md)** | 14 comprehensive jury defense Q&As covering SSRF, latency, scoring, and edge cases. | Jury Defense & FAQ |
 | **[TECH_STACK_JUSTIFICATION.md](./TECH_STACK_JUSTIFICATION.md)** | Why the Python standard-library engine, AST parsers, MCP, and agentskills.io approach are used. | Tech Stack & Industry Justification |
 | **[PITCH.md](./PITCH.md)** | Executive presentation deck, live demo walkthrough, and Adobe ecosystem synergy. | Pitch & Demo Presentation |
 | **[INTERVIEW_QA_AND_DEFENSE.md](./INTERVIEW_QA_AND_DEFENSE.md)** | Adobe Senior Panel defense guide with 100/100 model answers to technical questions. | Jury Defense & Interview Prep |
