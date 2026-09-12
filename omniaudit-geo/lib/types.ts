@@ -5,6 +5,16 @@ export interface FindingAction {
   code_patch?: string;
   implementation_code?: string;
   explanation?: string;
+  proactive_enhancement?: string;
+}
+
+export interface ProactiveRecommendation {
+  id: string;
+  area: string;
+  recommendation: string;
+  expected_impact: string;
+  priority: "critical" | "high" | "medium" | "low" | string;
+  implementation_code?: string;
 }
 
 export interface Finding {
@@ -58,6 +68,7 @@ export interface AuditReport {
     component_scores?: ComponentScores;
   };
   findings: Finding[];
+  proactive_recommendations?: ProactiveRecommendation[];
 }
 
 export interface BenchmarkItem {

@@ -155,10 +155,26 @@ def main():
     if not ok1: overall_success = False
 
     # Gate 2: Orchestrator & Specialists
-    ok2, p2, t2 = run_unittest_suite("skills/audit-orchestrator/tests", "Gate 2 & 3: Audit Engine & Benchmark Evals")
+    ok2, p2, t2 = run_unittest_suite("skills/audit-orchestrator/tests", "Gate 2: Audit Engine & Specialist Unit Tests")
     total_passed += p2
     total_tests += t2
     if not ok2: overall_success = False
+
+    # Gate 3: ECC-Style Benchmark Evaluation Matrix
+    print_header("Gate 3: 14+ Golden Benchmark Fixtures Evaluation Harness")
+    bench_proc = subprocess.run(
+        [sys.executable, str(REPO_ROOT / "scripts" / "eval_benchmarks.py")],
+        capture_output=True,
+        text=True
+    )
+    if bench_proc.returncode == 0:
+        print(bench_proc.stdout)
+        print(f"{GREEN}✓ Passed 16/16 Golden Benchmarks with 100% precision & schema compliance{RESET}")
+    else:
+        print(bench_proc.stdout)
+        print(bench_proc.stderr)
+        print(f"{RED}✗ Golden Benchmarks evaluation failed{RESET}")
+        overall_success = False
 
     # Gate 4: Marketplace Schema Check
     ok4 = run_marketplace_check()

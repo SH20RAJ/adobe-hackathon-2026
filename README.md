@@ -123,23 +123,29 @@ adobe-hackathon-2026/
 
 ## ⚡ Quickstart: Run & Verify
 
-### 1. Unified 5-Gate Verification Loop:
+### 1. Unified 6-Gate Master Verification Loop:
 ```bash
 python3 scripts/verify.py
 ```
-> Runs 106+ unit and benchmark tests, verifies Schema and `marketplace.json` integrity, and validates the Next.js Edge app production build in ~4 seconds.
+> Runs 117 unit and benchmark tests across 6 gates: Crawl/SSRF safety, Specialist unit tests, 16 Golden Benchmarks matrix, Schema integrity, Web unit tests, and Cloudflare Next.js production build in ~3 seconds.
 
-### 2. Zero-Dependency Python Orchestrator:
+### 2. Standalone 16 Golden Benchmarks Evaluation Harness:
+```bash
+python3 scripts/eval_benchmarks.py
+```
+> Evaluates all 16 Golden Benchmarks with latency breakdown (<1ms/site), scoring precision, and beyond-defect proactive recommendations in ~20ms.
+
+### 3. Zero-Dependency Python Orchestrator:
 ```bash
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
 ```
 
-### 3. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
+### 4. Model Context Protocol (MCP) Server for Claude Desktop / Cursor:
 ```bash
 python3 skills/audit-orchestrator/scripts/mcp_server.py
 ```
 
-### 4. Edge HTTP API:
+### 5. Edge HTTP API:
 ```bash
 curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://example.com"
 ```

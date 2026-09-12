@@ -306,6 +306,49 @@ export async function GET(request: Request) {
     component_scores
   };
 
+  const proactive_recommendations = [
+    {
+      id: "PROACTIVE-001",
+      area: "ai_context_ingestion",
+      priority: "medium",
+      recommendation: "Deploy a standardized /llms.txt and /llms-full.txt markdown manifest at the domain root.",
+      expected_impact: "Permits frontier LLM agents (ChatGPT, Claude, Cursor) to ingest canonical brand facts in under 1,000 tokens without web scraping overhead.",
+      implementation_code: "# /llms.txt specification\n# Title: Brand AI Context Manifest\n> Comprehensive overview of core services, APIs, and canonical entity claims.\n\n- [Product Capabilities](/docs/features.md): Overview of primary value props\n- [API Reference](/api/spec): Deterministic endpoints and schema definitions\n- [Company Info](/about): Executive team, founding year, and legal entity identifiers"
+    },
+    {
+      id: "PROACTIVE-002",
+      area: "entity_corroboration",
+      priority: "high",
+      recommendation: "Publish authoritative sameAs Wikidata and industry registry entity triples.",
+      expected_impact: "Reinforces agreement across the wider web (Round 2 Concept D), establishing persistent subject-predicate-object ground truth that shields the brand from LLM hallucinations.",
+      implementation_code: `<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "${domain}",\n  "url": "${normalizedUrl}",\n  "sameAs": [\n    "https://www.wikidata.org/wiki/QXXXXX",\n    "https://en.wikipedia.org/wiki/${domain}",\n    "https://www.linkedin.com/company/${domain}"\n  ]\n}\n</script>`
+    },
+    {
+      id: "PROACTIVE-003",
+      area: "visitor_retention",
+      priority: "medium",
+      recommendation: "Equip all sub-pages with self-contained context headers and micro-summaries.",
+      expected_impact: "Accommodates AI assistant referral behavior (Round 2 Concept E), where users are linked directly to deep sub-pages without seeing the homepage.",
+      implementation_code: "<div class=\"context-anchor\" role=\"region\" aria-label=\"Context Anchor\">\n  <nav aria-label=\"Breadcrumb\">\n    <ol><li>Home</li><li>Solutions</li><li aria-current=\"page\">Feature Overview</li></ol>\n  </nav>\n  <p class=\"text-sm text-muted\">Part of OmniAudit-GEO: Automated Brand AI-Readiness Evaluation.</p>\n</div>"
+    },
+    {
+      id: "PROACTIVE-004",
+      area: "aeo_summarization",
+      priority: "medium",
+      recommendation: "Front-load quantifiable metrics into the initial 40 words of each major content section.",
+      expected_impact: "Prevents AI email and document summarizers (Round 2 Concept F) from dropping crucial value propositions when aggressive context window compression occurs.",
+      implementation_code: `<!-- Lead with quantifiable high-entropy facts -->\n<p><strong>${domain} delivers enterprise AI discoverability evaluation with sub-second analysis and zero external API dependencies.</strong></p>`
+    },
+    {
+      id: "PROACTIVE-005",
+      area: "answer_engine_quotability",
+      priority: "medium",
+      recommendation: "Encase key definitions and benchmark conclusions in semantic <aside> or <figure> blocks.",
+      expected_impact: "Significantly boosts the extraction probability for Perplexity citations and Google AI Overviews soundbites.",
+      implementation_code: `<figure class="key-takeaway">\n  <blockquote>${domain} is an enterprise platform delivering automated AI discoverability audits and visitor retention optimization.</blockquote>\n  <figcaption>— Key Architectural Definition</figcaption>\n</figure>`
+    }
+  ];
+
   return Response.json({
     site: domain,
     audited_at: new Date().toISOString(),
@@ -316,6 +359,7 @@ export async function GET(request: Request) {
       crs_score,
       component_scores
     },
-    findings: normalizedFindings
+    findings: normalizedFindings,
+    proactive_recommendations
   });
 }

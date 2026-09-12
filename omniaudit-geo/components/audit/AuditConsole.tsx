@@ -389,12 +389,70 @@ export function AuditConsole({ initialUrl = "" }: { initialUrl?: string }) {
                           </div>
                         )
                       )}
+
+                      {f.suggested_action?.proactive_enhancement && (
+                        <div className="p-2.5 rounded-lg bg-primary/5 border border-primary/20 text-[11px] text-muted-foreground flex items-start gap-2">
+                          <span className="text-primary font-bold whitespace-nowrap">Proactive Strategy:</span>
+                          <span>{f.suggested_action.proactive_enhancement}</span>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
               })}
             </div>
           </div>
+
+          {/* Proactive Beyond-Defect Recommendations */}
+          {report.proactive_recommendations && report.proactive_recommendations.length > 0 && (
+            <div className="space-y-4 pt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground uppercase tracking-wider flex items-center gap-2">
+                    <span>Proactive Beyond-Defect Strategies ({report.proactive_recommendations.length})</span>
+                    <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
+                      Adobe Rubric High-Leverage
+                    </Badge>
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Proactive improvements that strengthen AI discoverability and on-site engagement even where no explicit defect was found.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {report.proactive_recommendations.map((rec) => (
+                  <Card key={rec.id} className="border-border bg-card/60 transition-all hover:border-border/90">
+                    <CardContent className="p-4 space-y-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <Badge variant="secondary" className="font-mono text-[10px]">{rec.id}</Badge>
+                        <Badge variant="outline" className="text-[10px] capitalize">{rec.area.replace(/_/g, " ")}</Badge>
+                      </div>
+                      <h4 className="text-xs font-semibold text-foreground">{rec.recommendation}</h4>
+                      <p className="text-[11px] text-muted-foreground leading-relaxed">{rec.expected_impact}</p>
+                      {rec.implementation_code && (
+                        <div className="pt-1">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-[10px] text-muted-foreground font-mono">Starter Blueprint:</span>
+                            <button
+                              type="button"
+                              onClick={() => copyCode(rec.id, rec.implementation_code!)}
+                              className="text-[10px] text-primary hover:underline font-mono cursor-pointer"
+                            >
+                              {copiedId === rec.id ? "✓ Copied" : "Copy"}
+                            </button>
+                          </div>
+                          <pre className="p-2 rounded-lg bg-background border border-border/60 text-[10px] font-mono text-muted-foreground overflow-x-auto max-h-28">
+                            {rec.implementation_code}
+                          </pre>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

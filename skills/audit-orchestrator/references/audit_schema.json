@@ -64,9 +64,25 @@
             "properties": {
               "summary": { "type": "string" },
               "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
-              "implementation_code": { "type": "string" }
+              "implementation_code": { "type": "string" },
+              "proactive_enhancement": { "type": "string" }
             }
           }
+        }
+      }
+    },
+    "proactive_recommendations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "area", "recommendation", "expected_impact", "priority"],
+        "properties": {
+          "id": { "type": "string" },
+          "area": { "type": "string" },
+          "recommendation": { "type": "string" },
+          "expected_impact": { "type": "string" },
+          "priority": { "type": "string", "enum": ["critical", "high", "medium", "low"] },
+          "implementation_code": { "type": "string" }
         }
       }
     }
