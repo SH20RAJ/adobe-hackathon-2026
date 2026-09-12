@@ -259,7 +259,7 @@ export function detectHydrationGap(url: string, html: string): Finding | null {
   const severity = (strongGap) ? "high" : "medium";
 
   return {
-    id: "F-003b",
+    id: "F-011",
     title: "Likely Client-Side Rendering Content Gap",
     severity,
     category: "crawlability_rendering",
