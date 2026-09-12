@@ -69,7 +69,6 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 
 ### 2.4 Cloud & Container Distribution (Docker / DigitalOcean)
 * **Description:** Production-ready containerized FastAPI application with native SSR and live JSON-RPC MCP adapter.
-* **Live Deployment:** **[https://omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)**
 * **Features:**
   * Runs production FastAPI control plane with multi-worker concurrency.
   * Packaged via minimal `Dockerfile` (Python 3.12-slim, non-root user) and `docker-compose.yml`.

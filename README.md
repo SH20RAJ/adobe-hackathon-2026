@@ -3,7 +3,6 @@
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Team Submission**
 > **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
 > **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)  
-> **Live Edge Web App:** [omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)  
 > **Live Showcase & Pitch:** [sh20raj.github.io/adobe-hackathon-2026](https://sh20raj.github.io/adobe-hackathon-2026/)
 
 ---
