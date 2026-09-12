@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}OmniAudit-GEO — Brand AI-Readiness & Visitor Retention Platform{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-pill">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+    </svg>
+    Adobe University Hackathon 2026 Round 3 Marketplace
+  </div>
+  <h1 class="hero-title">
+    Audit Why AI Assistants <br>
+    <span class="gradient-text">Fail to Discover or Retain</span> Your Brand
+  </h1>
+  <p class="hero-subtitle">
+    Pure Python & FastAPI. Evaluates off-site AI discoverability (ACPI) and post-referral visitor retention (CRS) in under 1 millisecond.
+  </p>
+
+  <!-- Search Audit Bar (Pure HTML Form - Zero React/JS required) -->
+  <div class="audit-search-bar">
+    <form action="/audit" method="get" class="search-form">
+      <input 
+        type="text" 
+        name="url" 
+        class="search-input" 
+        placeholder="Enter website URL (e.g. adobe.com, openai.com, example.com)..." 
+        required
+        autocomplete="off"
+      />
+      <button type="submit" class="btn btn-primary">Run Live Audit</button>
+    </form>
+
+    <div class="preset-pills">
+      <span style="font-size: 0.8rem; color: var(--text-muted);">Quick audit presets:</span>
+      <a href="/audit?url=adobe.com" class="preset-btn">adobe.com</a>
+      <a href="/audit?url=openai.com" class="preset-btn">openai.com</a>
+      <a href="/audit?url=github.com" class="preset-btn">github.com</a>
+      <a href="/audit?url=example.com" class="preset-btn">example.com</a>
+    </div>
+  </div>
+</section>
+
+<!-- 6 Decoupled Diagnostic Skills -->
+<section style="margin-top: 2rem;">
+  <h2 style="text-align: center; font-size: 1.85rem; font-weight: 700; margin-bottom: 0.5rem;">
+    6 Modular Diagnostic Skills (<a href="https://agentskills.io" target="_blank" style="color:var(--accent-primary); text-decoration:none;">agentskills.io</a>)
+  </h2>
+  <p style="text-align: center; color: var(--text-secondary); max-width: 600px; margin: 0 auto 2.5rem auto;">
+    Composed dynamically by autonomous AI agents or executed as an integrated master audit.
+  </p>
+
+  <div class="grid-3">
+    <div class="card">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">🤖</div>
+      <div class="card-title">Crawl & Hydration Audit</div>
+      <div class="card-desc">
+        Audits robots.txt rules for GPTBot, ClaudeBot, PerplexityBot, and flags blank JS client hydration gaps.
+      </div>
+      <span class="badge badge-high">Skill 1</span>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">🌐</div>
+      <div class="card-title">Structured Entity & sameAs</div>
+      <div class="card-desc">
+        Validates Schema.org JSON-LD entity graph and sameAs Wikidata links to eliminate LLM hallucinations.
+      </div>
+      <span class="badge badge-high">Skill 2</span>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">💬</div>
+      <div class="card-title">AEO Quotability & Facts</div>
+      <div class="card-desc">
+        Measures sentence-level atomic fact density, interrogative Q&A headings, and text locked in non-text graphics.
+      </div>
+      <span class="badge badge-medium">Skill 3</span>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">⏱️</div>
+      <div class="card-title">Freshness & Trust Signals</div>
+      <div class="card-desc">
+        Audits temporal freshness, dateModified markers, author bylines, and citations for AI knowledge graphs.
+      </div>
+      <span class="badge badge-medium">Skill 4</span>
+    </div>
+
+    <div class="card">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">🎯</div>
+      <div class="card-title">On-Site Retention (CRS)</div>
+      <div class="card-desc">
+        Diagnoses 5-second hero value proposition clarity, reading ease, and high-contrast CTA conversion paths.
+      </div>
+      <span class="badge badge-low">Skill 5</span>
+    </div>
+
+    <div class="card" style="border-color: var(--border-active);">
+      <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">⚡</div>
+      <div class="card-title">Master Orchestrator</div>
+      <div class="card-desc">
+        Canonical entrypoint composing all diagnostic sub-skills into an authoritative schema-compliant JSON report.
+      </div>
+      <span class="badge badge-critical" style="background:rgba(99,102,241,0.2); color:#c7d2fe; border-color:var(--accent-primary);">Entrypoint</span>
+    </div>
+  </div>
+</section>
+
+<!-- Model Context Protocol Section -->
+<section class="card" style="margin-top: 3.5rem; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(17,24,39,0.8) 100%); border-color: rgba(99,102,241,0.3);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
+    <div>
+      <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 0.5rem;">Native Anthropic Model Context Protocol (MCP) Server</h3>
+      <p style="color: var(--text-secondary); max-width: 650px; font-size: 0.95rem;">
+        Expose all 6 diagnostic audit tools directly to Cursor, Claude Desktop, and Antigravity agents via JSON-RPC 2.0.
+      </p>
+    </div>
+    <a href="/docs#mcp" class="btn btn-primary">View MCP Instructions</a>
+  </div>
+</section>
+{% endblock %}

@@ -78,13 +78,14 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 
 ---
 
-## 🌐 Live Deployments & Interactive Environments
+## 🌐 Web Control Plane, API & Live Environments
 
-* **Live Edge Application (Cloudflare Workers + Next.js App Router):**  
-  👉 **[https://omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)**
-  * Separate interactive web/API prototype powered by Cloudflare Workers.
-  * Real-time live auditing API at `/api/audit?url=<URL>`.
-  * Clean, minimalist **Adobe Spectrum UI/UX** design system.
+* **Pure Python Web Control Plane & MCP Server (`omniaudit-geo`):**
+  * Built 100% in Python using **FastAPI** and **Jinja2 SSR** (Zero React, Zero JS build step).
+  * Direct Python AST & heuristic imports directly from canonical skill scripts (`audit_runner.py`, `mcp_server.py`, `safe_fetch.py`).
+  * Real-time live auditing API at `GET /api/audit?url=<URL>`.
+  * Remote Model Context Protocol (MCP) JSON-RPC 2.0 endpoint at `POST /api/mcp` and `GET /mcp`.
+  * Clean, ultra-fast **Adobe Spectrum UI/UX** design system rendered server-side in sub-milliseconds.
 
 * **Live Showcase & Pitch Page (GitHub Pages):**  
   👉 **[https://sh20raj.github.io/adobe-hackathon-2026/](https://sh20raj.github.io/adobe-hackathon-2026/)**
@@ -95,22 +96,32 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 
 ```
 adobe-hackathon-2026/
-├── marketplace.json                    <- Top-level Marketplace Manifest
-├── README.md                           <- Documentation & Quickstart
+├── marketplace.json                    <- Top-level agentskills.io Marketplace Manifest
+├── README.md                           <- Documentation & Quickstart (This file)
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory
+├── CLAUDE.md                           <- Claude Code Operational Protocol
 ├── index.html                          <- Interactive Pitch & Showcase Dashboard
 ├── .github/workflows/deploy-pages.yml  <- Automated GitHub Pages CI/CD
-├── omniaudit-geo/                      <- Cloudflare Workers Next.js Edge App
-│   ├── app/page.tsx                    <- Adobe Spectrum Dashboard
-│   ├── app/api/audit/route.ts          <- Real-time Live Edge Audit API
-│   └── wrangler.jsonc                  <- Cloudflare Edge Manifest
+├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane & MCP Server
+│   ├── main.py                         <- FastAPI App, REST API & JSON-RPC 2.0 MCP Server
+│   ├── templates/                      <- Server-Side Rendered (SSR) Jinja2 Templates
+│   ├── static/                         <- Vanilla CSS Design System & Static Brand Assets
+│   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Jinja2
+│   └── tests/                          <- TestClient test suite for API & MCP endpoints
 ├── docs/                               <- Master Architecture, Pitch & Defense Guides
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Engine
+│   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria & Golden Benchmarks
+│   ├── JUDGE_DEFENSE.md                <- 14 Comprehensive Jury & Technical Defense Answers
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Choices
 │   ├── PITCH.md                        <- Executive Presentation & Demo Script
 │   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
 │   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md <- MCP, agentskills.io & Adobe Exchange
-└── skills/                             <- Specialized Agent Skills
+├── scripts/
+│   ├── verify.py                       <- Unified 6-gate verification runner (--ci)
+│   ├── final_check.py                  <- Single mandatory pre-submission pass gate
+│   ├── eval_benchmarks.py              <- 16 Golden Benchmarks evaluation harness
+│   └── package_submission.py           <- Clean zip packager and sandbox validator
+└── skills/                             <- Specialized Agent Skills (agentskills.io)
     ├── audit-orchestrator/             <- [ENTRYPOINT] scripts/audit_runner.py & mcp_server.py
     ├── crawl-render-audit/             <- AI Bot Permissions (robots.txt) & Hydration Gaps
     ├── structured-entity-audit/        <- Schema.org JSON-LD & Entity Disambiguation (sameAs)
@@ -123,22 +134,38 @@ adobe-hackathon-2026/
 
 ## ⚡ Quickstart: Run & Verify
 
-### 1. Unified 6-Gate Master Verification Loop:
+### 1. Single Final Submission Check:
 ```bash
-python3 scripts/verify.py
+python3 scripts/final_check.py
 ```
-> Runs 122 unit and benchmark tests across 6 gates: Crawl/SSRF safety, Specialist unit tests, 16 Golden Benchmarks matrix, Schema integrity, Web unit tests, and Cloudflare Next.js production build in ~3 seconds.
+> Runs the complete 6-gate verification runner in strict CI mode, verifies the unzipped package inside an isolated sandbox, and outputs `FINAL SUBMISSION: PASS`.
 
-### 2. Standalone 16 Golden Benchmarks Evaluation Harness:
+### 2. Unified 6-Gate Master Verification Loop:
+```bash
+python3 scripts/verify.py --ci
+```
+> Runs 152 unit and benchmark tests across 6 gates: Hostile SSRF Defense, Specialist unit tests, 16 Golden Benchmarks matrix, Recursive Schema integrity, FastAPI control plane tests, and Marketplace package sandbox verification.
+
+### 3. Standalone 16 Golden Benchmarks Evaluation Harness:
 ```bash
 python3 scripts/eval_benchmarks.py
 ```
-> Evaluates all 16 Golden Benchmarks with latency breakdown (<1ms/site), scoring precision, and beyond-defect proactive recommendations in ~20ms.
+> Evaluates all 16 Golden Benchmarks with latency breakdown (<0.5ms/site), scoring precision (100.0%), and beyond-defect proactive recommendations in ~6ms.
 
-### 3. Model Context Protocol (MCP) Integration:
+### 4. Run FastAPI Web Control Plane & MCP Server Locally:
+```bash
+uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
+```
+- Open browser at `http://localhost:8000`
+- Audit Console: `http://localhost:8000/audit?url=https://adobe.com`
+- Benchmarks Table: `http://localhost:8000/benchmarks`
+- MCP JSON-RPC Endpoint: `http://localhost:8000/api/mcp`
+- Interactive API Docs: `http://localhost:8000/docs`
+
+### 5. Model Context Protocol (MCP) Integration:
 - **Instant IDE Remote Connection (Cursor, Claude Desktop, Antigravity):**
   ```text
-  URL: https://omniaudit-geo.shraj.workers.dev/api/mcp
+  URL: http://localhost:8000/api/mcp
   ```
 - **Air-Gapped Python MCP Server (Stdio):**
   ```bash
@@ -146,17 +173,6 @@ python3 scripts/eval_benchmarks.py
   # Self-test all 7 tools:
   python3 skills/audit-orchestrator/scripts/mcp_server.py --test
   ```
-
-### 4. Edge HTTP Audit API:
-```bash
-curl -s "https://omniaudit-geo.shraj.workers.dev/api/audit?url=https://adobe.com"
-```
-
-### 5. Adobe Spectrum 2 Web Application & PWA:
-- **Live URL:** [omniaudit-geo.shraj.workers.dev](https://omniaudit-geo.shraj.workers.dev)
-- **PWA Manifest:** [omniaudit-geo.shraj.workers.dev/manifest.json](https://omniaudit-geo.shraj.workers.dev/manifest.json)
-- **Design System:** Engineered adhering to authentic Adobe Spectrum 2 design principles (Adobe Red `#EB1000`, Charcoal surfaces `#141414`/`#1E1E1E`, Celery status accents `#27C281`, and crisp typography).
-
 
 ---
 
@@ -166,18 +182,19 @@ OmniAudit-GEO incorporates the agent harness engineering standards inspired by *
 * **Claude Code:** Configured with [`CLAUDE.md`](./CLAUDE.md) (commands, boundaries, subagent delegation).
 * **Google Antigravity AI:** Configured with [`AGENTS.md`](./AGENTS.md) and [`.agents/`](./.agents/) rules & skills (`tdd-workflow`, `verification-loop`, `security-review`, `eval-harness`).
 * **Cursor IDE:** Configured with [`.cursorrules`](./.cursorrules).
-* **Evaluation Harness:** 14 Golden Benchmarks and Acceptance Criteria documented in [`docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`](./docs/ACCEPTANCE_CRITERIA_AND_EVALS.md).
+* **Evaluation Harness:** 16 Golden Benchmarks and Acceptance Criteria documented in [`docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`](./docs/ACCEPTANCE_CRITERIA_AND_EVALS.md).
 
 ## 📚 Master Documentation Suite
 
 Explore the comprehensive research and design documents in [`docs/`](./docs/):
 
 1. **[Master Architecture & Scoring Models](./docs/ARCHITECTURE.md)** — Component topology and mathematical formulation for ACPI and CRS scores.
-2. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why the Python standard-library engine, AST parsers, Cloudflare Workers, MCP, and `agentskills.io` approach are used.
-3. **[Skill Marketplaces & Distribution Strategy](./docs/08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** — Distribution across `agentskills.io`, MCP Registries (Smithery/Glama), Adobe Exchange, and Cloudflare.
-4. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
-5. **[Adobe Senior Panel Defense & Interview Q&A](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions.
-6. **[Team Profiles & Engineering Strengths](./docs/03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** — Shaswat's product/showcase foundation and Prithvi's audit-engine hardening contributions.
+2. **[Adobe Senior Panel Defense & Interview Q&A](./docs/JUDGE_DEFENSE.md)** — 14 comprehensive defense answers addressing real-world edge cases, SSRF defense, ReDoS immunity, and benchmarking.
+3. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why the Python standard-library engine, AST parsers, FastAPI, MCP, and `agentskills.io` approach are used.
+4. **[Skill Marketplaces & Distribution Strategy](./docs/08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** — Distribution across `agentskills.io`, MCP Registries (Smithery/Glama), and Adobe Exchange.
+5. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
+6. **[Technical Q&A Defense](./docs/INTERVIEW_QA_AND_DEFENSE.md)** — 100/100 model answers to technical jury questions.
+7. **[Team Profiles & Engineering Strengths](./docs/03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** — Shaswat's product/showcase foundation and Prithvi's audit-engine hardening contributions.
 
 ---
 

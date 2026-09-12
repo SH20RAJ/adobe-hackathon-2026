@@ -1,0 +1,267 @@
+{
+  "status": "passed",
+  "timestamp": "2026-09-12T17:49:04Z",
+  "total_elapsed_s": 0.98,
+  "ci_mode": true,
+  "tests": {
+    "total": 152,
+    "passed": 152,
+    "failed": 0,
+    "python_tests": {
+      "total": 152,
+      "passed": 152,
+      "failed": 0
+    }
+  },
+  "gates": {
+    "gate1_security": {
+      "success": true,
+      "total": 61,
+      "passed": 61,
+      "failed": 0,
+      "skipped": 0,
+      "elapsed_s": 0.02
+    },
+    "gate2_core_engine": {
+      "success": true,
+      "total": 83,
+      "passed": 83,
+      "failed": 0,
+      "skipped": 0,
+      "elapsed_s": 0.018
+    },
+    "gate3_benchmarks": {
+      "status": "passed",
+      "total": 16,
+      "passed": 16,
+      "failed": 0,
+      "true_positives": 9,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "precision_pct": 100.0,
+      "recall_pct": 100.0,
+      "f1_score": 100.0,
+      "avg_latency_ms": 0.7,
+      "total_time_ms": 11.15,
+      "schema_failures": 0,
+      "fixtures": [
+        {
+          "fixture": "crawler_blocked",
+          "category": "Crawl & Robots",
+          "passed": true,
+          "acpi_score": 91.9,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.65,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "hydration_spa",
+          "category": "Hydration Gap",
+          "passed": true,
+          "acpi_score": 90.3,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.38,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "partial_hydration",
+          "category": "Hydration Gap",
+          "passed": true,
+          "acpi_score": 91.9,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.43,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "large_state_static",
+          "category": "Hydration (FP Check)",
+          "passed": true,
+          "acpi_score": 96.4,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.39,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "app_router",
+          "category": "Hydration (FP Check)",
+          "passed": true,
+          "acpi_score": 96.4,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.35,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "good_business",
+          "category": "Production Brand",
+          "passed": true,
+          "acpi_score": 98.2,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.56,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "good_structured",
+          "category": "Structured Data",
+          "passed": true,
+          "acpi_score": 99.4,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.55,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "bad_structured",
+          "category": "Structured Data",
+          "passed": true,
+          "acpi_score": 92.0,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.42,
+          "tp": 2,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "strong_aeo",
+          "category": "AEO & Quotability",
+          "passed": true,
+          "acpi_score": 95.2,
+          "crs_score": 97.2,
+          "schema_valid": true,
+          "latency_ms": 0.67,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "weak_aeo",
+          "category": "AEO & Quotability",
+          "passed": true,
+          "acpi_score": 93.2,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.33,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "stale_article",
+          "category": "Freshness & Trust",
+          "passed": true,
+          "acpi_score": 94.0,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.34,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "current_article",
+          "category": "Freshness & Trust",
+          "passed": true,
+          "acpi_score": 95.2,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.33,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "strong_engagement",
+          "category": "On-Site Engagement",
+          "passed": true,
+          "acpi_score": 96.4,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.42,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "weak_engagement",
+          "category": "On-Site Engagement",
+          "passed": true,
+          "acpi_score": 95.2,
+          "crs_score": 98.9,
+          "schema_valid": true,
+          "latency_ms": 2.34,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "documentation",
+          "category": "On-Site Engagement",
+          "passed": true,
+          "acpi_score": 96.4,
+          "crs_score": 100.0,
+          "schema_valid": true,
+          "latency_ms": 0.46,
+          "tp": 0,
+          "fp": 0,
+          "fn": 0
+        },
+        {
+          "fixture": "navigation_noise",
+          "category": "On-Site Engagement",
+          "passed": true,
+          "acpi_score": 94.8,
+          "crs_score": 97.2,
+          "schema_valid": true,
+          "latency_ms": 2.53,
+          "tp": 1,
+          "fp": 0,
+          "fn": 0
+        }
+      ]
+    },
+    "gate4_schema": {
+      "status": "passed",
+      "benchmark_schema_failures": 0
+    },
+    "gate5_web": {
+      "status": "passed",
+      "tests": {
+        "status": "passed",
+        "passed": 8,
+        "failed": 0,
+        "total": 8,
+        "skipped": 0,
+        "elapsed_s": 0.051
+      },
+      "engine": {
+        "status": "passed",
+        "routes_count": 27
+      }
+    },
+    "gate6_package": {
+      "status": "passed",
+      "archive_path": "/Users/shaswatraj/Desktop/adobe-hackathon-2026/omniaudit-geo-marketplace.zip",
+      "archive_bytes": 83139
+    }
+  }
+}

@@ -33,12 +33,13 @@ python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
 ```
 
-### Web Control Plane (`omniaudit-geo`):
+### Web Control Plane & MCP Server (`omniaudit-geo`):
 ```bash
-cd omniaudit-geo
-bun run dev       # Start local development server
-bun run build     # Build Next.js / Vinext production bundle
-bun run deploy    # Deploy to Cloudflare Workers (omniaudit-geo.shraj.workers.dev)
+# Run local FastAPI server
+uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
+
+# Run FastAPI test suite
+python3 -m unittest discover -s omniaudit-geo/tests -v
 ```
 
 ---
@@ -53,20 +54,26 @@ adobe-hackathon-2026/
 ├── docs/                               <- Architecture, Acceptance Criteria, and Pitch Docs
 │   ├── ARCHITECTURE.md                 <- Master system architecture & scoring models
 │   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria (AC) & Golden Benchmarks
+│   ├── JUDGE_DEFENSE.md                <- 14 Comprehensive Jury & Technical Defense Answers
 │   ├── PITCH.md                        <- Executive Presentation & Jury Deck
 │   └── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Q&A Defense
 ├── scripts/
-│   └── verify.py                       <- Unified 4-gate verification script
-├── skills/                             <- Deterministic Python Audit Skills
+│   ├── verify.py                       <- Unified 6-gate verification runner (--ci)
+│   ├── final_check.py                  <- Single mandatory pre-submission pass gate
+│   ├── eval_benchmarks.py              <- 16 Golden Benchmarks evaluation harness
+│   └── package_submission.py           <- Clean zip packager and sandbox validator
+├── skills/                             <- Deterministic Python Audit Skills (agentskills.io)
 │   ├── audit-orchestrator/             <- [ENTRYPOINT] Master dispatcher & schema validator
 │   ├── crawl-render-audit/             <- Robots.txt AI permissions & hydration gaps
 │   ├── structured-entity-audit/        <- Schema.org JSON-LD & sameAs entity graphs
 │   ├── aeo-quotability-audit/          <- LLM quotability & atomic fact density
 │   ├── freshness-corroboration-audit/  <- Temporal freshness & trust corroboration
 │   └── on-site-engagement-audit/       <- Value prop clarity, readability & bounce risk
-└── omniaudit-geo/                      <- Cloudflare Workers Edge Web Control Plane
-    ├── app/                            <- Next.js App Router (Adobe Spectrum UI)
-    └── wrangler.jsonc                  <- Cloudflare Workers configuration
+└── omniaudit-geo/                      <- Pure Python FastAPI Web Control Plane & MCP Server
+    ├── main.py                         <- FastAPI app, REST API & JSON-RPC 2.0 MCP server
+    ├── templates/                      <- Server-Side Rendered (SSR) Jinja2 templates
+    ├── static/                         <- Vanilla CSS design tokens & static brand assets
+    └── tests/                          <- TestClient test suite for API & MCP endpoints
 ```
 
 ---

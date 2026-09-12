@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Skill Marketplace — OmniAudit-GEO{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2.5rem;">
+  <div class="hero-pill">agentskills.io Open Specification</div>
+  <h1 style="font-size: 2rem; font-weight: 700; margin-bottom: 0.5rem;">Agent Skill Marketplace Manifest</h1>
+  <p style="color: var(--text-secondary);">
+    Modular, standard-compliant diagnostic skills declared in <code>marketplace.json</code>.
+  </p>
+</div>
+
+<div class="grid-2">
+  {% for skill in skills %}
+  <div class="card" style="position: relative; {% if skill.entrypoint %}border-color: var(--border-active);{% endif %}">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+      <div>
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">{{ skill.id }}</div>
+        <div style="font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-muted);">{{ skill.path }}</div>
+      </div>
+      {% if skill.entrypoint %}
+      <span class="badge badge-critical" style="background: rgba(99,102,241,0.2); color: #c7d2fe; border-color: var(--accent-primary);">Entrypoint</span>
+      {% else %}
+      <span class="badge badge-low">Diagnostic Skill</span>
+      {% endif %}
+    </div>
+
+    <p style="color: var(--text-secondary); font-size: 0.92rem; margin-bottom: 1.25rem;">
+      {{ skill.description }}
+    </p>
+
+    <div style="font-size: 0.82rem; font-weight: 600; color: #a5b4fc; margin-bottom: 0.35rem;">CLI Invocation:</div>
+    {% if skill.entrypoint %}
+    <pre class="code-block"><code>python3 skills/{{ skill.id }}/scripts/audit_runner.py --url "https://example.com"</code></pre>
+    {% else %}
+    <pre class="code-block"><code>python3 skills/audit-orchestrator/scripts/mcp_server.py</code></pre>
+    {% endif %}
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}
