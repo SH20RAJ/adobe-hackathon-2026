@@ -95,6 +95,14 @@ DOCS_REGISTRY: list[dict[str, Any]] = [
         "description": "6-Gate verification loop, 167 unit and integration tests, offline execution, and CI workflows.",
     },
     {
+        "id": "test-report",
+        "title": "Comprehensive Test Report",
+        "icon": "📋",
+        "category": "Canonical Guides",
+        "rel_path": "docs/test-report.md",
+        "description": "Live automated test results, benchmark precision/recall, website audits, and security gate matrices.",
+    },
+    {
         "id": "benchmarking",
         "title": "16 Golden Benchmarks",
         "icon": "📊",
@@ -271,32 +279,71 @@ def get_docs_catalog() -> list[dict[str, Any]]:
     return DOCS_REGISTRY
 
 
+DOC_CONTENT_CACHE: dict[str, str] = {}
+
+
 def get_doc_by_id(doc_id: str) -> dict[str, Any] | None:
-    """Fetches a document by its unique ID and loads its content from disk."""
+    """Fetches a document by its unique ID and loads its content from disk with multi-path resolution and fallback."""
     for item in DOCS_REGISTRY:
         if item["id"] == doc_id:
-            file_path = REPO_ROOT / item["rel_path"]
-            if file_path.is_file():
-                try:
-                    content = file_path.read_text(encoding="utf-8")
-                    return {
-                        **item,
-                        "content": content,
-                        "absolute_path": str(file_path),
-                        "exists": True,
-                    }
-                except Exception as e:
-                    return {
-                        **item,
-                        "content": f"# Error loading document\n\nCould not read `{item['rel_path']}`: {e}",
-                        "exists": False,
-                    }
-            else:
+            rel = item["rel_path"]
+
+            # 1. Candidate file paths on disk
+            candidate_paths = [
+                REPO_ROOT / rel,
+                Path.cwd() / rel,
+                Path(__file__).resolve().parent.parent / rel,
+                Path(__file__).resolve().parent / rel,
+                Path("/app") / rel,
+            ]
+
+            for cp in candidate_paths:
+                if cp.is_file():
+                    try:
+                        content = cp.read_text(encoding="utf-8")
+                        DOC_CONTENT_CACHE[doc_id] = content
+                        return {
+                            **item,
+                            "content": content,
+                            "absolute_path": str(cp),
+                            "exists": True,
+                        }
+                    except Exception:
+                        pass
+
+            # 2. Return from in-memory cache if available
+            if doc_id in DOC_CONTENT_CACHE:
                 return {
                     **item,
-                    "content": f"# Document Not Found\n\nFile does not exist at `{item['rel_path']}`.",
-                    "exists": False,
+                    "content": DOC_CONTENT_CACHE[doc_id],
+                    "absolute_path": f"cache://{rel}",
+                    "exists": True,
                 }
+
+            # 3. Live fallback: Fetch raw markdown from GitHub repository
+            try:
+                import urllib.request
+
+                raw_url = f"https://raw.githubusercontent.com/SH20RAJ/omniaudit/main/{rel}"
+                req = urllib.request.Request(raw_url, headers={"User-Agent": "OmniAudit-GEO-DocsViewer/1.0"})
+                with urllib.request.urlopen(req, timeout=5) as resp:
+                    if resp.status == 200:
+                        content = resp.read().decode("utf-8")
+                        DOC_CONTENT_CACHE[doc_id] = content
+                        return {
+                            **item,
+                            "content": content,
+                            "absolute_path": raw_url,
+                            "exists": True,
+                        }
+            except Exception:
+                pass
+
+            return {
+                **item,
+                "content": f"# Document Not Found\n\nFile does not exist at `{item['rel_path']}`.",
+                "exists": False,
+            }
     return None
 
 

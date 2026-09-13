@@ -22,11 +22,20 @@ WORKDIR /app
 COPY omniaudit-geo/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application, skills, scripts, and marketplace manifest
+# Copy application, documentation, skills, scripts, and marketplace manifest
 COPY marketplace.json ./marketplace.json
 COPY README.md ./README.md
+COPY AGENTS.md ./AGENTS.md
+COPY CLAUDE.md ./CLAUDE.md
+COPY CONTRIBUTING.md ./CONTRIBUTING.md
+COPY SECURITY.md ./SECURITY.md
+COPY CODE_OF_CONDUCT.md ./CODE_OF_CONDUCT.md
+COPY LICENSE ./LICENSE
+COPY pyproject.toml ./pyproject.toml
+COPY setup.py ./setup.py
 COPY app.py ./app.py
 COPY cli.py ./cli.py
+COPY docs/ ./docs/
 COPY skills/ ./skills/
 COPY scripts/ ./scripts/
 COPY omniaudit-geo/ ./omniaudit-geo/

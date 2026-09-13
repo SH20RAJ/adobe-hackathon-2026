@@ -1,0 +1,398 @@
+{
+  "timestamp": "2026-09-13 05:30:17 UTC",
+  "git_commit": "1664f74",
+  "git_branch": "main",
+  "system": "Darwin 25.6.0 (arm64)",
+  "python_version": "3.14.4",
+  "unit_tests": {
+    "total": 184,
+    "passed": 184,
+    "failed": 0,
+    "errors": 0,
+    "skipped": 0,
+    "elapsed_seconds": 0.517,
+    "breakdown": {
+      "tests": 28
+    },
+    "success": true
+  },
+  "benchmarks": {
+    "status": "passed",
+    "total": 16,
+    "passed": 16,
+    "failed": 0,
+    "true_positives": 9,
+    "false_positives": 0,
+    "false_negatives": 0,
+    "precision_pct": 100.0,
+    "recall_pct": 100.0,
+    "f1_score": 100.0,
+    "avg_latency_ms": 0.39,
+    "total_time_ms": 6.3,
+    "schema_failures": 0,
+    "fixtures": [
+      {
+        "fixture": "crawler_blocked",
+        "category": "Crawl & Robots",
+        "passed": true,
+        "acpi_score": 84.9,
+        "crs_score": 93.0,
+        "schema_valid": true,
+        "latency_ms": 0.43,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "hydration_spa",
+        "category": "Hydration Gap",
+        "passed": true,
+        "acpi_score": 79.3,
+        "crs_score": 83.5,
+        "schema_valid": true,
+        "latency_ms": 0.35,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "partial_hydration",
+        "category": "Hydration Gap",
+        "passed": true,
+        "acpi_score": 84.9,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.48,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "large_state_static",
+        "category": "Hydration (FP Check)",
+        "passed": true,
+        "acpi_score": 89.4,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.39,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "app_router",
+        "category": "Hydration (FP Check)",
+        "passed": true,
+        "acpi_score": 89.4,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.37,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "good_business",
+        "category": "Production Brand",
+        "passed": true,
+        "acpi_score": 96.2,
+        "crs_score": 94.5,
+        "schema_valid": true,
+        "latency_ms": 0.56,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "good_structured",
+        "category": "Structured Data",
+        "passed": true,
+        "acpi_score": 96.4,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.35,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "bad_structured",
+        "category": "Structured Data",
+        "passed": true,
+        "acpi_score": 90.0,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.36,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "strong_aeo",
+        "category": "AEO & Quotability",
+        "passed": true,
+        "acpi_score": 88.2,
+        "crs_score": 88.7,
+        "schema_valid": true,
+        "latency_ms": 0.5,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "weak_aeo",
+        "category": "AEO & Quotability",
+        "passed": true,
+        "acpi_score": 82.2,
+        "crs_score": 83.5,
+        "schema_valid": true,
+        "latency_ms": 0.33,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "stale_article",
+        "category": "Freshness & Trust",
+        "passed": true,
+        "acpi_score": 87.0,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.32,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "current_article",
+        "category": "Freshness & Trust",
+        "passed": true,
+        "acpi_score": 88.2,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.32,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "strong_engagement",
+        "category": "On-Site Engagement",
+        "passed": true,
+        "acpi_score": 89.4,
+        "crs_score": 95.5,
+        "schema_valid": true,
+        "latency_ms": 0.4,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "weak_engagement",
+        "category": "On-Site Engagement",
+        "passed": true,
+        "acpi_score": 88.2,
+        "crs_score": 90.7,
+        "schema_valid": true,
+        "latency_ms": 0.35,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "documentation",
+        "category": "On-Site Engagement",
+        "passed": true,
+        "acpi_score": 89.4,
+        "crs_score": 91.5,
+        "schema_valid": true,
+        "latency_ms": 0.32,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      {
+        "fixture": "navigation_noise",
+        "category": "On-Site Engagement",
+        "passed": true,
+        "acpi_score": 87.8,
+        "crs_score": 88.9,
+        "schema_valid": true,
+        "latency_ms": 0.46,
+        "tp": 1,
+        "fp": 0,
+        "fn": 0
+      }
+    ]
+  },
+  "website_audits": [
+    {
+      "archetype": "Production AI Cloud",
+      "url": "https://omnicognitive.example.com",
+      "status_code": 200,
+      "acpi_score": 90.8,
+      "crs_score": 93.7,
+      "findings_count": 4,
+      "schema_valid": true,
+      "latency_ms": 1.84,
+      "key_findings": [
+        "F-004",
+        "F-005",
+        "F-008"
+      ]
+    },
+    {
+      "archetype": "E-Commerce Product",
+      "url": "https://shop.example.com/aeroflight",
+      "status_code": 200,
+      "acpi_score": 90.8,
+      "crs_score": 96.5,
+      "findings_count": 3,
+      "schema_valid": true,
+      "latency_ms": 1.7,
+      "key_findings": [
+        "F-004",
+        "F-005",
+        "F-008"
+      ]
+    },
+    {
+      "archetype": "News & Editorial",
+      "url": "https://news.example.com/ai-standards",
+      "status_code": 200,
+      "acpi_score": 88.2,
+      "crs_score": 95.0,
+      "findings_count": 4,
+      "schema_valid": true,
+      "latency_ms": 1.65,
+      "key_findings": [
+        "F-004",
+        "F-005",
+        "F-015"
+      ]
+    },
+    {
+      "archetype": "Blocked Crawlers Site",
+      "url": "https://blocked.example.com",
+      "status_code": 200,
+      "acpi_score": 78.7,
+      "crs_score": 91.5,
+      "findings_count": 4,
+      "schema_valid": true,
+      "latency_ms": 1.33,
+      "key_findings": [
+        "F-001-GPTBot",
+        "F-001-ClaudeBot",
+        "F-004"
+      ]
+    },
+    {
+      "archetype": "Client-Side SPA",
+      "url": "https://spa.example.com",
+      "status_code": 200,
+      "acpi_score": 81.4,
+      "crs_score": 83.5,
+      "findings_count": 5,
+      "schema_valid": true,
+      "latency_ms": 1.39,
+      "key_findings": [
+        "F-011",
+        "F-004",
+        "F-007"
+      ]
+    },
+    {
+      "archetype": "Live Public Domain (example.com)",
+      "url": "https://example.com",
+      "status_code": 200,
+      "acpi_score": 89.4,
+      "crs_score": 92.0,
+      "findings_count": 3,
+      "schema_valid": true,
+      "latency_ms": 240.6,
+      "key_findings": [
+        "F-004",
+        "F-008",
+        "F-019"
+      ]
+    }
+  ],
+  "security": [
+    {
+      "vector": "IPv4 Loopback",
+      "target": "http://127.0.0.1:8000",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Localhost Hostname",
+      "target": "http://localhost:3000",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Cloud Metadata Service",
+      "target": "http://169.254.169.254/latest/meta-data",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Private RFC 1918 (Class A)",
+      "target": "http://10.0.0.1/admin",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Private RFC 1918 (Class C)",
+      "target": "http://192.168.1.1",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "IPv6 Loopback",
+      "target": "http://[::1]:8080",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Userinfo Authority Injection",
+      "target": "http://user:pass@legit.com",
+      "blocked": true,
+      "status_code": 400
+    },
+    {
+      "vector": "Disallowed FTP Protocol",
+      "target": "ftp://ftp.example.com/file",
+      "blocked": true,
+      "status_code": 400
+    }
+  ],
+  "mcp": [
+    {
+      "method": "initialize",
+      "status_code": 200,
+      "success": true
+    },
+    {
+      "method": "tools/list",
+      "status_code": 200,
+      "tools_count": 7,
+      "success": true
+    },
+    {
+      "method": "tools/call (audit_website)",
+      "status_code": 200,
+      "success": true
+    },
+    {
+      "method": "tools/call (inspect_robots_and_rendering)",
+      "status_code": 200,
+      "success": true
+    },
+    {
+      "method": "tools/call (inspect_structured_data)",
+      "status_code": 200,
+      "success": true
+    }
+  ]
+}

@@ -329,6 +329,35 @@ def cmd_lint(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_docs(args: argparse.Namespace) -> int:
+    """Browse or read repository documentation."""
+    from docs_manager import DOCS_REGISTRY, get_doc_by_id, search_docs
+
+    if getattr(args, "list", False):
+        print(_c(BOLD, _c(CYAN, "\n📚 OmniAudit-GEO Documentation Catalog:")))
+        for doc in DOCS_REGISTRY:
+            print(f"  • {_c(GREEN, doc['id']):<30} [{doc['category']}] {doc['title']}")
+        return 0
+
+    if getattr(args, "search", None):
+        results = search_docs(args.search)
+        print(_c(BOLD, _c(CYAN, f"\n🔍 Search results for '{args.search}': ({len(results)} found)")))
+        for doc in results:
+            print(f"  • {_c(GREEN, doc['id']):<30} {doc['title']}")
+        return 0
+
+    if getattr(args, "get", None):
+        doc = get_doc_by_id(args.get)
+        if not doc or not doc.get("exists"):
+            print(_c(RED, f"Error: Document '{args.get}' not found."))
+            return 1
+        print(doc["content"])
+        return 0
+
+    print("Use --list, --search <query>, or --get <doc_id>")
+    return 0
+
+
 # ----------------------------------------------------------------------
 # Text and Markdown Formatters
 # ----------------------------------------------------------------------
@@ -518,6 +547,12 @@ Examples:
     lint_parser = subparsers.add_parser("lint", help="Run Ruff linter and code formatting checks")
     lint_parser.add_argument("--fix", action="store_true", help="Automatically fix fixable lint and format issues")
 
+    # 9. docs subcommand
+    docs_parser = subparsers.add_parser("docs", help="Browse, search, or read canonical documentation")
+    docs_parser.add_argument("--list", "-l", action="store_true", help="List all available documents in registry")
+    docs_parser.add_argument("--search", "-s", help="Search documentation by keyword")
+    docs_parser.add_argument("--get", "-g", help="Read full document content by slug ID (e.g. getting-started)")
+
     return parser
 
 
@@ -549,6 +584,8 @@ def main() -> int:
         return cmd_package(args)
     elif args.command == "lint":
         return cmd_lint(args)
+    elif args.command == "docs":
+        return cmd_docs(args)
     else:
         parser.print_help()
         return 0
