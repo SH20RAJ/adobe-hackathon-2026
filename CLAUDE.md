@@ -24,7 +24,7 @@ python3 cli.py benchmark
 ## 🏛️ Repository Architecture & Boundaries
 
 ```text
-adobe-hackathon-2026/
+omniaudit/
 ├── marketplace.json        <- Official agentskills.io marketplace manifest
 ├── cli.py                  <- Unified CLI entrypoint (shares skills/ logic directly)
 ├── app.py                  <- Standalone Gradio 6 UI launcher (Port 7860)

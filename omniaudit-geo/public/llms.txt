@@ -25,5 +25,5 @@ OmniAudit-GEO is an enterprise agent skills marketplace compliant with the `agen
 - Web UI: https://omniaudit-geo.onrender.com/
 - Documentation Portal: https://omniaudit-geo.onrender.com/docs
 - REST API Documentation: https://omniaudit-geo.onrender.com/api/docs
-- GitHub: https://github.com/SH20RAJ/adobe-hackathon-2026
-- Marketplace Manifest: https://github.com/SH20RAJ/adobe-hackathon-2026/blob/main/marketplace.json
+- GitHub: https://github.com/SH20RAJ/omniaudit
+- Marketplace Manifest: https://github.com/SH20RAJ/omniaudit/blob/main/marketplace.json

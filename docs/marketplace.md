@@ -33,7 +33,7 @@ To avoid confusion between development tools and hackathon deliverables, OmniAud
 │    • Provides: Containerized FastAPI runtime, Gradio 6 UI, and remote MCP server.        │
 │    • Purpose: Cloud deployment on Render, DigitalOcean App Platform, or Kubernetes.     │
 ├──────────────────────────────────────────────────────────────────────────────────────────┤
-│ 4. SOURCE REPOSITORY (`SH20RAJ/adobe-hackathon-2026`)                                    │
+│ 4. SOURCE REPOSITORY (`SH20RAJ/omniaudit`)                                               │
 │    • Contents: Full workspace including tests, CI workflows, benchmarks, docs, assets.  │
 │    • Purpose: Collaborative open-source development and version history.                 │
 └──────────────────────────────────────────────────────────────────────────────────────────┘

@@ -30,6 +30,6 @@ This documentation is organized into focused, single-source-of-truth references 
 * **Interactive Documentation Portal:** [https://omniaudit-geo.onrender.com/docs](https://omniaudit-geo.onrender.com/docs)
 * **Live Web Demo:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
 * **Live Health Probe:** [https://omniaudit-geo.onrender.com/api/health](https://omniaudit-geo.onrender.com/api/health)
-* **GitHub Repository:** [https://github.com/SH20RAJ/adobe-hackathon-2026](https://github.com/SH20RAJ/adobe-hackathon-2026)
+* **GitHub Repository:** [https://github.com/SH20RAJ/omniaudit](https://github.com/SH20RAJ/omniaudit)
 * **Official Submission Archive:** `omniaudit-geo-marketplace.zip` (0.09 MB / $\le 50$ MB limit)
 * **Challenge Portal:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)

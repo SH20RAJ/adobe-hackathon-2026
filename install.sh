@@ -4,7 +4,7 @@
 # Adobe University Hackathon 2026 (Round 3 CRP)
 #
 # Usage (Direct via curl — No git required!):
-#   curl -fsSL https://raw.githubusercontent.com/SH20RAJ/adobe-hackathon-2026/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/SH20RAJ/omniaudit/main/install.sh | bash
 #
 # Or from a cloned repository:
 #   ./install.sh
@@ -72,7 +72,7 @@ from pathlib import Path
 
 dest = Path('$INSTALL_ROOT')
 dest.mkdir(parents=True, exist_ok=True)
-url = 'https://github.com/SH20RAJ/adobe-hackathon-2026/archive/refs/heads/main.zip'
+url = 'https://github.com/SH20RAJ/omniaudit/archive/refs/heads/main.zip'
 
 try:
     req = urllib.request.Request(url, headers={'User-Agent': 'OmniAudit-Installer'})

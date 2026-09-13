@@ -36,15 +36,15 @@ python3 -m unittest discover -s tests -v
 ### Option A: 1-Click DigitalOcean App Platform
 1. Fork or push this repository to GitHub.
 2. In DigitalOcean Cloud Console, navigate to **Apps** → **Create App**.
-3. Select GitHub and choose `adobe-hackathon-2026`.
+3. Select GitHub and choose `omniaudit`.
 4. DigitalOcean automatically detects the root `Dockerfile` and `.do/app.yaml`.
 5. Click **Deploy**. Your app will be live with auto-scaling HTTPS in under 2 minutes.
 
 ### Option B: DigitalOcean Droplet (Docker Compose)
 SSH into your DigitalOcean droplet and run:
 ```bash
-git clone https://github.com/SH20RAJ/adobe-hackathon-2026.git
-cd adobe-hackathon-2026
+git clone https://github.com/SH20RAJ/omniaudit.git
+cd omniaudit
 
 # Build and start container in background
 docker compose up -d --build

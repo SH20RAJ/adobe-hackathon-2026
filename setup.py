@@ -20,7 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     author="Shaswat Raj & Prithvi",
     author_email="shaswatraj3@gmail.com",
-    url="https://github.com/SH20RAJ/adobe-hackathon-2026",
+    url="https://github.com/SH20RAJ/omniaudit",
     py_modules=["cli", "app"],
     python_requires=">=3.10",
     install_requires=[],

@@ -62,7 +62,7 @@ Add this configuration to your Claude Desktop config file:
     "omniaudit-geo": {
       "command": "python3",
       "args": [
-        "/ABSOLUTE/PATH/TO/adobe-hackathon-2026/skills/audit-orchestrator/scripts/mcp_server.py"
+        "/ABSOLUTE/PATH/TO/omniaudit/skills/audit-orchestrator/scripts/mcp_server.py"
       ]
     }
   }
@@ -130,7 +130,7 @@ In `~/.codeium/windsurf/mcp_config.json`:
     "omniaudit-geo": {
       "command": "python3",
       "args": [
-        "/ABSOLUTE/PATH/TO/adobe-hackathon-2026/skills/audit-orchestrator/scripts/mcp_server.py"
+        "/ABSOLUTE/PATH/TO/omniaudit/skills/audit-orchestrator/scripts/mcp_server.py"
       ]
     }
   }

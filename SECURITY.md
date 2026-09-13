@@ -16,8 +16,8 @@ If you discover a security vulnerability (such as an SSRF bypass in `safe_fetch.
 
 Instead, please report it privately:
 
-1. Use [GitHub Private Vulnerability Reporting](https://github.com/SH20RAJ/adobe-hackathon-2026/security/advisories/new).
-2. Or email the core maintainers directly at [shaswatraj.dev@gmail.com](mailto:shaswatraj.dev@gmail.com) with the subject `[SECURITY] OmniAudit-GEO Vulnerability Report`.
+1. Use [GitHub Private Vulnerability Reporting](https://github.com/SH20RAJ/omniaudit/security/advisories/new).
+2. Or email the core maintainers directly at [sh20raj@gmail.com](mailto:sh20raj@gmail.com) with the subject `[SECURITY] OmniAudit-GEO Vulnerability Report`.
 
 Please include:
 * Description of the vulnerability and attack vector.

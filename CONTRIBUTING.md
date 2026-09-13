@@ -30,8 +30,8 @@ This project and everyone participating in it is governed by the [OmniAudit-GEO 
 ### Local Setup
 1. Fork and clone the repository:
    ```bash
-   git clone https://github.com/<your-username>/adobe-hackathon-2026.git
-   cd adobe-hackathon-2026
+   git clone https://github.com/<your-username>/omniaudit.git
+   cd omniaudit
    ```
 
 2. Create and activate a virtual environment:

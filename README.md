@@ -1,9 +1,9 @@
 # OmniAudit-GEO: Enterprise Brand AI-Readiness Marketplace
 
 <p align="center">
-  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026"><img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fadobe-hackathon-2026&countColor=%23263759&style=flat" alt="Visitors" /></a>
-  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/verify.yml?branch=main&label=6-Gate%20Verification&style=flat-square&logo=githubactions&logoColor=white" alt="Verification" /></a>
-  <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/publish-container.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/publish-container.yml?branch=main&label=GHCR%20Build&style=flat-square&logo=docker&logoColor=white" alt="Container" /></a>
+  <a href="https://visitorbadge.io/status?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fomniaudit"><img src="https://api.visitorbadge.io/api/combined?path=https%3A%2F%2Fgithub.com%2FSH20RAJ%2Fomniaudit&countColor=%23263759&style=flat" alt="Visitors" /></a>
+  <a href="https://github.com/SH20RAJ/omniaudit/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/omniaudit/verify.yml?branch=main&label=6-Gate%20Verification&style=flat-square&logo=githubactions&logoColor=white" alt="Verification" /></a>
+  <a href="https://github.com/SH20RAJ/omniaudit/actions/workflows/publish-container.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/omniaudit/publish-container.yml?branch=main&label=GHCR%20Build&style=flat-square&logo=docker&logoColor=white" alt="Container" /></a>
   <a href="https://omniaudit-geo.onrender.com/"><img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=flat-square&logo=render&logoColor=white" alt="Live Demo" /></a>
   <a href="https://omniaudit-geo.onrender.com/docs"><img src="https://img.shields.io/badge/Docs-Live%20Portal-6366F1?style=flat-square&logo=gitbook&logoColor=white" alt="Documentation Portal" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" /></a>
@@ -81,13 +81,13 @@ Organized as an `agentskills.io` compliant Agent Skill Marketplace defined by [`
 
 ### Method 1: Instant One-Liner (No Git Required — Recommended)
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SH20RAJ/adobe-hackathon-2026/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SH20RAJ/omniaudit/main/install.sh | bash
 ```
 
 ### Method 2: Cloned Repository (Editable Python Package)
 ```bash
-git clone https://github.com/SH20RAJ/adobe-hackathon-2026.git
-cd adobe-hackathon-2026
+git clone https://github.com/SH20RAJ/omniaudit.git
+cd omniaudit
 pip install -e .
 ```
 
@@ -149,7 +149,7 @@ OmniAudit-GEO natively implements the Anthropic MCP specification (`protocolVers
   "mcpServers": {
     "omniaudit-geo": {
       "command": "python3",
-      "args": ["/ABSOLUTE/PATH/TO/adobe-hackathon-2026/skills/audit-orchestrator/scripts/mcp_server.py"]
+      "args": ["/ABSOLUTE/PATH/TO/omniaudit/skills/audit-orchestrator/scripts/mcp_server.py"]
     }
   }
 }
@@ -169,6 +169,7 @@ curl -s -X POST https://omniaudit-geo.onrender.com/api/mcp \
   -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "audit_website", "arguments": {"url": "https://example.com"}}}'
 ```
 
+Click the "MCP Servers" button in the top right of the chat window. Click "Add new MCP server". Enter "OmniAuditGEO Cloud" in the name field. In the URL field, enter `https://omniaudit-geo.onrender.com/api/mcp`. Click the "Add" button. 
 
 
 ---

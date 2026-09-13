@@ -24,7 +24,7 @@ OmniAudit-GEO provides four flexible installation paths:
 Run directly from your terminal. This downloads the latest release archive, unpacks the skills and runtime into `~/.local/share/omniaudit-geo`, and links `omni` and `omniaudit` into `~/.local/bin` without requiring `git`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/SH20RAJ/adobe-hackathon-2026/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/SH20RAJ/omniaudit/main/install.sh | bash
 ```
 
 *Note: Ensure `~/.local/bin` is in your `$PATH` (e.g. `export PATH="$HOME/.local/bin:$PATH"`).*
@@ -35,8 +35,8 @@ For developers contributing to the codebase or modifying skills:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/SH20RAJ/adobe-hackathon-2026.git
-cd adobe-hackathon-2026
+git clone https://github.com/SH20RAJ/omniaudit.git
+cd omniaudit
 
 # 2. Install editable CLI wrapper in your active Python environment
 pip install -e .

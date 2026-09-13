@@ -50,7 +50,7 @@ SCHEMA_JSON_LD = """{
       "url": "https://omniaudit-geo.onrender.com/",
       "logo": "https://omniaudit-geo.onrender.com/logo.svg",
       "sameAs": [
-        "https://github.com/SH20RAJ/adobe-hackathon-2026"
+        "https://github.com/SH20RAJ/omniaudit"
       ]
     },
     {
