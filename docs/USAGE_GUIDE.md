@@ -54,11 +54,13 @@ OmniAudit-GEO is designed around a **Single Source of Truth** architecture:
 
 OmniAudit-GEO offers four setup options depending on your environment:
 
-### Option A: One-Liner Automated Setup (Recommended)
-Installs the global `omni` and `omniaudit` commands into your environment or user path:
+### Option A: One-Liner Automated Setup (Zero Git Required — Recommended)
+Run directly from your terminal to download, unpack, and configure `omni` and `omniaudit` globally via Python:
 ```bash
-git clone https://github.com/SH20RAJ/adobe-hackathon-2026.git
-cd adobe-hackathon-2026
+curl -fsSL https://raw.githubusercontent.com/SH20RAJ/adobe-hackathon-2026/main/install.sh | bash
+```
+Or from inside a cloned repository:
+```bash
 ./install.sh
 ```
 

@@ -170,8 +170,12 @@ OmniAudit-GEO offers four flexible setup paths, from zero-install immediate runs
 
 ### Installation Methods
 
-#### Method 1: Instant One-Liner Installer (Recommended)
-Automatically sets up the global `omni` and `omniaudit` commands with fallback handling across Linux and macOS:
+#### Method 1: Instant One-Liner Installer (Zero Git Required — Recommended)
+Run directly from your terminal to automatically download, unpack, and configure `omni` and `omniaudit` globally via Python:
+```bash
+curl -fsSL https://raw.githubusercontent.com/SH20RAJ/adobe-hackathon-2026/main/install.sh | bash
+```
+Or from inside a cloned repository:
 ```bash
 ./install.sh
 ```
