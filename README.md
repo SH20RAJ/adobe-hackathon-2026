@@ -164,32 +164,70 @@ adobe-hackathon-2026/
 
 ---
 
-## ⚡ Quickstart: Install, Run & Verify
+## ⚡ Installation & Quickstart Setup
 
-### 1. Unified Command-Line Interface (`cli.py`):
-OmniAudit-GEO includes a unified, colorized CLI tool that shares the canonical Python AST engine directly from `skills/`:
+OmniAudit-GEO offers four flexible setup paths, from zero-install immediate runs to global CLI installation:
+
+### Installation Methods
+
+#### Method 1: Instant One-Liner Installer (Recommended)
+Automatically sets up the global `omni` and `omniaudit` commands with fallback handling across Linux and macOS:
+```bash
+./install.sh
+```
+
+#### Method 2: Standard Python Package Installation (`pip install -e .`)
+Install the package directly into your current Python environment:
+```bash
+pip install -e .
+# Or with optional web control plane dependencies:
+pip install -e ".[web]"
+```
+Now run from anywhere:
+```bash
+omni --url https://example.com
+omniaudit --url https://example.com
+```
+
+#### Method 3: Zero-Dependency Immediate Run (Pure Python Standard Library)
+No installation or pip packages required! Core AST and scoring logic runs out of the box on Python 3.10+:
+```bash
+python3 cli.py --url https://example.com
+```
+
+#### Method 4: Docker / OCI Container Run
+```bash
+docker run --rm -p 8000:8000 ghcr.io/sh20raj/omniaudit-geo:stable
+```
+
+---
+
+## 🛠️ Complete Setup: CLI, MCP, Web & Skills
+
+### 1. Unified Command-Line Interface (`omni` / `omniaudit` / `cli.py`):
+The CLI shares the canonical Python AST engine directly from `skills/` with zero code duplication:
 
 ```bash
-# Immediate site audit (standard library only, zero pip dependencies!):
-python3 cli.py --url https://example.com
+# Shorthand full site audit (colorized terminal cards)
+omni --url https://example.com
 
-# Formatted output (JSON or GitHub Markdown):
-python3 cli.py audit --url https://example.com --format json
-python3 cli.py audit --url https://example.com --format markdown --output report.md
+# Formatted output (Strict JSON conforming to audit_schema.json or GitHub Markdown)
+omni audit --url https://example.com --format json
+omni audit --url https://example.com --format markdown --output report.md
 
-# Run individual specialist skill audits:
-python3 cli.py specialist crawl --url https://example.com
-python3 cli.py specialist structured --url https://example.com
-python3 cli.py specialist aeo --url https://example.com
-python3 cli.py specialist freshness --url https://example.com
-python3 cli.py specialist engagement --url https://example.com
+# Run individual specialist skills in isolation:
+omni specialist crawl --url https://example.com       # robots.txt AI bot policies + SPA hydration
+omni specialist structured --url https://example.com  # Schema.org JSON-LD & sameAs authority graphs
+omni specialist aeo --url https://example.com         # Atomic fact density & quotability
+omni specialist freshness --url https://example.com   # Publication timestamps & publisher trust
+omni specialist engagement --url https://example.com  # Hero value prop clarity & reading ease
 
-# Launch local web control plane or run tests:
-python3 cli.py serve --port 8000
-python3 cli.py mcp --test
-python3 cli.py benchmark
-python3 cli.py verify --ci
-python3 cli.py package
+# Local servers, benchmarks & verification:
+omni serve --port 8000   # Launch FastAPI + Gradio Web UI
+omni mcp --test          # Run internal MCP protocol self-test
+omni benchmark           # Run 16 Golden Benchmarks with latency telemetry
+omni verify --ci         # Run the unified 6-gate verification loop
+omni package             # Rebuild and sandbox-verify omniaudit-geo-marketplace.zip
 ```
 
 ### 2. Single Final Submission Check:
@@ -220,6 +258,8 @@ python3 app.py
 
 **Option B: Full FastAPI Control Plane + Mounted Gradio UI (Port 8000):**
 ```bash
+omni serve --port 8000
+# or:
 python3 cli.py serve --port 8000
 ```
 - Interactive Gradio UI: `http://localhost:8000/`
@@ -228,18 +268,27 @@ python3 cli.py serve --port 8000
 - Interactive OpenAPI Docs: `http://localhost:8000/api/docs`
 
 ### 6. Model Context Protocol (MCP) Integration:
-- **Instant IDE Remote Connection (Cursor, Claude Desktop, Antigravity):**
+OmniAudit-GEO exposes 7 deterministic tools for AI assistants (Claude, Cursor, Antigravity, Windsurf, Cline):
+- **Instant IDE Remote Connection:**
   ```text
   URL: https://omniaudit-geo.onrender.com/api/mcp
   ```
 - **Air-Gapped Python MCP Server (Stdio):**
   ```bash
-  python3 cli.py mcp
-  # Self-test all 7 tools:
-  python3 cli.py mcp --test
+  omni mcp
+  # or test:
+  omni mcp --test
   ```
+For complete copy-paste JSON configurations for Claude Desktop, Cursor, and Windsurf, see **[docs/USAGE_GUIDE.md](./docs/USAGE_GUIDE.md)**.
 
-### 7. Container Deployment (Docker, GHCR & DigitalOcean App Platform):
+### 7. Specialized Marketplace Skills Architecture:
+Each of the 6 skills in `skills/` adheres strictly to the `agentskills.io` standard:
+* **`SKILL.md`:** Self-contained instructions with YAML frontmatter, step-by-step algorithms, and input/output contracts.
+* **`scripts/`:** Deterministic Python AST extraction and analysis scripts.
+* **`references/`:** JSON schemas (`audit_schema.json`, `specialist_audit_schema.json`), severity rubrics, and blueprints.
+* **`tests/`:** Autonomous unit tests and offline HTML fixtures.
+
+### 8. Container Deployment (Docker, GHCR & DigitalOcean App Platform):
 - **Container Registry:** `ghcr.io/sh20raj/omniaudit-geo`
 - **Run Pre-built OCI Image:**
   ```bash

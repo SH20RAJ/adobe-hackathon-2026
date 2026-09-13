@@ -52,57 +52,58 @@ OmniAudit-GEO is designed around a **Single Source of Truth** architecture:
 
 ## 2. Quickstart & Installation
 
-### Option A: Local Python (Standard Library Only)
-If you only need the CLI, MCP server, and tests, you need **Python 3.10+ and standard library only**:
+OmniAudit-GEO offers four setup options depending on your environment:
 
+### Option A: One-Liner Automated Setup (Recommended)
+Installs the global `omni` and `omniaudit` commands into your environment or user path:
 ```bash
 git clone https://github.com/SH20RAJ/adobe-hackathon-2026.git
 cd adobe-hackathon-2026
+./install.sh
+```
 
-# Run immediate site audit (zero external dependencies!):
+### Option B: Editable Python Package (`pip install -e .`)
+Install into your current virtual environment or user space with standard Python packaging:
+```bash
+pip install -e .
+# Or with optional web control plane dependencies:
+pip install -e ".[web]"
+```
+Now run directly:
+```bash
+omni --url https://example.com
+omniaudit --url https://example.com
+```
+
+### Option C: Zero-Install Standalone Execution (Standard Library Only)
+If you only need immediate terminal audits without installing anything:
+```bash
 python3 cli.py --url https://example.com
 ```
 
-### Option B: Full Web & API Setup (Virtual Environment)
-To launch the FastAPI REST API and Gradio Web UI locally:
-
-```bash
-# Create and activate virtual environment
-python3 -m venv venv
-source venv/bin/activate
-
-# Install web control plane dependencies
-pip install -r requirements.txt
-
-# Launch web server on http://localhost:8000
-python3 cli.py serve
-```
-
-### Option C: Docker (Pre-built GHCR Image)
-Run without installing Python locally:
-
+### Option D: Docker / OCI Container
 ```bash
 docker run --rm -p 8000:8000 ghcr.io/sh20raj/omniaudit-geo:stable
 ```
 
 ---
 
-## 3. Unified Command-Line Interface (`cli.py`)
+## 3. Unified Command-Line Interface (`omni` / `omniaudit` / `cli.py`)
 
-The root `cli.py` provides an all-in-one command line tool with rich ANSI terminal colorization, JSON pipeability, and markdown report generation.
+The unified CLI provides rich ANSI terminal colorization, JSON pipeability, and markdown report generation. You can invoke it using `omni`, `omniaudit`, or `python3 cli.py` interchangeably.
 
 ### 3.1. Immediate Full Master Audit
 Run an end-to-end audit across all 6 skills:
 
 ```bash
 # Shorthand audit with colorized terminal summary
-python3 cli.py --url https://example.com
+omni --url https://example.com
 
 # Strict JSON output conforming to audit_schema.json
-python3 cli.py audit --url https://example.com --format json
+omni audit --url https://example.com --format json
 
 # Export GitHub Markdown report directly to a file
-python3 cli.py audit --url https://example.com --format markdown --output audit-report.md
+omni audit --url https://example.com --format markdown --output audit-report.md
 ```
 
 ### 3.2. Specialist Skill Audits
@@ -110,41 +111,41 @@ Run any of the 5 specialist skills independently:
 
 ```bash
 # 1. Crawl & JS-Render Inspector (robots.txt AI bot policies + SPA hydration gaps)
-python3 cli.py specialist crawl --url https://example.com
+omni specialist crawl --url https://example.com
 
 # 2. Structured Entity & JSON-LD Validator (Schema.org graphs + sameAs links)
-python3 cli.py specialist structured --url https://example.com
+omni specialist structured --url https://example.com
 
 # 3. AEO Quotability Scorer (Atomic facts, table headers, llms.txt)
-python3 cli.py specialist aeo --url https://example.com
+omni specialist aeo --url https://example.com
 
 # 4. Freshness & Publisher Trust (Publication timestamps + bylines + privacy policies)
-python3 cli.py specialist freshness --url https://example.com
+omni specialist freshness --url https://example.com
 
 # 5. On-Site Engagement Evaluator (Hero value prop, reading ease, CTA clarity)
-python3 cli.py specialist engagement --url https://example.com
+omni specialist engagement --url https://example.com
 ```
 
 ### 3.3. Launching Servers & Running Tests via CLI
 
 ```bash
 # Launch FastAPI + Gradio 6 web server on port 8000
-python3 cli.py serve --port 8000
+omni serve --port 8000
 
 # Launch standalone Gradio interface
-python3 cli.py serve --gradio-only --port 7860
+omni serve --gradio-only --port 7860
 
 # Run internal MCP server self-test
-python3 cli.py mcp --test
+omni mcp --test
 
 # Run the official 6-Gate verification loop
-python3 cli.py verify --ci
+omni verify --ci
 
 # Run the 16 Golden Benchmarks evaluation harness
-python3 cli.py benchmark
+omni benchmark
 
 # Rebuild and sandbox-verify the official submission package (omniaudit-geo-marketplace.zip)
-python3 cli.py package
+omni package
 ```
 
 ---

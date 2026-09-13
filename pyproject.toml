@@ -1,0 +1,67 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "omniaudit-geo"
+version = "1.0.0"
+description = "Enterprise Brand AI-Readiness, GEO/AEO Audit Marketplace & Anthropic MCP Server"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [
+  { name = "Shaswat Raj", email = "shaswatraj3@gmail.com" },
+  { name = "Prithvi" }
+]
+keywords = [
+  "seo",
+  "geo",
+  "aeo",
+  "generative-engine-optimization",
+  "mcp",
+  "model-context-protocol",
+  "agentskills",
+  "ai-discoverability",
+  "brand-audit"
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.14"
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+web = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "gradio>=6.0.0",
+  "httpx>=0.27.0",
+  "pydantic>=2.7.0"
+]
+dev = [
+  "fastapi>=0.115.0",
+  "uvicorn>=0.30.0",
+  "gradio>=6.0.0",
+  "httpx>=0.27.0",
+  "pydantic>=2.7.0"
+]
+
+[project.scripts]
+omniaudit = "cli:main"
+omni = "cli:main"
+
+[project.urls]
+Homepage = "https://omniaudit-geo.onrender.com/"
+Repository = "https://github.com/SH20RAJ/adobe-hackathon-2026"
+Documentation = "https://github.com/SH20RAJ/adobe-hackathon-2026/blob/main/docs/USAGE_GUIDE.md"
+
+[tool.setuptools]
+py-modules = ["cli", "app"]
