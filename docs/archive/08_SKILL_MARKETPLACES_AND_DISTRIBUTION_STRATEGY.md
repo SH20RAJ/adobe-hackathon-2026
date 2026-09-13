@@ -39,7 +39,7 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
 
 ### 2.2 Model Context Protocol (MCP) Registries (Smithery.ai, Glama.ai, mcp.so)
 * **Description:** MCP is Anthropic's open protocol for connecting AI assistants (Claude Desktop, Cursor, Antigravity, Superwhisper) to external tools and data sources.
-* **Our Adapter:** [`skills/audit-orchestrator/scripts/mcp_server.py`](file:///Users/shaswatraj/Desktop/adobe-hackathon-2026/skills/audit-orchestrator/scripts/mcp_server.py)
+* **Our Adapter:** [`skills/audit-orchestrator/scripts/mcp_server.py`](../../skills/audit-orchestrator/scripts/mcp_server.py)
 * **Popular MCP Registries:**
   * **[Smithery.ai](https://smithery.ai):** The premier registry for MCP servers with 1-click CLI installer (`npx -y @smithery/cli install omniaudit-geo`).
   * **[Glama.ai/mcp](https://glama.ai/mcp):** Open-source directory of verified Model Context Protocol tools.

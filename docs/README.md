@@ -1,32 +1,34 @@
-# Adobe University Hackathon 2026 — Round 3 Research & Documentation Suite
+# OmniAudit-GEO Documentation Hub
 
-Welcome to the comprehensive strategy, architecture, and research documentation suite for the **Adobe University Hackathon 2026 (Campus Recruitment Program)**.
+Welcome to the canonical technical documentation suite for **OmniAudit-GEO**, developed for the **Adobe University Hackathon 2026 (Campus Recruitment Program — Round 3)**.
+
+This documentation is organized into focused, single-source-of-truth references designed for rapid navigation by judges, developers, deployment engineers, and AI coding agents.
 
 ---
 
-## 📑 Core Documentation Index
+## 🧭 Canonical Documentation Index
 
-| File | Description | Focus Area |
+| Topic | Canonical Document | Primary Focus |
 | :--- | :--- | :--- |
-| **[USAGE_GUIDE.md](./USAGE_GUIDE.md)** | Complete installation, unified CLI (`cli.py`), MCP integration (Claude, Cursor, Antigravity), API, and deployment guide. | End-to-End User & Developer Guide |
-| **[ARCHITECTURE.md](./ARCHITECTURE.md)** | Master system topology for a six-skill marketplace (one orchestrator + five diagnostic skills), and ACPI/CRS formulas. | Master System Architecture |
-| **[ACCEPTANCE_CRITERIA_AND_EVALS.md](./ACCEPTANCE_CRITERIA_AND_EVALS.md)** | Formal system requirements, AC-SYS criteria, and 6-gate verification definitions. | Requirements & Quality Gates |
-| **[JUDGE_DEFENSE.md](./JUDGE_DEFENSE.md)** | 15 comprehensive jury defense Q&As covering SSRF, latency, scoring, regression benchmarks, and edge cases. | Jury Defense & FAQ |
-| **[TECH_STACK_JUSTIFICATION.md](./TECH_STACK_JUSTIFICATION.md)** | Why the Python standard-library engine, AST parsers, MCP, and agentskills.io approach are used. | Tech Stack & Industry Justification |
-| **[PITCH.md](./PITCH.md)** | Executive presentation deck, live demo walkthrough, and Adobe ecosystem synergy. | Pitch & Demo Presentation |
-| **[INTERVIEW_QA_AND_DEFENSE.md](./INTERVIEW_QA_AND_DEFENSE.md)** | Adobe Senior Panel defense guide with 100/100 model answers to technical questions. | Jury Defense & Interview Prep |
-| **[08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md](./08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** | Distribution across agentskills.io, MCP Registries (Smithery/Glama), Adobe Exchange, and Cloud Deployments. | Skill Stores & Distribution |
-| **[01_ADOBE_HACKATHON_2026_ROUND3_DEEP_DIVE.md](./01_ADOBE_HACKATHON_2026_ROUND3_DEEP_DIVE.md)** | Full breakdown of the Round 3 problem statement, requirements, and constraints. | Challenge Analysis & Scoring Rubric |
-| **[02_PREVIOUS_WINNERS_AND_BENCHMARK_ANALYSIS.md](./02_PREVIOUS_WINNERS_AND_BENCHMARK_ANALYSIS.md)** | Research on historical Adobe hackathon winners (GenSolve, Co-Create, CRP) and top 1% differentiators. | Competitive Intelligence & Benchmarking |
-| **[03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md](./03_SHASWAT_RAJ_PROFILE_AND_TEAM_STRENGTHS.md)** | Team profiles, complementary engineering strengths, and project ownership. | Team Strengths & Technical Alignment |
-| **[04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md](./04_MASTER_WINNING_STRATEGY_AND_SYSTEM_ARCHITECTURE.md)** | Complete technical blueprint, six-skill composition, and dataflow. | System Design & Architecture |
-| **[05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md](./05_SKILL_SPECIFICATIONS_AND_PROMPT_ENGINEERING.md)** | `agentskills.io` compliant `SKILL.md` specifications, schemas, and progressive disclosure rules. | Skill Specifications & Prompts |
-| **[06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md](./06_EXECUTION_TIMELINE_AND_MILESTONE_ROADMAP.md)** | Phased implementation schedule, testing matrix across 20+ sites, and submission checklist. | Project Management & Submission Roadmap |
-| **[07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md](./07_WINNING_PROJECT_IDEAS_AND_ARCHITECTURES.md)** | 4 top-tier winning project ideas with comparative matrix, architecture diagrams, and recommended choice. | Ideation & Architecture Designs |
+| **🚀 Getting Started** | **[getting-started.md](getting-started.md)** | Prerequisites, 1-line curl install, pip editable mode, first audit, Web UI. |
+| **🏛️ Architecture** | **[architecture.md](architecture.md)** | Master system topology, AST parsing pipeline, core engine vs adapters, scoring formulas. |
+| **📦 Marketplace & Submission** | **[marketplace.md](marketplace.md)** | Adobe challenge boundaries, `marketplace.json` manifest, submission ZIP vs repo. |
+| **🧰 Specialist Skills** | **[skills.md](skills.md)** | Deep dive into all 6 skills: inputs, outputs, detection logic, severity matrix. |
+| **💻 Command-Line Interface** | **[cli.md](cli.md)** | Unified CLI reference (`omni` / `omniaudit` / `cli.py`): commands, flags, examples. |
+| **🌐 REST API** | **[api.md](api.md)** | FastAPI control plane: endpoints, request/response models, rate limiting, OpenAPI docs. |
+| **🤖 Model Context Protocol** | **[mcp.md](mcp.md)** | Anthropic MCP server: tool schemas, stdio and HTTP transports, IDE configs (Claude, Cursor, Antigravity). |
+| **🛡️ Security Model** | **[security.md](security.md)** | Anti-SSRF defense, private IP blocking, resource bounds, ReDoS immunity, known limitations. |
+| **🧪 Testing & Quality Gates** | **[testing.md](testing.md)** | 6-Gate verification loop, 167 unit/integration tests, offline fixture execution, CI workflows. |
+| **📊 Benchmark Evaluation** | **[benchmarking.md](benchmarking.md)** | 16 Golden Fixtures test matrix, precision/recall metrics, local AST vs network latency. |
+| **☁️ Deployment & Operations** | **[deployment.md](deployment.md)** | Dockerfile, GHCR registry, Render webhook auto-deploy, DigitalOcean App Platform, health checks. |
+| **⚖️ Judge & Jury Defense** | **[judging.md](judging.md)** | 90-second executive summary, 15 comprehensive jury defenses, team engineering ownership. |
+| **📂 Historical Archive** | **[archive/](archive/)** | Preserved early hackathon planning, ideation, and initial research documents. |
 
 ---
 
-## 🎯 Quick Links & Challenge Context
-* **Live Web Demo & API:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
-* **Unstop Hackathon Portal:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
-* **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))
+## 🎯 Quick Reference Links
+* **Live Web Demo:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
+* **Live Health Probe:** [https://omniaudit-geo.onrender.com/api/health](https://omniaudit-geo.onrender.com/api/health)
+* **GitHub Repository:** [https://github.com/SH20RAJ/adobe-hackathon-2026](https://github.com/SH20RAJ/adobe-hackathon-2026)
+* **Official Submission Archive:** `omniaudit-geo-marketplace.zip` (0.09 MB / $\le 50$ MB limit)
+* **Challenge Portal:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)
