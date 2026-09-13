@@ -239,7 +239,7 @@ OmniAudit-GEO incorporates the agent harness engineering standards inspired by *
 Explore the comprehensive research and design documents in [`docs/`](./docs/):
 
 1. **[Master Architecture & Scoring Models](./docs/ARCHITECTURE.md)** — Component topology and mathematical formulation for ACPI and CRS scores.
-2. **[Adobe Senior Panel Defense & Interview Q&A](./docs/JUDGE_DEFENSE.md)** — 14 comprehensive defense answers addressing real-world edge cases, SSRF defense, ReDoS immunity, and benchmarking.
+2. **[Adobe Senior Panel Defense & Interview Q&A](./docs/JUDGE_DEFENSE.md)** — 15 comprehensive defense answers addressing real-world edge cases, SSRF defense, ReDoS immunity, regression benchmarks, and empirical scoring.
 3. **[Tech Stack Selection & Justification](./docs/TECH_STACK_JUSTIFICATION.md)** — Why the Python standard-library engine, AST parsers, FastAPI, MCP, and `agentskills.io` approach are used.
 4. **[Skill Marketplaces & Distribution Strategy](./docs/08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md)** — Distribution across `agentskills.io`, MCP Registries (Smithery/Glama), and Adobe Exchange.
 5. **[Executive Pitch & Presentation Deck](./docs/PITCH.md)** — Complete presentation narrative, hook, and Adobe ecosystem synergy.
@@ -261,7 +261,7 @@ We welcome contributions from developers, researchers, and AI practitioners! Omn
 
 ## 📅 Submission Metadata
 * **Submission Deadline:** September 13, 2026, 11:59 PM IST
-* **Official Submission Package:** [`omniaudit-geo-marketplace.zip`](./omniaudit-geo-marketplace.zip) (`0.08 MB / ≤ 50 MB`, strictly containing `marketplace.json`, `README.md`, `skills/`)
+* **Official Submission Package:** [`omniaudit-geo-marketplace.zip`](./omniaudit-geo-marketplace.zip) (`0.09 MB / ≤ 50 MB`, strictly containing `marketplace.json`, `README.md`, `skills/`)
 * **Packaging & Verification Script:** `python3 scripts/package_submission.py`
 * **Performance:** Bounded HTTP responses, redirects, and timeouts; runtime depends on the target response and network.
 * **License:** Apache-2.0
