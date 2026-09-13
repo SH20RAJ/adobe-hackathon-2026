@@ -155,6 +155,20 @@ OmniAudit-GEO natively implements the Anthropic MCP specification (`protocolVers
 }
 ```
 
+### Remote Cloud MCP Invocation (JSON-RPC 2.0)
+
+```bash
+# 1. List available MCP tools
+curl -s -X POST https://omniaudit-geo.onrender.com/api/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {}}'
+
+# 2. Execute full audit via MCP
+curl -s -X POST https://omniaudit-geo.onrender.com/api/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "audit_website", "arguments": {"url": "https://example.com"}}}'
+```
+
 
 
 ---
