@@ -27,6 +27,7 @@ This documentation is organized into focused, single-source-of-truth references 
 ---
 
 ## 🎯 Quick Reference Links
+* **Interactive Documentation Portal:** [https://omniaudit-geo.onrender.com/docs](https://omniaudit-geo.onrender.com/docs)
 * **Live Web Demo:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
 * **Live Health Probe:** [https://omniaudit-geo.onrender.com/api/health](https://omniaudit-geo.onrender.com/api/health)
 * **GitHub Repository:** [https://github.com/SH20RAJ/adobe-hackathon-2026](https://github.com/SH20RAJ/adobe-hackathon-2026)

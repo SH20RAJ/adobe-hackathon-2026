@@ -41,10 +41,16 @@ from audit_runner import (
 from safe_fetch import normalize_url, FetchValidationError
 from eval_benchmarks import run_evals
 from mcp_server import handle_json_rpc, MCP_TOOLS
+import re
 from audit_guard import (
     execute_guarded_audit,
     execute_guarded_specialist_audit,
     execute_guarded_mcp,
+)
+from docs_manager import (
+    get_docs_catalog,
+    get_doc_by_id,
+    search_docs,
 )
 
 
@@ -392,7 +398,60 @@ def get_mcp_tools_data() -> List[List[str]]:
             t.get("description", ""),
             req or "none",
         ])
-    return rows
+def get_doc_choices(category: str = "All Categories") -> List[str]:
+    catalog = get_docs_catalog()
+    if category and category != "All Categories":
+        catalog = [d for d in catalog if d["category"] == category]
+    return [f"{d['icon']} {d['title']} ({d['id']})" for d in catalog]
+
+
+def parse_doc_id_from_choice(choice: str) -> str:
+    match = re.search(r"\(([^)]+)\)$", choice)
+    return match.group(1) if match else "getting-started"
+
+
+def get_default_doc_choice() -> str:
+    choices = get_doc_choices("All Categories")
+    return choices[0] if choices else ""
+
+
+def render_doc_meta_header(doc_id: str) -> str:
+    doc = get_doc_by_id(doc_id)
+    if not doc:
+        return ""
+    return f"""
+    <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px 18px; margin: 10px 0 18px 0;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 3px 10px; border-radius: 12px; letter-spacing: 0.05em;">{doc['category']}</span>
+                <span style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-left: 10px;">{doc['icon']} {doc['title']}</span>
+            </div>
+            <div style="font-family: monospace; font-size: 0.8rem; color: #94a3b8; background: rgba(0,0,0,0.25); padding: 4px 10px; border-radius: 6px;">
+                {doc['rel_path']}
+            </div>
+        </div>
+        <div style="font-size: 0.88rem; color: #cbd5e1; margin-top: 8px; line-height: 1.5;">{doc['description']}</div>
+    </div>
+    """
+
+
+def get_doc_markdown(doc_id: str) -> str:
+    doc = get_doc_by_id(doc_id)
+    return doc.get("content", "# Document Not Found") if doc else "# Document Not Found"
+
+
+def on_category_change(cat: str):
+    choices = get_doc_choices(cat)
+    val = choices[0] if choices else ""
+    doc_id = parse_doc_id_from_choice(val)
+    return gr.update(choices=choices, value=val), render_doc_meta_header(doc_id), get_doc_markdown(doc_id)
+
+
+def on_doc_change(choice: str):
+    if not choice:
+        return "", ""
+    doc_id = parse_doc_id_from_choice(choice)
+    return render_doc_meta_header(doc_id), get_doc_markdown(doc_id)
 
 
 # ---------------------------------------------------------------------------
@@ -815,6 +874,57 @@ def create_gradio_app() -> gr.Blocks:
                     value=get_mcp_tools_data(),
                     interactive=False,
                     wrap=True,
+                )
+
+            # ===============================================================
+            # TAB 6: 📖 Interactive Documentation Hub
+            # ===============================================================
+            with gr.TabItem("📖 Documentation Hub", id="tab_docs"):
+                gr.HTML("""
+                <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px 20px; margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                        <div>
+                            <div style="font-size: 1.25rem; font-weight: 800; color: #ffffff;">OmniAudit-GEO Documentation Portal</div>
+                            <div style="font-size: 0.88rem; color: #94a3b8; margin-top: 4px;">
+                                Live interactive browser exploring canonical architecture, specialist skills, security models, testing rubrics, and jury defense.
+                            </div>
+                        </div>
+                        <div>
+                            <a href="/docs" target="_blank" style="background: rgba(235, 16, 0, 0.15); color: #ff6b6b; border: 1px solid rgba(235, 16, 0, 0.3); padding: 8px 16px; border-radius: 6px; font-weight: 600; text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;">
+                                🌐 Open Fullscreen Docs (/docs) ↗
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                """)
+
+                with gr.Row():
+                    doc_category_filter = gr.Dropdown(
+                        choices=["All Categories", "Canonical Guides", "Skill Instructions", "Root Protocols", "Historical Archive"],
+                        value="All Categories",
+                        label="Filter by Category",
+                        scale=2,
+                    )
+                    doc_item_select = gr.Dropdown(
+                        choices=get_doc_choices("All Categories"),
+                        value=get_default_doc_choice(),
+                        label="Select Document to View",
+                        scale=4,
+                    )
+
+                doc_header_html = gr.HTML(value=render_doc_meta_header("getting-started"))
+                doc_viewer_md = gr.Markdown(value=get_doc_markdown("getting-started"))
+
+                doc_category_filter.change(
+                    fn=on_category_change,
+                    inputs=[doc_category_filter],
+                    outputs=[doc_item_select, doc_header_html, doc_viewer_md],
+                )
+
+                doc_item_select.change(
+                    fn=on_doc_change,
+                    inputs=[doc_item_select],
+                    outputs=[doc_header_html, doc_viewer_md],
                 )
 
         # Footer

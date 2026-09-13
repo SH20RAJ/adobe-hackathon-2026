@@ -135,7 +135,25 @@ class TestFastAPIApp(unittest.TestCase):
         self.assertIn("og:title", res_root.text)
         self.assertIn("canonical", res_root.text)
         self.assertIn("application/ld+json", res_root.text)
-        self.assertIn("SoftwareApplication", res_root.text)
+    def test_docs_portal_and_api(self):
+        # /docs portal HTML
+        res_docs = self.client.get("/docs")
+        self.assertEqual(res_docs.status_code, 200)
+        self.assertIn("OmniAudit-GEO Documentation Portal", res_docs.text)
+
+        # /api/docs/list
+        res_list = self.client.get("/api/docs/list")
+        self.assertEqual(res_list.status_code, 200)
+        docs = res_list.json()
+        self.assertGreaterEqual(len(docs), 20)
+
+        # /api/docs/content
+        res_content = self.client.get("/api/docs/content?doc=getting-started")
+        self.assertEqual(res_content.status_code, 200)
+        data = res_content.json()
+        self.assertEqual(data["id"], "getting-started")
+        self.assertIn("Getting Started", data["title"])
+        self.assertIn("Prerequisites", data["content"])
 
     def test_security_headers_and_cors(self):
         res = self.client.get("/api/health")

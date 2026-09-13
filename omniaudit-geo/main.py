@@ -48,6 +48,12 @@ from schema_validator import validate_report
 from eval_benchmarks import run_evals
 from seo_config import SEO_HEAD_HTML, NOSCRIPT_SEMANTIC_BODY, SEO_TITLE, SEO_DESCRIPTION
 from audit_guard import check_rate_limit, execute_guarded_audit, execute_guarded_mcp
+from docs_manager import (
+    get_docs_catalog,
+    get_doc_by_id,
+    search_docs,
+    build_documentation_portal_html,
+)
 
 app = FastAPI(
     title="OmniAudit-GEO — Brand AI-Readiness & GEO Engine",
@@ -343,8 +349,24 @@ async def serve_marketplace(request: Request):
     return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
 @app.get("/docs", response_class=HTMLResponse)
-async def serve_docs(request: Request):
-    return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
+async def serve_docs(request: Request, doc: Optional[str] = None):
+    """Serves the rich, interactive standalone documentation website."""
+    initial_slug = doc.strip() if doc and doc.strip() else "getting-started"
+    html = build_documentation_portal_html(initial_doc_id=initial_slug)
+    return HTMLResponse(content=html, status_code=200)
+
+@app.get("/api/docs/list")
+async def api_docs_list():
+    """Returns catalog of all available documentation files and metadata."""
+    return get_docs_catalog()
+
+@app.get("/api/docs/content")
+async def api_docs_content(doc: str = Query(..., description="Document ID slug (e.g. 'getting-started', 'architecture')")):
+    """Returns raw markdown content and metadata for requested document."""
+    data = get_doc_by_id(doc.strip())
+    if not data:
+        raise HTTPException(status_code=404, detail={"error": "Not Found", "message": f"Document '{doc}' not found."})
+    return data
 
 # Public static root files (favicons, logos, manifests, SEO robots & sitemaps)
 @app.get("/favicon.ico")

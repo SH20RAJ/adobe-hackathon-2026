@@ -60,7 +60,7 @@ omni = "cli:main"
 [project.urls]
 Homepage = "https://omniaudit-geo.onrender.com/"
 Repository = "https://github.com/SH20RAJ/adobe-hackathon-2026"
-Documentation = "https://github.com/SH20RAJ/adobe-hackathon-2026/blob/main/docs/README.md"
+Documentation = "https://omniaudit-geo.onrender.com/docs"
 
 [tool.setuptools]
 py-modules = ["cli", "app"]

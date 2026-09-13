@@ -5,6 +5,7 @@
   <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/verify.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/verify.yml?branch=main&label=6-Gate%20Verification&style=flat-square&logo=githubactions&logoColor=white" alt="Verification" /></a>
   <a href="https://github.com/SH20RAJ/adobe-hackathon-2026/actions/workflows/publish-container.yml"><img src="https://img.shields.io/github/actions/workflow/status/SH20RAJ/adobe-hackathon-2026/publish-container.yml?branch=main&label=GHCR%20Build&style=flat-square&logo=docker&logoColor=white" alt="Container" /></a>
   <a href="https://omniaudit-geo.onrender.com/"><img src="https://img.shields.io/badge/Live%20Demo-Render-46E3B7?style=flat-square&logo=render&logoColor=white" alt="Live Demo" /></a>
+  <a href="https://omniaudit-geo.onrender.com/docs"><img src="https://img.shields.io/badge/Docs-Live%20Portal-6366F1?style=flat-square&logo=gitbook&logoColor=white" alt="Documentation Portal" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License" /></a>
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python" /></a>
   <a href="https://fastapi.tiangolo.com"><img src="https://img.shields.io/badge/FastAPI-0.115+-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI" /></a>
@@ -16,7 +17,8 @@
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Official Team Submission**<br>
 > **Team:** Shaswat Raj ([@sh20raj](https://github.com/sh20raj)) & Prithvi ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys))<br>
 > **Challenge:** [Unstop - Adobe University Hackathon 2026](https://unstop.com/hackathons/crp-adobe-university-hackathon-2026-adobe-1715333)<br>
-> **Live Web Application & API:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)
+> **Live Web Application & API:** [https://omniaudit-geo.onrender.com/](https://omniaudit-geo.onrender.com/)<br>
+> **Interactive Documentation Portal:** [https://omniaudit-geo.onrender.com/docs](https://omniaudit-geo.onrender.com/docs)
 
 ---
 
@@ -154,7 +156,7 @@ OmniAudit-GEO natively implements the Anthropic MCP specification (`protocolVers
 
 ## 🧭 Canonical Documentation Index
 
-Every documentation topic has exactly one canonical home under [`docs/`](./docs/):
+Every documentation topic has exactly one canonical home under [`docs/`](./docs/), also browsable interactively via the **[Live Documentation Portal](https://omniaudit-geo.onrender.com/docs)**:
 
 | Document | Purpose |
 | :--- | :--- |
