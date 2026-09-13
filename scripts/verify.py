@@ -122,7 +122,57 @@ def verify_fastapi_engine():
         print(f"\n{RED}--- GATE 5 FASTAPI ENGINE IMPORT FAILURE ---{RESET}")
         traceback.print_exc()
         print(f"{RED}--------------------------------------------{RESET}\n")
-        return {"status": "failed", "error": str(e)}
+def verify_documentation_and_contracts():
+    """Deterministic validation of documentation integrity, canonical references, and manifest consistency."""
+    import re
+    errors = []
+
+    # 1. Verify marketplace manifest
+    manifest_path = REPO_ROOT / "marketplace.json"
+    if not manifest_path.exists():
+        errors.append("marketplace.json is missing")
+    else:
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for skill in data.get("skills", []):
+                sp = REPO_ROOT / skill.get("path", "")
+                if not sp.is_dir():
+                    errors.append(f"Skill directory missing: {skill.get('path')}")
+                elif not (sp / "SKILL.md").exists():
+                    errors.append(f"SKILL.md missing in {skill.get('path')}")
+        except Exception as e:
+            errors.append(f"Failed to parse marketplace.json: {e}")
+
+    # 2. Verify all 12 canonical docs exist
+    canonical_docs = [
+        "README.md", "getting-started.md", "architecture.md", "marketplace.md",
+        "skills.md", "cli.md", "api.md", "mcp.md", "security.md",
+        "testing.md", "benchmarking.md", "deployment.md", "judging.md"
+    ]
+    for cd in canonical_docs:
+        if not (REPO_ROOT / "docs" / cd).exists():
+            errors.append(f"Canonical documentation missing: docs/{cd}")
+
+    # 3. Verify markdown links in root README and docs/README
+    for doc_file in [REPO_ROOT / "README.md", REPO_ROOT / "docs" / "README.md"]:
+        if doc_file.exists():
+            content = doc_file.read_text(encoding="utf-8")
+            for m in re.finditer(r'\[([^\]]+)\]\(([^)]+)\)', content):
+                text, url = m.group(1), m.group(2)
+                if url.startswith(("http://", "https://", "#", "mailto:")):
+                    continue
+                raw_path = url.split("#")[0]
+                if not raw_path:
+                    continue
+                target = (doc_file.parent / raw_path).resolve()
+                if not target.exists():
+                    errors.append(f"Broken link in {doc_file.name}: [{text}]({url}) -> {target}")
+
+    return {
+        "status": "passed" if len(errors) == 0 else "failed",
+        "errors": errors,
+    }
 
 def main():
     ci_mode = "--ci" in sys.argv
@@ -183,20 +233,27 @@ def main():
     # -------------------------------------------------------------
     # GATE 4: Recursive JSON Schema & Contract Validation
     # -------------------------------------------------------------
-    print_gate_header(4, "Recursive JSON Schema & Contract Validation")
+    print_gate_header(4, "Recursive JSON Schema, Manifest & Contract Validation")
     schema_suite = run_python_suite([
         "skills/audit-orchestrator/tests",
     ])
-    schema_ok = (bench_data["schema_failures"] == 0) and schema_suite["success"]
+    doc_contract = verify_documentation_and_contracts()
+    schema_ok = (bench_data["schema_failures"] == 0) and schema_suite["success"] and (doc_contract["status"] == "passed")
     gate_results["gate4_schema"] = {
         "status": "passed" if schema_ok else "failed",
         "benchmark_schema_failures": bench_data["schema_failures"],
+        "doc_contract_errors": doc_contract["errors"],
     }
     if not schema_ok:
         overall_passed = False
-        print(f"{RED}✗ Gate 4 Failed: Schema validation errors detected{RESET}")
+        if doc_contract["errors"]:
+            print(f"{RED}✗ Gate 4 Contract & Documentation Errors:{RESET}")
+            for err in doc_contract["errors"]:
+                print(f"   • {RED}{err}{RESET}")
+        if bench_data["schema_failures"] > 0 or not schema_suite["success"]:
+            print(f"{RED}✗ Gate 4 Failed: Schema validation errors detected{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 4 Passed: 100% Schema validation across all fixtures & negative tests{RESET}")
+        print(f"{GREEN}✓ Gate 4 Passed: 100% Schema & documentation contract validation across all fixtures & manifest{RESET}")
 
     # -------------------------------------------------------------
     # GATE 5: Web Control Plane & MCP Server (FastAPI)
