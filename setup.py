@@ -5,8 +5,9 @@ Supports editable installation via: pip install -e .
 Provides console commands: `omniaudit` and `omni`
 """
 
-from setuptools import setup, find_packages
 from pathlib import Path
+
+from setuptools import setup
 
 REPO_ROOT = Path(__file__).resolve().parent
 long_description = (REPO_ROOT / "README.md").read_text(encoding="utf-8") if (REPO_ROOT / "README.md").exists() else ""
@@ -37,7 +38,7 @@ setup(
             "gradio>=6.0.0",
             "httpx>=0.27.0",
             "pydantic>=2.7.0",
-        ]
+        ],
     },
     entry_points={
         "console_scripts": [

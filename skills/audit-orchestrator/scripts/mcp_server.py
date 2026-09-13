@@ -13,9 +13,9 @@ Exposes all 6 agentskills.io modular tools:
 6. inspect_on_site_retention — Skill 5 (On-site Retention)
 """
 
-import sys
 import json
 import os
+import sys
 import urllib.parse
 
 # Ensure audit_runner is importable
@@ -24,15 +24,15 @@ if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
 from audit_runner import (
-    run_full_audit,
-    fetch_url,
     HTMLContentExtractor,
-    audit_crawl_render,
-    audit_structured_data,
     audit_aeo_quotability,
+    audit_crawl_render,
     audit_freshness_trust,
     audit_on_site_engagement,
+    audit_structured_data,
     enrich_findings_actions,
+    fetch_url,
+    run_full_audit,
 )
 
 MCP_TOOLS = [
@@ -136,6 +136,7 @@ MCP_TOOLS = [
     },
 ]
 
+
 def execute_tool(name: str, arguments: dict) -> dict:
     """
     Executes an audit tool according to official contract schemas:
@@ -144,11 +145,11 @@ def execute_tool(name: str, arguments: dict) -> dict:
     """
     if not isinstance(arguments, dict):
         raise ValueError("Tool arguments must be a dictionary")
-        
+
     url = arguments.get("url")
     if not url or not isinstance(url, str) or not url.strip():
         raise ValueError("Missing or invalid 'url' parameter: must be a non-empty string")
-    
+
     url = url.strip()
     if not url.startswith("http://") and not url.startswith("https://"):
         url = "https://" + url
@@ -193,6 +194,7 @@ def execute_tool(name: str, arguments: dict) -> dict:
         "total_findings": len(findings),
         "findings": findings,
     }
+
 
 def handle_json_rpc(request_input) -> dict:
     try:
@@ -257,7 +259,10 @@ def handle_json_rpc(request_input) -> dict:
                 return {
                     "jsonrpc": "2.0",
                     "id": req_id,
-                    "error": {"code": -32602, "message": "Invalid params: 'url' is required and must be a non-empty string"},
+                    "error": {
+                        "code": -32602,
+                        "message": "Invalid params: 'url' is required and must be a non-empty string",
+                    },
                 }
 
             try:
@@ -302,6 +307,7 @@ def handle_json_rpc(request_input) -> dict:
             "error": {"code": -32700, "message": str(e)},
         }
 
+
 def run_self_test():
     """Runs a self-test of the MCP server methods."""
     print("Testing MCP initialize...")
@@ -318,6 +324,7 @@ def run_self_test():
 
     print("All MCP self-tests passed successfully!")
 
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == "--test":
         run_self_test()
@@ -330,6 +337,7 @@ def main():
         response = handle_json_rpc(line)
         sys.stdout.write(json.dumps(response) + "\n")
         sys.stdout.flush()
+
 
 if __name__ == "__main__":
     main()

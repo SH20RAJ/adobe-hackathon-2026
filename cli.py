@@ -21,9 +21,10 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 # Ensure sibling directories are on sys.path
 REPO_ROOT = Path(__file__).resolve().parent
@@ -54,8 +55,10 @@ for p in [
 # ANSI Color Utilities
 USE_COLOR = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
 
+
 def _c(code: str, text: str) -> str:
     return f"\033[{code}m{text}\033[0m" if USE_COLOR else text
+
 
 BOLD = "1"
 CYAN = "36"
@@ -66,6 +69,7 @@ MAGENTA = "35"
 BLUE = "34"
 DIM = "2"
 
+
 def color_score(score: float) -> str:
     text = f"{score:.1f}/100"
     if score >= 85.0:
@@ -74,6 +78,7 @@ def color_score(score: float) -> str:
         return _c(YELLOW, _c(BOLD, text))
     else:
         return _c(RED, _c(BOLD, text))
+
 
 def color_severity(sev: str) -> str:
     s = sev.upper()
@@ -86,9 +91,11 @@ def color_severity(sev: str) -> str:
     else:
         return _c(BLUE, f"[{s}]")
 
+
 # ----------------------------------------------------------------------
 # CLI Commands
 # ----------------------------------------------------------------------
+
 
 def cmd_audit(args: argparse.Namespace) -> int:
     """Run full master audit on a target URL."""
@@ -111,7 +118,7 @@ def cmd_audit(args: argparse.Namespace) -> int:
         print(_c(CYAN, _c(BOLD, "║            OmniAudit-GEO — Brand AI-Readiness Audit Engine            ║")))
         print(_c(CYAN, _c(BOLD, "╚═══════════════════════════════════════════════════════════════════════╝")))
         print(f"Target URL : {_c(BOLD, target_url)}")
-        print(f"Executing canonical pipeline across all 6 specialist skills...\n")
+        print("Executing canonical pipeline across all 6 specialist skills...\n")
 
     try:
         report = run_full_audit(target_url)
@@ -140,16 +147,16 @@ def cmd_audit(args: argparse.Namespace) -> int:
 
 def cmd_specialist(args: argparse.Namespace) -> int:
     """Run an isolated specialist skill audit."""
-    from safe_fetch import normalize_url, safe_fetch, DEFAULT_MAX_ROBOTS_BYTES
     from audit_runner import (
         HTMLContentExtractor,
-        audit_crawl_render,
-        audit_structured_data,
         audit_aeo_quotability,
+        audit_crawl_render,
         audit_freshness_trust,
         audit_on_site_engagement,
+        audit_structured_data,
         enrich_findings_actions,
     )
+    from safe_fetch import normalize_url, safe_fetch
 
     skill_name = args.skill.lower().strip()
     raw_url = args.url
@@ -174,7 +181,7 @@ def cmd_specialist(args: argparse.Namespace) -> int:
     extractor = HTMLContentExtractor()
     extractor.feed(html)
 
-    findings: List[Dict[str, Any]] = []
+    findings: list[dict[str, Any]] = []
 
     if skill_name in ("crawl", "crawl-render", "crawl-render-audit"):
         findings = audit_crawl_render(target_url, html, headers)
@@ -199,7 +206,12 @@ def cmd_specialist(args: argparse.Namespace) -> int:
     enrich_findings_actions(findings)
 
     if args.format == "json":
-        print(json.dumps({"skill": skill_name, "url": target_url, "findings_count": len(findings), "findings": findings}, indent=2))
+        print(
+            json.dumps(
+                {"skill": skill_name, "url": target_url, "findings_count": len(findings), "findings": findings},
+                indent=2,
+            )
+        )
     else:
         print(_c(CYAN, _c(BOLD, f"\n=== {label} ===")))
         print(f"Target: {_c(BOLD, target_url)} | Findings Detected: {len(findings)}\n")
@@ -239,6 +251,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     if args.gradio_only:
         from gradio_ui import create_gradio_app
+
         from seo_config import SEO_HEAD_HTML
 
         demo = create_gradio_app()
@@ -253,6 +266,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 
     try:
         import uvicorn
+
         print(_c(GREEN, f"🚀 Launching OmniAudit-GEO Web Control Plane & MCP Server on http://{host}:{port}"))
         print(_c(CYAN, f"   • Web UI       : http://{host}:{port}/"))
         print(_c(CYAN, f"   • REST API     : http://{host}:{port}/api/audit?url=https://example.com"))
@@ -268,6 +282,7 @@ def cmd_serve(args: argparse.Namespace) -> int:
 def cmd_verify(args: argparse.Namespace) -> int:
     """Run official 6-Gate verification loop."""
     from verify import main as verify_main
+
     if args.ci:
         sys.argv = ["verify.py", "--ci"]
     else:
@@ -279,20 +294,47 @@ def cmd_verify(args: argparse.Namespace) -> int:
 def cmd_benchmark(args: argparse.Namespace) -> int:
     """Run the 16 Golden Benchmarks evaluation harness."""
     from eval_benchmarks import run_evals
+
     return int(run_evals(return_dict=False))
 
 
 def cmd_package(args: argparse.Namespace) -> int:
     """Build and sandbox-verify submission ZIP package."""
     from package_submission import build_package
+
     out_zip = build_package()
     return 0 if (out_zip and Path(out_zip).is_file()) else 1
+
+
+def cmd_lint(args: argparse.Namespace) -> int:
+    """Run Ruff linter and formatter across the codebase."""
+    print(_c(BOLD, _c(CYAN, "\n🔍 Running Ruff Linter & Format Checks across OmniAudit-GEO...")))
+    cmd_check = [sys.executable, "-m", "ruff", "check", "."]
+    if getattr(args, "fix", False):
+        cmd_check.append("--fix")
+    res_check = subprocess.run(cmd_check, cwd=str(REPO_ROOT))
+    if res_check.returncode != 0:
+        print(_c(RED, "\n❌ Ruff linting reported issues. Run 'omni lint --fix' to resolve automatically."))
+        return res_check.returncode
+
+    cmd_format = [sys.executable, "-m", "ruff", "format", "--check", "."]
+    if getattr(args, "fix", False):
+        cmd_format = [sys.executable, "-m", "ruff", "format", "."]
+    res_format = subprocess.run(cmd_format, cwd=str(REPO_ROOT))
+    if res_format.returncode != 0:
+        print(_c(RED, "\n❌ Ruff format check failed. Run 'omni lint --fix' to format files."))
+        return res_format.returncode
+
+    print(_c(BOLD, _c(GREEN, "\n✓ 100% Clean: All Ruff lint and formatting checks passed successfully.")))
+    return 0
+
 
 # ----------------------------------------------------------------------
 # Text and Markdown Formatters
 # ----------------------------------------------------------------------
 
-def format_text_report(report: Dict[str, Any]) -> str:
+
+def format_text_report(report: dict[str, Any]) -> str:
     lines = []
     site = report.get("site", "unknown")
     audited_at = report.get("audited_at", "N/A")
@@ -308,11 +350,13 @@ def format_text_report(report: Dict[str, Any]) -> str:
     lines.append("─" * 70)
     lines.append(f"• AI Citation Probability Index (ACPI) : {color_score(acpi)}")
     lines.append(f"• Cognitive Retention Score     (CRS)  : {color_score(crs)}")
-    lines.append(f"• Total Findings Detected              : {summary.get('total_findings', len(findings))} ("
-                 f"{_c(RED, str(summary.get('critical', 0)) + ' critical')}, "
-                 f"{_c(RED, str(summary.get('high', 0)) + ' high')}, "
-                 f"{_c(YELLOW, str(summary.get('medium', 0)) + ' medium')}, "
-                 f"{_c(BLUE, str(summary.get('low', 0)) + ' low')})")
+    lines.append(
+        f"• Total Findings Detected              : {summary.get('total_findings', len(findings))} ("
+        f"{_c(RED, str(summary.get('critical', 0)) + ' critical')}, "
+        f"{_c(RED, str(summary.get('high', 0)) + ' high')}, "
+        f"{_c(YELLOW, str(summary.get('medium', 0)) + ' medium')}, "
+        f"{_c(BLUE, str(summary.get('low', 0)) + ' low')})"
+    )
     lines.append("─" * 70)
 
     if findings:
@@ -328,7 +372,7 @@ def format_text_report(report: Dict[str, Any]) -> str:
             if isinstance(sa, dict) and sa.get("summary"):
                 lines.append(f"   Suggested Fix : {sa['summary']}")
             if isinstance(sa, dict) and sa.get("implementation_code"):
-                lines.append(f"   Code snippet  :")
+                lines.append("   Code snippet  :")
                 for c_line in sa["implementation_code"].splitlines()[:3]:
                     lines.append(f"     {c_line}")
     else:
@@ -337,7 +381,9 @@ def format_text_report(report: Dict[str, Any]) -> str:
     if proactive:
         lines.append(_c(BOLD, "\n[ PROACTIVE GEO RECOMMENDATIONS ]"))
         for p in proactive:
-            lines.append(f"• {_c(BOLD, p.get('area', '').upper())} ({p.get('priority', '').upper()}): {p.get('recommendation', '')}")
+            lines.append(
+                f"• {_c(BOLD, p.get('area', '').upper())} ({p.get('priority', '').upper()}): {p.get('recommendation', '')}"
+            )
             if p.get("expected_impact"):
                 lines.append(f"  {_c(DIM, 'Impact:')} {p['expected_impact']}")
 
@@ -345,7 +391,7 @@ def format_text_report(report: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def format_markdown_report(report: Dict[str, Any]) -> str:
+def format_markdown_report(report: dict[str, Any]) -> str:
     site = report.get("site", "unknown")
     audited_at = report.get("audited_at", "N/A")
     metrics = report.get("metrics", {})
@@ -359,7 +405,7 @@ def format_markdown_report(report: Dict[str, Any]) -> str:
         "## Composite Scores",
         f"- **AI Citation Probability Index (ACPI):** `{metrics.get('acpi_score', 0.0):.1f} / 100`",
         f"- **Cognitive Retention Score (CRS):** `{metrics.get('crs_score', 0.0):.1f} / 100`",
-        f"\n## Findings Summary",
+        "\n## Findings Summary",
         f"- **Total Findings:** {summary.get('total_findings', len(findings))}",
         f"- **Critical:** {summary.get('critical', 0)} | **High:** {summary.get('high', 0)} | **Medium:** {summary.get('medium', 0)} | **Low:** {summary.get('low', 0)}",
         "\n## Detailed Findings",
@@ -383,15 +429,19 @@ def format_markdown_report(report: Dict[str, Any]) -> str:
     if proactive:
         md.append("\n## Proactive GEO Opportunities")
         for p in proactive:
-            md.append(f"- **{p.get('area', '').title()}** (`{p.get('priority', '').upper()}`): {p.get('recommendation', '')}")
+            md.append(
+                f"- **{p.get('area', '').title()}** (`{p.get('priority', '').upper()}`): {p.get('recommendation', '')}"
+            )
             if p.get("expected_impact"):
                 md.append(f"  - *Expected Impact:* {p['expected_impact']}")
 
     return "\n".join(md)
 
+
 # ----------------------------------------------------------------------
 # CLI Argument Parser Setup
 # ----------------------------------------------------------------------
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -416,7 +466,9 @@ Examples:
 
     # Allow top-level `--url` for immediate full audit shorthand
     parser.add_argument("--url", help="Target website URL to audit immediately")
-    parser.add_argument("--format", choices=["text", "json", "markdown"], default="text", help="Output format (default: text)")
+    parser.add_argument(
+        "--format", choices=["text", "json", "markdown"], default="text", help="Output format (default: text)"
+    )
     parser.add_argument("--output", "-o", help="File path to save the output report")
     parser.add_argument("--quiet", "-q", action="store_true", help="Suppress decorative banners")
 
@@ -425,15 +477,21 @@ Examples:
     # 1. audit subcommand
     audit_parser = subparsers.add_parser("audit", help="Run full master audit across all 6 skills")
     audit_parser.add_argument("--url", "-u", required=True, help="Target website URL to audit")
-    audit_parser.add_argument("--format", "-f", choices=["text", "json", "markdown"], default="text", help="Output format (default: text)")
+    audit_parser.add_argument(
+        "--format", "-f", choices=["text", "json", "markdown"], default="text", help="Output format (default: text)"
+    )
     audit_parser.add_argument("--output", "-o", help="File path to save output report")
     audit_parser.add_argument("--quiet", "-q", action="store_true", help="Suppress decorative banners")
 
     # 2. specialist subcommand
     spec_parser = subparsers.add_parser("specialist", help="Run an isolated specialist skill audit")
-    spec_parser.add_argument("skill", choices=["crawl", "structured", "aeo", "freshness", "engagement"], help="Specialist skill name")
+    spec_parser.add_argument(
+        "skill", choices=["crawl", "structured", "aeo", "freshness", "engagement"], help="Specialist skill name"
+    )
     spec_parser.add_argument("--url", "-u", required=True, help="Target website URL to audit")
-    spec_parser.add_argument("--format", "-f", choices=["text", "json"], default="text", help="Output format (default: text)")
+    spec_parser.add_argument(
+        "--format", "-f", choices=["text", "json"], default="text", help="Output format (default: text)"
+    )
 
     # 3. mcp subcommand
     mcp_parser = subparsers.add_parser("mcp", help="Run Anthropic Model Context Protocol (MCP) server")
@@ -455,6 +513,10 @@ Examples:
 
     # 7. package subcommand
     subparsers.add_parser("package", help="Build and sandbox-verify submission ZIP package")
+
+    # 8. lint subcommand
+    lint_parser = subparsers.add_parser("lint", help="Run Ruff linter and code formatting checks")
+    lint_parser.add_argument("--fix", action="store_true", help="Automatically fix fixable lint and format issues")
 
     return parser
 
@@ -485,6 +547,8 @@ def main() -> int:
         return cmd_benchmark(args)
     elif args.command == "package":
         return cmd_package(args)
+    elif args.command == "lint":
+        return cmd_lint(args)
     else:
         parser.print_help()
         return 0

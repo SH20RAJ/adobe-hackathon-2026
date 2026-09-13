@@ -3,7 +3,6 @@ import pathlib
 import sys
 import unittest
 
-
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 from crawl_inspector import evaluate_robots, robots_findings, robots_response_findings

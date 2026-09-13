@@ -9,13 +9,13 @@ Excludes all node_modules, build outputs, web source, git archives, and temporar
 Critically: Unzips into a temporary directory and verifies the unzipped archive.
 """
 
-import os
-import sys
-import shutil
-import zipfile
-import tempfile
 import json
+import os
+import shutil
 import subprocess
+import sys
+import tempfile
+import zipfile
 from pathlib import Path
 
 WORKSPACE_ROOT = Path(__file__).resolve().parent.parent
@@ -49,6 +49,7 @@ EXCLUDED_EXTENSIONS = {
     ".swp",
 }
 
+
 def validate_yaml_frontmatter(skill_md_path: Path) -> bool:
     """Verifies that SKILL.md starts with valid YAML frontmatter containing 'name'."""
     text = skill_md_path.read_text(encoding="utf-8")
@@ -64,6 +65,7 @@ def validate_yaml_frontmatter(skill_md_path: Path) -> bool:
         if line.startswith("name:"):
             has_name = True
     return found_closing and has_name
+
 
 def build_package() -> Path:
     print("\n" + "═" * 70)
@@ -81,7 +83,7 @@ def build_package() -> Path:
     if not skills_dir.is_dir():
         sys.exit("❌ Error: skills/ directory missing at workspace root")
 
-    with open(marketplace_json, "r", encoding="utf-8") as f:
+    with open(marketplace_json, encoding="utf-8") as f:
         manifest = json.load(f)
 
     skills = manifest.get("skills", [])
@@ -157,7 +159,9 @@ def build_package() -> Path:
     zip_size_mb = zip_size_bytes / (1024 * 1024)
 
     if zip_size_bytes > MAX_SIZE_BYTES:
-        sys.exit(f"❌ Error: Archive size ({zip_size_mb:.2f} MB) exceeds maximum allowed {MAX_SIZE_BYTES / (1024*1024)} MB")
+        sys.exit(
+            f"❌ Error: Archive size ({zip_size_mb:.2f} MB) exceeds maximum allowed {MAX_SIZE_BYTES / (1024 * 1024)} MB"
+        )
 
     print(f"✓ Generated archive: {OUTPUT_ZIP.name} ({zip_size_mb:.2f} MB)")
 
@@ -182,7 +186,7 @@ def build_package() -> Path:
             assert (skill_folder / "SKILL.md").exists(), f"SKILL.md missing in unzipped skills/{s_id}"
 
         # Ensure NO junk files leaked into the unzipped package
-        for root, dirs, files in os.walk(tmp_path):
+        for _root, dirs, files in os.walk(tmp_path):
             for d in dirs:
                 assert d not in EXCLUDED_DIR_NAMES, f"Junk directory '{d}' leaked into archive!"
             for f in files:
@@ -193,10 +197,17 @@ def build_package() -> Path:
         test_env = dict(os.environ)
         test_env["PYTHONPATH"] = str(tmp_path / "skills" / "audit-orchestrator" / "scripts")
         test_proc = subprocess.run(
-            [sys.executable, "-m", "unittest", "discover", "-s", str(tmp_path / "skills" / "audit-orchestrator" / "tests")],
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                str(tmp_path / "skills" / "audit-orchestrator" / "tests"),
+            ],
             capture_output=True,
             text=True,
-            env=test_env
+            env=test_env,
         )
         if test_proc.returncode != 0:
             print(test_proc.stderr)
@@ -204,10 +215,15 @@ def build_package() -> Path:
 
         # Run CLI audit runner from inside unzipped archive
         cli_proc = subprocess.run(
-            [sys.executable, str(tmp_path / "skills" / "audit-orchestrator" / "scripts" / "audit_runner.py"), "--url", "https://example.com"],
+            [
+                sys.executable,
+                str(tmp_path / "skills" / "audit-orchestrator" / "scripts" / "audit_runner.py"),
+                "--url",
+                "https://example.com",
+            ],
             capture_output=True,
             text=True,
-            env=test_env
+            env=test_env,
         )
         if cli_proc.returncode != 0:
             print(cli_proc.stderr)
@@ -217,6 +233,7 @@ def build_package() -> Path:
         try:
             cli_report = json.loads(cli_proc.stdout)
             from schema_validator import validate_report
+
             is_valid, errs = validate_report(cli_report)
             assert is_valid, f"CLI output from unzipped package failed schema validation: {errs}"
         except Exception as e:
@@ -231,6 +248,7 @@ def build_package() -> Path:
     print(f"   Size: {zip_size_mb:.2f} MB | Packaged files: {file_count}")
     print("═" * 70 + "\n")
     return OUTPUT_ZIP
+
 
 if __name__ == "__main__":
     build_package()

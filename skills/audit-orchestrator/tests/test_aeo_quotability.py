@@ -3,7 +3,6 @@ import pathlib
 import sys
 import unittest
 
-
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 from audit_runner import HTMLContentExtractor, audit_aeo_quotability
@@ -67,12 +66,16 @@ class AEOQuotabilityTests(unittest.TestCase):
         self.assertLess(evidence["F-015"]["quotability_score"], 35)
 
     def test_informative_image_missing_alt(self):
-        findings, evidence = analyze("<h1>Product</h1><p>Product specifications and price.</p><img src='product-chart.png'>")
+        findings, evidence = analyze(
+            "<h1>Product</h1><p>Product specifications and price.</p><img src='product-chart.png'>"
+        )
         self.assertIn("F-006", evidence)
         self.assertEqual(evidence["F-006"]["informative_images_missing_alt"], 1)
 
     def test_decorative_image_is_not_flagged(self):
-        findings, evidence = analyze("<h1>Product</h1><p>Product specifications and price.</p><img src='icon-star.svg'>")
+        findings, evidence = analyze(
+            "<h1>Product</h1><p>Product specifications and price.</p><img src='icon-star.svg'>"
+        )
         self.assertNotIn("F-006", evidence)
 
     def test_hidden_state_content_is_reported_conservatively(self):
@@ -85,18 +88,14 @@ class AEOQuotabilityTests(unittest.TestCase):
 
     def test_large_hidden_navigation_does_not_trigger_hidden_content_finding(self):
         findings, evidence = analyze(
-            "<h1>Example</h1><nav style='display:none' id='mobile-menu'>"
-            + ("Navigation item " * 30)
-            + "</nav>"
+            "<h1>Example</h1><nav style='display:none' id='mobile-menu'>" + ("Navigation item " * 30) + "</nav>"
         )
         self.assertNotIn("F-016", evidence)
 
     def test_hidden_ui_menu_with_substantial_visible_content_is_ignored(self):
         findings, evidence = analyze(
             "<h1>Example</h1><p>" + ("Visible page information " * 30) + "</p>"
-            "<div style='display:none' class='modal-menu'>"
-            + ("Menu control " * 30)
-            + "</div>"
+            "<div style='display:none' class='modal-menu'>" + ("Menu control " * 30) + "</div>"
         )
         self.assertNotIn("F-016", evidence)
 

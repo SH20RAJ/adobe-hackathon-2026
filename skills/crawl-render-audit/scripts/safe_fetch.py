@@ -103,9 +103,7 @@ def normalize_url(url):
         netloc = f"[{hostname}]"
     if port is not None:
         netloc = f"{netloc}:{port}"
-    return urllib.parse.urlunsplit(
-        (parsed.scheme.lower(), netloc, parsed.path or "/", parsed.query, "")
-    )
+    return urllib.parse.urlunsplit((parsed.scheme.lower(), netloc, parsed.path or "/", parsed.query, ""))
 
 
 def _validate_resolved_addresses(hostname, port):
@@ -193,7 +191,7 @@ def safe_fetch(
                     exc.code,
                     dict(exc.headers or {}),
                 )
-        except (urllib.error.URLError, TimeoutError, socket.timeout):
+        except (urllib.error.URLError, TimeoutError):
             return _failure("network_error", "network request failed or timed out")
         except FetchValidationError as exc:
             return _failure("fetch_blocked", str(exc))

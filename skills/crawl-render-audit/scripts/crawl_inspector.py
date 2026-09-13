@@ -3,11 +3,12 @@
 Crawl & JS-Render Inspector Script.
 Parses robots.txt, HTTP headers, and detects JS hydration gaps.
 """
-import sys
+
 import json
-import urllib.request
-import urllib.parse
 import re
+import sys
+import urllib.parse
+import urllib.request
 
 from safe_fetch import DEFAULT_MAX_ROBOTS_BYTES, safe_fetch
 
@@ -80,10 +81,12 @@ def parse_robots_txt(robots_text):
 
     def finish_group():
         if user_agents:
-            groups.append({
-                "user_agents": [agent.lower() for agent in user_agents],
-                "rules": list(rules),
-            })
+            groups.append(
+                {
+                    "user_agents": [agent.lower() for agent in user_agents],
+                    "rules": list(rules),
+                }
+            )
 
     for raw_line in robots_text.splitlines():
         line = raw_line.split("#", 1)[0].strip()
@@ -104,11 +107,13 @@ def parse_robots_txt(robots_text):
             if value:
                 user_agents.append(value)
         elif field in {"allow", "disallow"} and user_agents:
-            rules.append({
-                "directive": field.title(),
-                "path": value,
-                "raw": f"{field.title()}: {value}",
-            })
+            rules.append(
+                {
+                    "directive": field.title(),
+                    "path": value,
+                    "raw": f"{field.title()}: {value}",
+                }
+            )
     finish_group()
     return groups
 
@@ -131,12 +136,8 @@ def evaluate_robots(robots_text, crawler, tested_path="/"):
     """Evaluate one crawler against exact groups or the wildcard fallback."""
     groups = parse_robots_txt(robots_text)
     crawler_key = crawler.lower()
-    exact_groups = [
-        group for group in groups if crawler_key in group["user_agents"]
-    ]
-    applicable = exact_groups or [
-        group for group in groups if "*" in group["user_agents"]
-    ]
+    exact_groups = [group for group in groups if crawler_key in group["user_agents"]]
+    applicable = exact_groups or [group for group in groups if "*" in group["user_agents"]]
     if not applicable:
         return {
             "crawler": crawler,
@@ -147,8 +148,7 @@ def evaluate_robots(robots_text, crawler, tested_path="/"):
         }
 
     matching_rules = [
-        rule for group in applicable for rule in group["rules"]
-        if _robots_rule_match(rule["path"], tested_path)
+        rule for group in applicable for rule in group["rules"] if _robots_rule_match(rule["path"], tested_path)
     ]
     if not matching_rules:
         status = "ALLOWED"
@@ -162,9 +162,7 @@ def evaluate_robots(robots_text, crawler, tested_path="/"):
             ),
         )
         status = "BLOCKED" if matched["directive"] == "Disallow" else "ALLOWED"
-    group_names = sorted({
-        agent for group in applicable for agent in group["user_agents"]
-    })
+    group_names = sorted({agent for group in applicable for agent in group["user_agents"]})
     return {
         "crawler": crawler,
         "tested_path": tested_path,
@@ -177,10 +175,7 @@ def evaluate_robots(robots_text, crawler, tested_path="/"):
 def robots_findings(robots_url, robots_text, tested_path="/"):
     """Create actionable findings only for blocked crawler access or unusable fetches."""
     findings = []
-    statuses = [
-        evaluate_robots(robots_text, crawler, tested_path)
-        for crawler in ROBOTS_CRAWLERS
-    ]
+    statuses = [evaluate_robots(robots_text, crawler, tested_path) for crawler in ROBOTS_CRAWLERS]
     for status in statuses:
         if status["status"] != "BLOCKED":
             continue
@@ -189,25 +184,24 @@ def robots_findings(robots_url, robots_text, tested_path="/"):
             **status,
         }
         severity = "high" if status["crawler"] in ROBOTS_CRAWLERS[:6] else "medium"
-        findings.append({
-            "id": f"F-001-{status['crawler']}",
-            "title": f"{status['crawler']} Blocked by robots.txt",
-            "severity": severity,
-            "category": "crawlability_ai_permissions",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": (
-                    f"Allow {status['crawler']} to access {tested_path} because the "
-                    f"current {status['user_agent_group']} group matches "
-                    f"{status['matched_directive']}."
-                ),
-                "priority": severity,
-                "implementation_code": (
-                    f"User-agent: {status['crawler']}\n"
-                    f"Allow: {tested_path}"
-                ),
-            },
-        })
+        findings.append(
+            {
+                "id": f"F-001-{status['crawler']}",
+                "title": f"{status['crawler']} Blocked by robots.txt",
+                "severity": severity,
+                "category": "crawlability_ai_permissions",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": (
+                        f"Allow {status['crawler']} to access {tested_path} because the "
+                        f"current {status['user_agent_group']} group matches "
+                        f"{status['matched_directive']}."
+                    ),
+                    "priority": severity,
+                    "implementation_code": (f"User-agent: {status['crawler']}\nAllow: {tested_path}"),
+                },
+            }
+        )
     return findings
 
 
@@ -225,18 +219,20 @@ def robots_response_findings(robots_url, response, tested_path="/"):
             "user_agent_group": None,
             "error_code": response.get("error_code") or "http_status",
         }
-        return [{
-            "id": "F-001-ROBOTS",
-            "title": "robots.txt Could Not Be Evaluated",
-            "severity": "medium",
-            "category": "crawlability_ai_permissions",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Publish a reachable, valid robots.txt so crawler permissions can be evaluated.",
-                "priority": "medium",
-                "implementation_code": "Return HTTP 200 for /robots.txt with valid User-agent and Allow/Disallow directives.",
-            },
-        }]
+        return [
+            {
+                "id": "F-001-ROBOTS",
+                "title": "robots.txt Could Not Be Evaluated",
+                "severity": "medium",
+                "category": "crawlability_ai_permissions",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Publish a reachable, valid robots.txt so crawler permissions can be evaluated.",
+                    "priority": "medium",
+                    "implementation_code": "Return HTTP 200 for /robots.txt with valid User-agent and Allow/Disallow directives.",
+                },
+            }
+        ]
     robots_text = response.get("html")
     if robots_text is None:
         robots_text = response.get("body", b"").decode("utf-8", errors="replace")
@@ -275,9 +271,7 @@ class _HydrationHTMLParser:
             def handle_endtag(self, tag):
                 tag = tag.lower()
                 if tag == "script" and self.owner.script_depth:
-                    self.owner.scripts.append(
-                        (self.owner.script_attrs, "".join(self.owner.script_buffer))
-                    )
+                    self.owner.scripts.append((self.owner.script_attrs, "".join(self.owner.script_buffer)))
                     self.owner.script_depth -= 1
                     self.owner.script_buffer = []
                 if self.stack:
@@ -305,9 +299,7 @@ class _HydrationHTMLParser:
                 values.append(attrs["id"])
             values.extend((attrs.get("class") or "").split())
             normalized = {value.lower() for value in values}
-            if normalized & ROOT_NAMES or any(
-                value.lower().endswith(("-root", "-app")) for value in values
-            ):
+            if normalized & ROOT_NAMES or any(value.lower().endswith(("-root", "-app")) for value in values):
                 return attrs.get("id") or next(iter(values), tag)
             return None
 
@@ -359,10 +351,7 @@ def _payload_info(parser):
         "markers": markers,
         "frameworks": framework_names,
         "csr_markers": sorted(set(csr_markers)),
-        "strong_csr_markers": sorted(
-            marker for marker in set(csr_markers)
-            if marker in STRONG_CSR_SCRIPT_MARKERS
-        ),
+        "strong_csr_markers": sorted(marker for marker in set(csr_markers) if marker in STRONG_CSR_SCRIPT_MARKERS),
         "script_count": len(parser.scripts),
         "payload_chars": sum(payload_scripts),
     }
@@ -375,29 +364,29 @@ def detect_hydration_gap(url, html):
     visible_text = " ".join(parser.visible_chunks)
     static_words = _word_count(visible_text)
     static_chars = len(visible_text)
-    roots = {
-        name: " ".join(chunks)
-        for name, chunks in parser.root_chunks.items()
-    }
+    roots = {name: " ".join(chunks) for name, chunks in parser.root_chunks.items()}
     payload = _payload_info(parser)
     payload_ratio = payload["payload_chars"] / max(static_chars, 1)
     framework_evidence = bool(payload["markers"])
     csr_evidence = bool(payload["csr_markers"])
     strong_csr_evidence = bool(payload["strong_csr_markers"])
-    nuxt_evidence = (
-        any(marker in {"__NUXT_DATA__", "window.__NUXT__"} for marker in payload["markers"])
-        or any(name.lower() in {"__nuxt", "nuxt"} for name in roots)
+    nuxt_evidence = any(marker in {"__NUXT_DATA__", "window.__NUXT__"} for marker in payload["markers"]) or any(
+        name.lower() in {"__nuxt", "nuxt"} for name in roots
     )
     nuxt_false = nuxt_evidence and "false" in parser.ssr_markers
     nuxt_true = "true" in parser.ssr_markers
-    root_name, root_text = min(
-        roots.items(),
-        key=lambda item: (
-            ROOT_PRIORITY.get(item[0].lower(), 4),
-            bool(item[1]),
-            item[0].lower(),
-        ),
-    ) if roots else (None, "")
+    root_name, root_text = (
+        min(
+            roots.items(),
+            key=lambda item: (
+                ROOT_PRIORITY.get(item[0].lower(), 4),
+                bool(item[1]),
+                item[0].lower(),
+            ),
+        )
+        if roots
+        else (None, "")
+    )
     root_chars = len(root_text)
     root_empty = bool(root_name) and root_chars <= NEAR_EMPTY_ROOT_CHARS
     low_static = static_words <= LOW_STATIC_WORDS
@@ -421,22 +410,12 @@ def detect_hydration_gap(url, html):
     strong_gap = (
         (nuxt_false and low_static)
         or (root_empty and (framework_evidence or strong_csr_evidence))
-        or (
-            low_static
-            and (framework_evidence or strong_csr_evidence)
-            and payload_ratio >= PAYLOAD_RATIO_THRESHOLD
-        )
+        or (low_static and (framework_evidence or strong_csr_evidence) and payload_ratio >= PAYLOAD_RATIO_THRESHOLD)
     )
     partial_gap = (
         partial_static
         and payload_ratio >= PAYLOAD_RATIO_THRESHOLD
-        and (
-            nuxt_false
-            or (
-                framework_evidence
-                and (root_empty or strong_csr_evidence)
-            )
-        )
+        and (nuxt_false or (framework_evidence and (root_empty or strong_csr_evidence)))
     )
     if not strong_gap and not partial_gap:
         return None
@@ -516,6 +495,7 @@ def inspect_crawl(url):
         pass
 
     return findings
+
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"

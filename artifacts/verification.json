@@ -1,7 +1,7 @@
 {
   "status": "passed",
-  "timestamp": "2026-09-13T05:05:04Z",
-  "total_elapsed_s": 3.12,
+  "timestamp": "2026-09-13T05:11:03Z",
+  "total_elapsed_s": 3.29,
   "ci_mode": true,
   "tests": {
     "total": 168,
@@ -41,8 +41,8 @@
       "precision_pct": 100.0,
       "recall_pct": 100.0,
       "f1_score": 100.0,
-      "avg_latency_ms": 0.68,
-      "total_time_ms": 10.96,
+      "avg_latency_ms": 0.67,
+      "total_time_ms": 10.77,
       "schema_failures": 0,
       "fixtures": [
         {
@@ -52,7 +52,7 @@
           "acpi_score": 84.9,
           "crs_score": 93.0,
           "schema_valid": true,
-          "latency_ms": 0.63,
+          "latency_ms": 0.58,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -64,7 +64,7 @@
           "acpi_score": 79.3,
           "crs_score": 83.5,
           "schema_valid": true,
-          "latency_ms": 0.57,
+          "latency_ms": 0.55,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -76,7 +76,7 @@
           "acpi_score": 84.9,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.62,
+          "latency_ms": 0.69,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -88,7 +88,7 @@
           "acpi_score": 89.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.62,
+          "latency_ms": 0.67,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -100,7 +100,7 @@
           "acpi_score": 89.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.57,
+          "latency_ms": 0.62,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -112,7 +112,7 @@
           "acpi_score": 96.2,
           "crs_score": 94.5,
           "schema_valid": true,
-          "latency_ms": 0.92,
+          "latency_ms": 1.42,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -124,7 +124,7 @@
           "acpi_score": 96.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 1.05,
+          "latency_ms": 0.59,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -136,7 +136,7 @@
           "acpi_score": 90.0,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.62,
+          "latency_ms": 0.61,
           "tp": 2,
           "fp": 0,
           "fn": 0
@@ -148,7 +148,7 @@
           "acpi_score": 88.2,
           "crs_score": 88.7,
           "schema_valid": true,
-          "latency_ms": 1.03,
+          "latency_ms": 0.83,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -160,7 +160,7 @@
           "acpi_score": 82.2,
           "crs_score": 83.5,
           "schema_valid": true,
-          "latency_ms": 0.58,
+          "latency_ms": 0.54,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -172,7 +172,7 @@
           "acpi_score": 87.0,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.57,
+          "latency_ms": 0.53,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -184,7 +184,7 @@
           "acpi_score": 88.2,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.55,
+          "latency_ms": 0.53,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -208,7 +208,7 @@
           "acpi_score": 88.2,
           "crs_score": 90.7,
           "schema_valid": true,
-          "latency_ms": 0.59,
+          "latency_ms": 0.61,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -220,7 +220,7 @@
           "acpi_score": 89.4,
           "crs_score": 91.5,
           "schema_valid": true,
-          "latency_ms": 0.56,
+          "latency_ms": 0.54,
           "tp": 0,
           "fp": 0,
           "fn": 0
@@ -232,7 +232,7 @@
           "acpi_score": 87.8,
           "crs_score": 88.9,
           "schema_valid": true,
-          "latency_ms": 0.83,
+          "latency_ms": 0.79,
           "tp": 1,
           "fp": 0,
           "fn": 0
@@ -242,7 +242,8 @@
     "gate4_schema": {
       "status": "passed",
       "benchmark_schema_failures": 0,
-      "doc_contract_errors": []
+      "doc_contract_errors": [],
+      "ruff_code_quality": "passed"
     },
     "gate5_web": {
       "status": "passed",
@@ -252,7 +253,7 @@
         "failed": 0,
         "total": 12,
         "skipped": 0,
-        "elapsed_s": 0.084
+        "elapsed_s": 0.083
       },
       "engine": {
         "status": "passed",
@@ -262,7 +263,7 @@
     "gate6_package": {
       "status": "passed",
       "archive_path": "/Users/shaswatraj/Desktop/adobe-hackathon-2026/omniaudit-geo-marketplace.zip",
-      "archive_bytes": 87375
+      "archive_bytes": 87679
     }
   }
 }

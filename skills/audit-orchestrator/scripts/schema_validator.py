@@ -7,10 +7,11 @@ Validates reports strictly against skills/audit-orchestrator/references/audit_sc
 
 import json
 from datetime import datetime
-from typing import Any, List, Tuple
+from typing import Any
 
 SEVERITY_ENUM = {"critical", "high", "medium", "low"}
 PRIORITY_ENUM = {"critical", "high", "medium", "low"}
+
 
 def is_valid_iso8601(timestamp_str: str) -> bool:
     """Validate ISO 8601 date-time format (e.g. 2026-09-12T17:30:00Z)."""
@@ -23,7 +24,8 @@ def is_valid_iso8601(timestamp_str: str) -> bool:
     except (ValueError, TypeError):
         return False
 
-def validate_finding(finding: Any, path: str) -> List[str]:
+
+def validate_finding(finding: Any, path: str) -> list[str]:
     errors = []
     if not isinstance(finding, dict):
         return [f"{path}: expected finding to be object, got {type(finding).__name__}"]
@@ -41,7 +43,9 @@ def validate_finding(finding: Any, path: str) -> List[str]:
     if "severity" in finding:
         sev = str(finding["severity"]).lower()
         if sev not in SEVERITY_ENUM:
-            errors.append(f"{path}.severity: invalid enum value '{finding['severity']}', expected one of {sorted(SEVERITY_ENUM)}")
+            errors.append(
+                f"{path}.severity: invalid enum value '{finding['severity']}', expected one of {sorted(SEVERITY_ENUM)}"
+            )
 
     if "evidence" in finding and not isinstance(finding["evidence"], str):
         errors.append(f"{path}.evidence: expected string, got {type(finding['evidence']).__name__}")
@@ -58,7 +62,8 @@ def validate_finding(finding: Any, path: str) -> List[str]:
 
     return errors
 
-def validate_proactive_recommendation(rec: Any, path: str) -> List[str]:
+
+def validate_proactive_recommendation(rec: Any, path: str) -> list[str]:
     errors = []
     if not isinstance(rec, dict):
         return [f"{path}: expected object, got {type(rec).__name__}"]
@@ -68,7 +73,9 @@ def validate_proactive_recommendation(rec: Any, path: str) -> List[str]:
             errors.append(f"{path}: missing required field '{req}'")
 
     if "priority" in rec and str(rec["priority"]).lower() not in PRIORITY_ENUM:
-        errors.append(f"{path}.priority: invalid enum value '{rec['priority']}', expected one of {sorted(PRIORITY_ENUM)}")
+        errors.append(
+            f"{path}.priority: invalid enum value '{rec['priority']}', expected one of {sorted(PRIORITY_ENUM)}"
+        )
 
     for str_field in ["id", "area", "recommendation", "expected_impact"]:
         if str_field in rec and not isinstance(rec[str_field], str):
@@ -76,12 +83,13 @@ def validate_proactive_recommendation(rec: Any, path: str) -> List[str]:
 
     return errors
 
-def validate_report(report: Any) -> Tuple[bool, List[str]]:
+
+def validate_report(report: Any) -> tuple[bool, list[str]]:
     """
     Recursively validates an audit report dictionary against audit_schema.json.
     Returns (True, []) on pass, or (False, [error_messages]) on failure.
     """
-    errors: List[str] = []
+    errors: list[str] = []
 
     if not isinstance(report, dict):
         return False, [f"Root must be a JSON object, got {type(report).__name__}"]
@@ -146,14 +154,16 @@ def validate_report(report: Any) -> Tuple[bool, List[str]]:
 
     return len(errors) == 0, errors
 
+
 if __name__ == "__main__":
     import sys
+
     if len(sys.argv) < 2:
         print("Usage: python3 schema_validator.py <path_to_report.json>")
         sys.exit(1)
 
     target_file = sys.argv[1]
-    with open(target_file, "r", encoding="utf-8") as f:
+    with open(target_file, encoding="utf-8") as f:
         data = json.load(f)
 
     is_valid, errs = validate_report(data)

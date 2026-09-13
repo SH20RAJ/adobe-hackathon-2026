@@ -14,22 +14,14 @@ if str(SCRIPTS_DIR) not in sys.path:
 
 from schema_validator import validate_report
 
+
 class TestSchemaValidation(unittest.TestCase):
     def setUp(self):
         self.valid_report = {
             "site": "example.com",
             "audited_at": "2026-09-12T17:30:00Z",
-            "summary": {
-                "total_findings": 1,
-                "critical": 0,
-                "high": 1,
-                "medium": 0,
-                "low": 0
-            },
-            "metrics": {
-                "acpi_score": 85.0,
-                "crs_score": 90.0
-            },
+            "summary": {"total_findings": 1, "critical": 0, "high": 1, "medium": 0, "low": 0},
+            "metrics": {"acpi_score": 85.0, "crs_score": 90.0},
             "findings": [
                 {
                     "id": "F-001",
@@ -40,8 +32,8 @@ class TestSchemaValidation(unittest.TestCase):
                     "suggested_action": {
                         "summary": "Allow AI bots in robots.txt",
                         "priority": "high",
-                        "implementation_code": "User-agent: GPTBot\nAllow: /"
-                    }
+                        "implementation_code": "User-agent: GPTBot\nAllow: /",
+                    },
                 }
             ],
             "proactive_recommendations": [
@@ -50,9 +42,9 @@ class TestSchemaValidation(unittest.TestCase):
                     "area": "ai_context",
                     "recommendation": "Deploy /llms.txt manifest",
                     "expected_impact": "Fast ingestion for LLMs",
-                    "priority": "medium"
+                    "priority": "medium",
                 }
-            ]
+            ],
         }
 
     def test_valid_report_passes(self):
@@ -96,7 +88,7 @@ class TestSchemaValidation(unittest.TestCase):
                 "title": "Bad Severity",
                 "severity": "catastrophic",  # invalid enum
                 "evidence": "bad",
-                "suggested_action": {"summary": "fix", "priority": "high"}
+                "suggested_action": {"summary": "fix", "priority": "high"},
             }
         ]
         valid, errors = validate_report(report)
@@ -105,17 +97,11 @@ class TestSchemaValidation(unittest.TestCase):
 
     def test_missing_finding_suggested_action_fails(self):
         report = dict(self.valid_report)
-        report["findings"] = [
-            {
-                "id": "F-001",
-                "title": "No Action",
-                "severity": "medium",
-                "evidence": "evidence"
-            }
-        ]
+        report["findings"] = [{"id": "F-001", "title": "No Action", "severity": "medium", "evidence": "evidence"}]
         valid, errors = validate_report(report)
         self.assertFalse(valid)
         self.assertTrue(any("missing required field 'suggested_action'" in e for e in errors))
+
 
 if __name__ == "__main__":
     unittest.main()

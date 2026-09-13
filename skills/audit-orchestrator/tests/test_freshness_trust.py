@@ -2,8 +2,7 @@ import json
 import pathlib
 import sys
 import unittest
-from datetime import datetime, timezone, timedelta
-
+from datetime import datetime, timedelta, timezone
 
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
@@ -42,13 +41,17 @@ class FreshnessTrustTests(unittest.TestCase):
         self.assertNotIn("F-009", {item["id"] for item in findings})
 
     def test_article_jsonld_dates_are_detected(self):
-        html = "<script type='application/ld+json'>{\"@type\":\"Article\",\"datePublished\":\"2024-01-01\",\"dateModified\":\"2026-01-01\"}</script>"
+        html = '<script type=\'application/ld+json\'>{"@type":"Article","datePublished":"2024-01-01","dateModified":"2026-01-01"}</script>'
         findings, _ = analyze(html)
         self.assertNotIn("F-009", {item["id"] for item in findings})
 
     def test_multiple_date_sources_are_reported(self):
-        findings, _ = analyze("<time datetime='2020-01-01'>Updated</time><meta property='article:modified_time' content='2020-02-01'>")
-        self.assertEqual(json.loads(next(item for item in findings if item["id"] == "F-009")["evidence"])["date_signal_count"], 2)
+        findings, _ = analyze(
+            "<time datetime='2020-01-01'>Updated</time><meta property='article:modified_time' content='2020-02-01'>"
+        )
+        self.assertEqual(
+            json.loads(next(item for item in findings if item["id"] == "F-009")["evidence"])["date_signal_count"], 2
+        )
 
     def test_malformed_date_does_not_crash(self):
         findings, _ = analyze("<time datetime='not-a-date'>Updated</time>")
@@ -59,7 +62,9 @@ class FreshnessTrustTests(unittest.TestCase):
         self.assertNotIn("F-009", {item["id"] for item in findings})
 
     def test_historical_article_is_not_automatically_stale(self):
-        findings, _ = analyze("<h1>History of Example in 2018</h1><p>This historical article describes events from 2018.</p>")
+        findings, _ = analyze(
+            "<h1>History of Example in 2018</h1><p>This historical article describes events from 2018.</p>"
+        )
         self.assertNotIn("F-009", {item["id"] for item in findings})
 
     def test_unknown_date_has_no_freshness_finding(self):
@@ -67,7 +72,9 @@ class FreshnessTrustTests(unittest.TestCase):
         self.assertNotIn("F-009", {item["id"] for item in findings})
 
     def test_external_reference_supports_factual_content(self):
-        findings, evidence = analyze("<h1>Facts</h1><p>Revenue reached $20 million in 2025.</p><a href='https://source.example/report'>Source</a>")
+        findings, evidence = analyze(
+            "<h1>Facts</h1><p>Revenue reached $20 million in 2025.</p><a href='https://source.example/report'>Source</a>"
+        )
         self.assertNotIn("F-018", {item["id"] for item in findings})
         self.assertEqual(evidence["F-018"]["external_reference_links"], 1) if "F-018" in evidence else None
 
@@ -83,14 +90,16 @@ class FreshnessTrustTests(unittest.TestCase):
         html = (
             "<meta name='author' content='Author'>"
             "<p>By Author. Revenue was $20 million in 2025.</p><p>Contact us by email.</p>"
-            "<script type='application/ld+json'>{\"@type\":\"Organization\",\"sameAs\":[\"https://source.example/id\"]}</script>"
+            '<script type=\'application/ld+json\'>{"@type":"Organization","sameAs":["https://source.example/id"]}</script>'
         )
         findings, evidence = analyze(html)
         self.assertNotIn("F-018", {item["id"] for item in findings})
         self.assertTrue(evidence.get("F-018", {}).get("author_signal", True))
 
     def test_navigation_and_footer_links_do_not_count(self):
-        findings, evidence = analyze("<nav><a href='https://social.example'>Social</a></nav><p>Revenue was $20 million in 2025.</p><footer><a href='https://example.test/privacy'>Privacy</a></footer>")
+        findings, evidence = analyze(
+            "<nav><a href='https://social.example'>Social</a></nav><p>Revenue was $20 million in 2025.</p><footer><a href='https://example.test/privacy'>Privacy</a></footer>"
+        )
         self.assertEqual(evidence.get("F-018", {}).get("external_reference_links", 0), 0)
 
     def test_malformed_jsonld_does_not_break_trust_analysis(self):

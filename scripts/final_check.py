@@ -7,11 +7,12 @@ and outputs:
 only if all mandatory checks pass without warnings or failures.
 """
 
-import sys
 import subprocess
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
 
 def main():
     print("\n" + "█" * 78)
@@ -20,11 +21,7 @@ def main():
 
     # 1. Run the 6-Gate verification runner in strict CI mode
     verify_script = REPO_ROOT / "scripts" / "verify.py"
-    proc = subprocess.run(
-        [sys.executable, str(verify_script), "--ci"],
-        cwd=str(REPO_ROOT),
-        text=True
-    )
+    proc = subprocess.run([sys.executable, str(verify_script), "--ci"], cwd=str(REPO_ROOT), text=True)
 
     if proc.returncode != 0:
         print("\n" + "!" * 78)
@@ -56,6 +53,7 @@ def main():
     print("██  Status: All Mandatory Verification Gates Passed and Submission-Ready    ██")
     print("█" * 78 + "\n")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())

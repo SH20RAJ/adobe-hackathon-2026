@@ -11,7 +11,7 @@ import json
 import os
 import time
 from pathlib import Path
-from typing import Tuple, List, Dict, Any, Optional
+from typing import Any
 
 import gradio as gr
 
@@ -23,40 +23,30 @@ CRAWL_SCRIPTS = SKILLS_DIR / "crawl-render-audit" / "scripts"
 ROOT_SCRIPTS = REPO_ROOT / "scripts"
 
 import sys
+
 for p in [str(ORCHESTRATOR_SCRIPTS), str(CRAWL_SCRIPTS), str(ROOT_SCRIPTS), str(REPO_ROOT / "omniaudit-geo")]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from audit_runner import (
-    run_full_audit,
-    fetch_url,
-    HTMLContentExtractor,
-    audit_crawl_render,
-    audit_structured_data,
-    audit_aeo_quotability,
-    audit_freshness_trust,
-    audit_on_site_engagement,
-    enrich_findings_actions,
-)
-from safe_fetch import normalize_url, FetchValidationError
-from eval_benchmarks import run_evals
-from mcp_server import handle_json_rpc, MCP_TOOLS
 import re
+
+from eval_benchmarks import run_evals
+
 from audit_guard import (
     execute_guarded_audit,
-    execute_guarded_specialist_audit,
     execute_guarded_mcp,
+    execute_guarded_specialist_audit,
 )
 from docs_manager import (
-    get_docs_catalog,
     get_doc_by_id,
-    search_docs,
+    get_docs_catalog,
 )
-
+from mcp_server import MCP_TOOLS
 
 # ---------------------------------------------------------------------------
 # UI Visual Helper Components
 # ---------------------------------------------------------------------------
+
 
 def render_score_badge(score: float, label: str) -> str:
     """Renders a color-coded circular score badge with qualitative rating."""
@@ -86,7 +76,7 @@ def render_score_badge(score: float, label: str) -> str:
     """
 
 
-def render_findings_html(findings: List[Dict[str, Any]]) -> str:
+def render_findings_html(findings: list[dict[str, Any]]) -> str:
     """Renders audit findings as clean, responsive, high-contrast cards."""
     if not findings:
         return """
@@ -99,10 +89,10 @@ def render_findings_html(findings: List[Dict[str, Any]]) -> str:
 
     sev_styles = {
         "critical": {"bg": "rgba(239, 68, 68, 0.15)", "border": "#ef4444", "text": "#ef4444", "icon": "🚨"},
-        "high":     {"bg": "rgba(249, 115, 22, 0.15)", "border": "#f97316", "text": "#f97316", "icon": "⚠️"},
-        "medium":   {"bg": "rgba(245, 158, 11, 0.15)", "border": "#f59e0b", "text": "#f59e0b", "icon": "⚡"},
-        "low":      {"bg": "rgba(59, 130, 246, 0.15)", "border": "#3b82f6", "text": "#3b82f6", "icon": "ℹ️"},
-        "info":     {"bg": "rgba(100, 116, 139, 0.15)", "border": "#94a3b8", "text": "#94a3b8", "icon": "📝"},
+        "high": {"bg": "rgba(249, 115, 22, 0.15)", "border": "#f97316", "text": "#f97316", "icon": "⚠️"},
+        "medium": {"bg": "rgba(245, 158, 11, 0.15)", "border": "#f59e0b", "text": "#f59e0b", "icon": "⚡"},
+        "low": {"bg": "rgba(59, 130, 246, 0.15)", "border": "#3b82f6", "text": "#3b82f6", "icon": "ℹ️"},
+        "info": {"bg": "rgba(100, 116, 139, 0.15)", "border": "#94a3b8", "text": "#94a3b8", "icon": "📝"},
     }
 
     cards = []
@@ -131,22 +121,34 @@ def render_findings_html(findings: List[Dict[str, Any]]) -> str:
                 """
 
         card_html = f"""
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid {st['border']}; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; transition: all 0.2s ease;">
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.08); border-left: 4px solid {
+            st["border"]
+        }; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; transition: all 0.2s ease;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
                 <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span style="background: rgba(255,255,255,0.08); color: #f1f5f9; font-family: monospace; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">{fid}</span>
-                    <span style="background: {st['bg']}; color: {st['text']}; border: 1px solid {st['border']}50; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.04em;">
-                        {st['icon']} {sev.upper()}
+                    <span style="background: rgba(255,255,255,0.08); color: #f1f5f9; font-family: monospace; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 4px;">{
+            fid
+        }</span>
+                    <span style="background: {st["bg"]}; color: {st["text"]}; border: 1px solid {
+            st["border"]
+        }50; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; letter-spacing: 0.04em;">
+                        {st["icon"]} {sev.upper()}
                     </span>
-                    <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em;">{cat}</span>
+                    <span style="font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em;">{
+            cat
+        }</span>
                 </div>
             </div>
             <div style="font-size: 1rem; font-weight: 600; color: #f8fafc; margin-bottom: 8px; line-height: 1.4;">
                 {title}
             </div>
-            {f'''<div style="background: rgba(235, 16, 0, 0.06); border-left: 3px solid #eb1000; border-radius: 4px; padding: 8px 12px; font-size: 0.85rem; color: #e2e8f0; line-height: 1.5; margin-bottom: 6px;">
+            {
+            f'''<div style="background: rgba(235, 16, 0, 0.06); border-left: 3px solid #eb1000; border-radius: 4px; padding: 8px 12px; font-size: 0.85rem; color: #e2e8f0; line-height: 1.5; margin-bottom: 6px;">
                 <strong style="color: #fca5a5;">💡 Action:</strong> {remediation}
-            </div>''' if remediation else ''}
+            </div>'''
+            if remediation
+            else ""
+        }
             {evidence_html}
         </div>
         """
@@ -157,12 +159,12 @@ def render_findings_html(findings: List[Dict[str, Any]]) -> str:
         <div style="font-size: 0.85rem; color: #94a3b8; margin-bottom: 10px; font-weight: 500;">
             Showing <strong>{len(findings)}</strong> diagnostic findings (sorted by priority):
         </div>
-        {''.join(cards)}
+        {"".join(cards)}
     </div>
     """
 
 
-def render_proactive_recs(recommendations: List[Dict[str, Any]]) -> str:
+def render_proactive_recs(recommendations: list[dict[str, Any]]) -> str:
     """Renders beyond-defect strategic recommendations as high-impact cards."""
     if not recommendations:
         return "<div style='color:#94a3b8; font-size:0.9rem; padding: 12px 0;'>No critical proactive recommendations generated. Target website satisfies core optimization heuristics.</div>"
@@ -202,7 +204,8 @@ def render_proactive_recs(recommendations: List[Dict[str, Any]]) -> str:
 # Backend Handlers using the Guarded Audit Service Execution Layer
 # ---------------------------------------------------------------------------
 
-def _get_client_ip(request: Optional[gr.Request]) -> str:
+
+def _get_client_ip(request: gr.Request | None) -> str:
     """Extracts client IP from incoming Gradio request context."""
     if not request:
         return "local"
@@ -217,7 +220,7 @@ def _get_client_ip(request: Optional[gr.Request]) -> str:
     return "local"
 
 
-def perform_full_audit(url: str, request: Optional[gr.Request] = None) -> Tuple[str, str, str, str, Dict[str, Any]]:
+def perform_full_audit(url: str, request: gr.Request | None = None) -> tuple[str, str, str, str, dict[str, Any]]:
     """Executes the master audit orchestrator on the target URL via the guarded execution service."""
     client_ip = _get_client_ip(request)
     start_time = time.perf_counter()
@@ -265,7 +268,7 @@ def perform_full_audit(url: str, request: Optional[gr.Request] = None) -> Tuple[
             <div style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px;">Engine Latency</div>
             <div style="font-size: 2.6rem; font-weight: 800; color: #8b5cf6; line-height: 1.1; margin: 4px 0;">{elapsed:.2f}s</div>
             <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 6px; font-family: monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                {report.get('site', clean_url)}
+                {report.get("site", clean_url)}
             </div>
         </div>
     </div>
@@ -278,19 +281,25 @@ def perform_full_audit(url: str, request: Optional[gr.Request] = None) -> Tuple[
     return metrics_html, summary_text, findings_html, recs_html, report
 
 
-def perform_specialist_audit(skill_name: str, url: str, request: Optional[gr.Request] = None) -> Tuple[str, str, Dict[str, Any]]:
+def perform_specialist_audit(
+    skill_name: str, url: str, request: gr.Request | None = None
+) -> tuple[str, str, dict[str, Any]]:
     """Invokes individual specialist audit skills directly via the guarded execution layer."""
     client_ip = _get_client_ip(request)
     summary_md, findings, meta = execute_guarded_specialist_audit(skill_name, url, client_ip=client_ip)
     if meta.get("error"):
         err_msg = meta.get("error")
-        return summary_md, f"<div style='color:#ef4444; padding:12px; background:rgba(239,68,68,0.1); border-radius:6px;'>🛡️ Guard Notice: {err_msg}</div>", meta
+        return (
+            summary_md,
+            f"<div style='color:#ef4444; padding:12px; background:rgba(239,68,68,0.1); border-radius:6px;'>🛡️ Guard Notice: {err_msg}</div>",
+            meta,
+        )
 
     findings_html = render_findings_html(findings)
     return summary_md, findings_html, meta
 
 
-def perform_live_mcp_call(tool_name: str, target_url: str, request: Optional[gr.Request] = None) -> Tuple[str, str]:
+def perform_live_mcp_call(tool_name: str, target_url: str, request: gr.Request | None = None) -> tuple[str, str]:
     """Interactive Live MCP Sandbox Tester via the guarded execution layer."""
     client_ip = _get_client_ip(request)
     if not target_url or not target_url.strip():
@@ -300,12 +309,7 @@ def perform_live_mcp_call(tool_name: str, target_url: str, request: Optional[gr.
         "jsonrpc": "2.0",
         "id": 1,
         "method": "tools/call",
-        "params": {
-            "name": tool_name,
-            "arguments": {
-                "url": target_url.strip()
-            }
-        }
+        "params": {"name": tool_name, "arguments": {"url": target_url.strip()}},
     }
     req_json = json.dumps(req_obj, indent=2)
     res_obj = execute_guarded_mcp(req_obj, client_ip=client_ip)
@@ -314,7 +318,7 @@ def perform_live_mcp_call(tool_name: str, target_url: str, request: Optional[gr.
     return req_json, res_json
 
 
-def load_benchmarks_data() -> Tuple[str, List[List[str]]]:
+def load_benchmarks_data() -> tuple[str, list[list[str]]]:
     """Runs the 16 Golden Fixtures evaluation harness and formats results."""
     eval_res = run_evals(return_dict=True)
     total = eval_res.get("total", 16)
@@ -356,49 +360,57 @@ def load_benchmarks_data() -> Tuple[str, List[List[str]]]:
 
     rows = []
     for fix in eval_res.get("fixtures", []):
-        rows.append([
-            fix.get("name", ""),
-            fix.get("category", ""),
-            f"{fix.get('acpi_score', 0):.1f}",
-            f"{fix.get('crs_score', 0):.1f}",
-            f"{fix.get('latency_ms', 0):.2f} ms",
-            "PASS" if fix.get("schema_valid") else "FAIL",
-            "✓ PASS",
-        ])
+        rows.append(
+            [
+                fix.get("name", ""),
+                fix.get("category", ""),
+                f"{fix.get('acpi_score', 0):.1f}",
+                f"{fix.get('crs_score', 0):.1f}",
+                f"{fix.get('latency_ms', 0):.2f} ms",
+                "PASS" if fix.get("schema_valid") else "FAIL",
+                "✓ PASS",
+            ]
+        )
 
     return summary_html, rows
 
 
-def get_marketplace_data() -> List[List[str]]:
+def get_marketplace_data() -> list[list[str]]:
     """Loads declared skills from marketplace.json."""
     manifest_path = REPO_ROOT / "marketplace.json"
     if not manifest_path.is_file():
         return []
-    with open(manifest_path, "r", encoding="utf-8") as f:
+    with open(manifest_path, encoding="utf-8") as f:
         data = json.load(f)
     rows = []
     for s in data.get("skills", []):
-        rows.append([
-            s.get("name", ""),
-            s.get("role", ""),
-            s.get("description", ""),
-            s.get("entrypoint", ""),
-            s.get("version", "1.0.0"),
-        ])
+        rows.append(
+            [
+                s.get("name", ""),
+                s.get("role", ""),
+                s.get("description", ""),
+                s.get("entrypoint", ""),
+                s.get("version", "1.0.0"),
+            ]
+        )
     return rows
 
 
-def get_mcp_tools_data() -> List[List[str]]:
+def get_mcp_tools_data() -> list[list[str]]:
     """Loads declared Anthropic Model Context Protocol (MCP) tools."""
     rows = []
     for t in MCP_TOOLS:
         req = ", ".join(t.get("inputSchema", {}).get("required", []))
-        rows.append([
-            t.get("name", ""),
-            t.get("description", ""),
-            req or "none",
-        ])
-def get_doc_choices(category: str = "All Categories") -> List[str]:
+        rows.append(
+            [
+                t.get("name", ""),
+                t.get("description", ""),
+                req or "none",
+            ]
+        )
+
+
+def get_doc_choices(category: str = "All Categories") -> list[str]:
     catalog = get_docs_catalog()
     if category and category != "All Categories":
         catalog = [d for d in catalog if d["category"] == category]
@@ -423,14 +435,14 @@ def render_doc_meta_header(doc_id: str) -> str:
     <div style="background: rgba(56, 189, 248, 0.05); border: 1px solid rgba(56, 189, 248, 0.2); border-radius: 8px; padding: 14px 18px; margin: 10px 0 18px 0;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
             <div>
-                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 3px 10px; border-radius: 12px; letter-spacing: 0.05em;">{doc['category']}</span>
-                <span style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-left: 10px;">{doc['icon']} {doc['title']}</span>
+                <span style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; color: #38bdf8; background: rgba(56, 189, 248, 0.15); padding: 3px 10px; border-radius: 12px; letter-spacing: 0.05em;">{doc["category"]}</span>
+                <span style="font-size: 1.05rem; font-weight: 700; color: #f8fafc; margin-left: 10px;">{doc["icon"]} {doc["title"]}</span>
             </div>
             <div style="font-family: monospace; font-size: 0.8rem; color: #94a3b8; background: rgba(0,0,0,0.25); padding: 4px 10px; border-radius: 6px;">
-                {doc['rel_path']}
+                {doc["rel_path"]}
             </div>
         </div>
-        <div style="font-size: 0.88rem; color: #cbd5e1; margin-top: 8px; line-height: 1.5;">{doc['description']}</div>
+        <div style="font-size: 0.88rem; color: #cbd5e1; margin-top: 8px; line-height: 1.5;">{doc["description"]}</div>
     </div>
     """
 
@@ -507,6 +519,7 @@ button.tab-nav {
 }
 """
 
+
 def create_gradio_app() -> gr.Blocks:
     """Creates the full, pure Gradio frontend for OmniAudit-GEO."""
     with gr.Blocks(title="OmniAudit-GEO — Brand AI-Readiness Platform") as demo:
@@ -581,13 +594,21 @@ def create_gradio_app() -> gr.Blocks:
 
                 with gr.Row():
                     with gr.Column():
-                        gr.HTML("<h3 style='font-size: 1.15rem; font-weight: 700; margin: 15px 0 8px 0; color:#f8fafc;'>📋 Proactive Recommendations (Beyond-Defect Strategic Advisory)</h3>")
-                        recs_output = gr.HTML(value="<div style='color:#94a3b8; font-size:0.9rem;'>Run an audit to view strategic recommendations.</div>")
+                        gr.HTML(
+                            "<h3 style='font-size: 1.15rem; font-weight: 700; margin: 15px 0 8px 0; color:#f8fafc;'>📋 Proactive Recommendations (Beyond-Defect Strategic Advisory)</h3>"
+                        )
+                        recs_output = gr.HTML(
+                            value="<div style='color:#94a3b8; font-size:0.9rem;'>Run an audit to view strategic recommendations.</div>"
+                        )
 
                 with gr.Row():
                     with gr.Column():
-                        gr.HTML("<h3 style='font-size: 1.15rem; font-weight: 700; margin: 20px 0 8px 0; color:#f8fafc;'>🔍 Detailed Diagnostic Findings & AST Evidence</h3>")
-                        findings_output = gr.HTML(value="<div style='color:#94a3b8; font-size:0.9rem;'>Detailed findings will render here after running an audit.</div>")
+                        gr.HTML(
+                            "<h3 style='font-size: 1.15rem; font-weight: 700; margin: 20px 0 8px 0; color:#f8fafc;'>🔍 Detailed Diagnostic Findings & AST Evidence</h3>"
+                        )
+                        findings_output = gr.HTML(
+                            value="<div style='color:#94a3b8; font-size:0.9rem;'>Detailed findings will render here after running an audit.</div>"
+                        )
 
                 with gr.Accordion("📦 Raw Standard JSON Report (Conforms to references/audit_schema.json)", open=False):
                     raw_json = gr.JSON(value={}, label="Verified Audit Schema Output")
@@ -646,7 +667,15 @@ def create_gradio_app() -> gr.Blocks:
                 bench_btn = gr.Button("🔄 Re-run Evaluation Harness", variant="secondary")
                 bench_metrics = gr.HTML(value="")
                 gr.Dataframe(
-                    headers=["Fixture Name", "Category", "ACPI Score", "CRS Score", "Latency", "Schema Valid", "Status"],
+                    headers=[
+                        "Fixture Name",
+                        "Category",
+                        "ACPI Score",
+                        "CRS Score",
+                        "Latency",
+                        "Schema Valid",
+                        "Status",
+                    ],
                     datatype=["str", "str", "str", "str", "str", "str", "str"],
                     value=load_benchmarks_data()[1],
                     interactive=False,
@@ -836,7 +865,9 @@ def create_gradio_app() -> gr.Blocks:
                 # -----------------------------------------------------------
                 # Interactive Live MCP Sandbox Tester
                 # -----------------------------------------------------------
-                gr.HTML("<h3 style='font-size: 1.15rem; font-weight: 700; margin: 25px 0 10px 0; color:#f8fafc;'>⚡ Live Interactive MCP Sandbox Tester</h3>")
+                gr.HTML(
+                    "<h3 style='font-size: 1.15rem; font-weight: 700; margin: 25px 0 10px 0; color:#f8fafc;'>⚡ Live Interactive MCP Sandbox Tester</h3>"
+                )
                 gr.Markdown("Test JSON-RPC 2.0 tool calls against the live MCP server directly in this interface:")
 
                 with gr.Row():
@@ -867,7 +898,9 @@ def create_gradio_app() -> gr.Blocks:
                     outputs=[mcp_req_code, mcp_res_code],
                 )
 
-                gr.HTML("<h4 style='font-size: 1rem; font-weight: 700; margin: 25px 0 10px 0; color:#f8fafc;'>📋 Declared Anthropic MCP Tools (7):</h4>")
+                gr.HTML(
+                    "<h4 style='font-size: 1rem; font-weight: 700; margin: 25px 0 10px 0; color:#f8fafc;'>📋 Declared Anthropic MCP Tools (7):</h4>"
+                )
                 gr.Dataframe(
                     headers=["Tool Name", "Description", "Required Inputs"],
                     datatype=["str", "str", "str"],
@@ -900,7 +933,13 @@ def create_gradio_app() -> gr.Blocks:
 
                 with gr.Row():
                     doc_category_filter = gr.Dropdown(
-                        choices=["All Categories", "Canonical Guides", "Skill Instructions", "Root Protocols", "Historical Archive"],
+                        choices=[
+                            "All Categories",
+                            "Canonical Guides",
+                            "Skill Instructions",
+                            "Root Protocols",
+                            "Historical Archive",
+                        ],
                         value="All Categories",
                         label="Filter by Category",
                         scale=2,

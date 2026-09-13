@@ -13,9 +13,9 @@ Gates:
   Gate 6: Marketplace Package & Unpacked Sandbox Verification
 """
 
+import json
 import sys
 import time
-import json
 import unittest
 from pathlib import Path
 
@@ -34,10 +34,12 @@ CYAN = "\033[96m"
 BOLD = "\033[1m"
 RESET = "\033[0m"
 
+
 def print_gate_header(gate_num: int, title: str):
     print(f"\n{BOLD}{CYAN}══════════════════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}{CYAN} Gate {gate_num}: {title}{RESET}")
     print(f"{BOLD}{CYAN}══════════════════════════════════════════════════════════════════════{RESET}")
+
 
 def run_python_suite(test_dirs: list):
     """Dynamically discover and run Python unittests across multiple directories."""
@@ -68,6 +70,7 @@ def run_python_suite(test_dirs: list):
         "skipped": skipped,
         "elapsed_s": round(elapsed, 3),
     }
+
 
 def run_fastapi_tests():
     """Run Python unittests for omniaudit-geo FastAPI control plane and MCP server."""
@@ -108,23 +111,29 @@ def run_fastapi_tests():
         "elapsed_s": round(elapsed, 3),
     }
 
+
 def verify_fastapi_engine():
     """Verify FastAPI application imports and routes compile cleanly without runtime errors."""
     try:
         if str(REPO_ROOT / "omniaudit-geo") not in sys.path:
             sys.path.insert(0, str(REPO_ROOT / "omniaudit-geo"))
         import main
+
         assert hasattr(main, "app"), "FastAPI 'app' instance missing in main.py"
         routes_count = len(main.app.routes)
         return {"status": "passed", "routes_count": routes_count}
-    except Exception as e:
+    except Exception:
         import traceback
+
         print(f"\n{RED}--- GATE 5 FASTAPI ENGINE IMPORT FAILURE ---{RESET}")
         traceback.print_exc()
         print(f"{RED}--------------------------------------------{RESET}\n")
+
+
 def verify_documentation_and_contracts():
     """Deterministic validation of documentation integrity, canonical references, and manifest consistency."""
     import re
+
     errors = []
 
     # 1. Verify marketplace manifest
@@ -133,7 +142,7 @@ def verify_documentation_and_contracts():
         errors.append("marketplace.json is missing")
     else:
         try:
-            with open(manifest_path, "r", encoding="utf-8") as f:
+            with open(manifest_path, encoding="utf-8") as f:
                 data = json.load(f)
             for skill in data.get("skills", []):
                 sp = REPO_ROOT / skill.get("path", "")
@@ -146,9 +155,19 @@ def verify_documentation_and_contracts():
 
     # 2. Verify all 12 canonical docs exist
     canonical_docs = [
-        "README.md", "getting-started.md", "architecture.md", "marketplace.md",
-        "skills.md", "cli.md", "api.md", "mcp.md", "security.md",
-        "testing.md", "benchmarking.md", "deployment.md", "judging.md"
+        "README.md",
+        "getting-started.md",
+        "architecture.md",
+        "marketplace.md",
+        "skills.md",
+        "cli.md",
+        "api.md",
+        "mcp.md",
+        "security.md",
+        "testing.md",
+        "benchmarking.md",
+        "deployment.md",
+        "judging.md",
     ]
     for cd in canonical_docs:
         if not (REPO_ROOT / "docs" / cd).exists():
@@ -158,7 +177,7 @@ def verify_documentation_and_contracts():
     for doc_file in [REPO_ROOT / "README.md", REPO_ROOT / "docs" / "README.md"]:
         if doc_file.exists():
             content = doc_file.read_text(encoding="utf-8")
-            for m in re.finditer(r'\[([^\]]+)\]\(([^)]+)\)', content):
+            for m in re.finditer(r"\[([^\]]+)\]\(([^)]+)\)", content):
                 text, url = m.group(1), m.group(2)
                 if url.startswith(("http://", "https://", "#", "mailto:")):
                     continue
@@ -173,6 +192,48 @@ def verify_documentation_and_contracts():
         "status": "passed" if len(errors) == 0 else "failed",
         "errors": errors,
     }
+
+
+def verify_code_quality_ruff():
+    """Validates code formatting and linting via Ruff if available in environment."""
+    import subprocess
+
+    try:
+        # Check if ruff module is accessible
+        check_proc = subprocess.run(
+            [sys.executable, "-m", "ruff", "--version"],
+            cwd=str(REPO_ROOT),
+            capture_output=True,
+            text=True,
+        )
+        if check_proc.returncode != 0:
+            return {"status": "skipped", "message": "Ruff not installed"}
+    except Exception:
+        return {"status": "skipped", "message": "Ruff not installed"}
+
+    check_res = subprocess.run(
+        [sys.executable, "-m", "ruff", "check", "."],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+    )
+    fmt_res = subprocess.run(
+        [sys.executable, "-m", "ruff", "format", "--check", "."],
+        cwd=str(REPO_ROOT),
+        capture_output=True,
+        text=True,
+    )
+
+    if check_res.returncode == 0 and fmt_res.returncode == 0:
+        return {"status": "passed", "errors": []}
+
+    errors = []
+    if check_res.returncode != 0:
+        errors.append(f"Ruff check reported issues:\n{check_res.stdout}")
+    if fmt_res.returncode != 0:
+        errors.append(f"Ruff format reported unformatted files:\n{fmt_res.stdout}")
+    return {"status": "failed", "errors": errors}
+
 
 def main():
     ci_mode = "--ci" in sys.argv
@@ -194,29 +255,37 @@ def main():
     # GATE 1: Hostile Security & SSRF Defense Invariants
     # -------------------------------------------------------------
     print_gate_header(1, "Hostile Security & SSRF Defense Invariants")
-    sec_results = run_python_suite([
-        "skills/crawl-render-audit/tests",
-    ])
+    sec_results = run_python_suite(
+        [
+            "skills/crawl-render-audit/tests",
+        ]
+    )
     gate_results["gate1_security"] = sec_results
     if not sec_results["success"]:
         overall_passed = False
         print(f"{RED}✗ Gate 1 Failed: {sec_results['failed']} tests failed{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 1 Passed: {sec_results['passed']}/{sec_results['total']} security tests passed in {sec_results['elapsed_s']}s{RESET}")
+        print(
+            f"{GREEN}✓ Gate 1 Passed: {sec_results['passed']}/{sec_results['total']} security tests passed in {sec_results['elapsed_s']}s{RESET}"
+        )
 
     # -------------------------------------------------------------
     # GATE 2: Core Audit Engine & Specialist Unit Tests
     # -------------------------------------------------------------
     print_gate_header(2, "Core Audit Engine & Specialist Unit Tests")
-    core_results = run_python_suite([
-        "skills/audit-orchestrator/tests",
-    ])
+    core_results = run_python_suite(
+        [
+            "skills/audit-orchestrator/tests",
+        ]
+    )
     gate_results["gate2_core_engine"] = core_results
     if not core_results["success"]:
         overall_passed = False
         print(f"{RED}✗ Gate 2 Failed: {core_results['failed']} tests failed{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 2 Passed: {core_results['passed']}/{core_results['total']} engine tests passed in {core_results['elapsed_s']}s{RESET}")
+        print(
+            f"{GREEN}✓ Gate 2 Passed: {core_results['passed']}/{core_results['total']} engine tests passed in {core_results['elapsed_s']}s{RESET}"
+        )
 
     # -------------------------------------------------------------
     # GATE 3: Golden Benchmark Evaluation Matrix
@@ -228,21 +297,32 @@ def main():
         overall_passed = False
         print(f"{RED}✗ Gate 3 Failed: {bench_data['failed']} benchmarks failed{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 3 Passed: 16/16 fixtures passed (Precision: {bench_data['precision_pct']}%, Recall: {bench_data['recall_pct']}%, Latency: {bench_data['avg_latency_ms']}ms){RESET}")
+        print(
+            f"{GREEN}✓ Gate 3 Passed: 16/16 fixtures passed (Precision: {bench_data['precision_pct']}%, Recall: {bench_data['recall_pct']}%, Latency: {bench_data['avg_latency_ms']}ms){RESET}"
+        )
 
     # -------------------------------------------------------------
     # GATE 4: Recursive JSON Schema & Contract Validation
     # -------------------------------------------------------------
     print_gate_header(4, "Recursive JSON Schema, Manifest & Contract Validation")
-    schema_suite = run_python_suite([
-        "skills/audit-orchestrator/tests",
-    ])
+    schema_suite = run_python_suite(
+        [
+            "skills/audit-orchestrator/tests",
+        ]
+    )
     doc_contract = verify_documentation_and_contracts()
-    schema_ok = (bench_data["schema_failures"] == 0) and schema_suite["success"] and (doc_contract["status"] == "passed")
+    ruff_quality = verify_code_quality_ruff()
+    schema_ok = (
+        (bench_data["schema_failures"] == 0)
+        and schema_suite["success"]
+        and (doc_contract["status"] == "passed")
+        and (ruff_quality["status"] != "failed")
+    )
     gate_results["gate4_schema"] = {
         "status": "passed" if schema_ok else "failed",
         "benchmark_schema_failures": bench_data["schema_failures"],
         "doc_contract_errors": doc_contract["errors"],
+        "ruff_code_quality": ruff_quality["status"],
     }
     if not schema_ok:
         overall_passed = False
@@ -250,10 +330,15 @@ def main():
             print(f"{RED}✗ Gate 4 Contract & Documentation Errors:{RESET}")
             for err in doc_contract["errors"]:
                 print(f"   • {RED}{err}{RESET}")
+        if ruff_quality.get("errors"):
+            print(f"{RED}✗ Gate 4 Ruff Code Quality Errors:{RESET}")
+            for r_err in ruff_quality["errors"]:
+                print(f"   • {RED}{r_err}{RESET}")
         if bench_data["schema_failures"] > 0 or not schema_suite["success"]:
             print(f"{RED}✗ Gate 4 Failed: Schema validation errors detected{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 4 Passed: 100% Schema & documentation contract validation across all fixtures & manifest{RESET}")
+        ruff_msg = " (Ruff Lint & Format Verified)" if ruff_quality["status"] == "passed" else ""
+        print(f"{GREEN}✓ Gate 4 Passed: 100% Schema, documentation contract & code quality validation{ruff_msg}{RESET}")
 
     # -------------------------------------------------------------
     # GATE 5: Web Control Plane & MCP Server (FastAPI)
@@ -266,7 +351,9 @@ def main():
         overall_passed = False
         print(f"{RED}✗ Gate 5 Failed: FastAPI test/import failure{RESET}")
     else:
-        print(f"{GREEN}✓ Gate 5 Passed: {fastapi_tests['passed']}/{fastapi_tests['total']} FastAPI tests passed, {fastapi_check.get('routes_count', 0)} routes mounted{RESET}")
+        print(
+            f"{GREEN}✓ Gate 5 Passed: {fastapi_tests['passed']}/{fastapi_tests['total']} FastAPI tests passed, {fastapi_check.get('routes_count', 0)} routes mounted{RESET}"
+        )
 
     gate_results["gate5_web"] = {
         "status": "passed" if web_ok else "failed",
@@ -345,6 +432,7 @@ def main():
     else:
         print(f"\n{BOLD}{RED}❌ VERIFICATION GATES FAILED — INSPECT DETAILS ABOVE{RESET}\n")
         return 1
+
 
 if __name__ == "__main__":
     sys.exit(main())

@@ -5,9 +5,9 @@ Mechanically computes precision, recall, false positive/negative rates,
 per-fixture latency, and verifies recursive schema validity on every fixture.
 """
 
+import pathlib
 import sys
 import time
-import pathlib
 from unittest.mock import patch
 
 ROOT_DIR = pathlib.Path(__file__).resolve().parent.parent
@@ -16,8 +16,9 @@ FIXTURES_DIR = ROOT_DIR / "skills" / "audit-orchestrator" / "tests" / "fixtures"
 sys.path.insert(0, str(SCRIPT_DIR))
 sys.path.insert(0, str(ROOT_DIR / "scripts"))
 
-from audit_runner import run_full_audit
 from schema_validator import validate_report
+
+from audit_runner import run_full_audit
 
 BENCHMARK_SPECS = [
     {
@@ -26,7 +27,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: GPTBot\nDisallow: /\n",
         "expected_findings": {"F-001-GPTBot"},
         "expected_absences": {"F-002"},
-        "desc": "Explicit GPTBot crawler block detected"
+        "desc": "Explicit GPTBot crawler block detected",
     },
     {
         "fixture": "hydration_spa",
@@ -34,7 +35,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-011"},
         "expected_absences": set(),
-        "desc": "Client-only SPA empty DOM detected"
+        "desc": "Client-only SPA empty DOM detected",
     },
     {
         "fixture": "partial_hydration",
@@ -42,7 +43,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-011"},
         "expected_absences": set(),
-        "desc": "Partial hydration skeleton text detected"
+        "desc": "Partial hydration skeleton text detected",
     },
     {
         "fixture": "large_state_static",
@@ -50,7 +51,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-011"},
-        "desc": "No false-positive hydration gap on static state"
+        "desc": "No false-positive hydration gap on static state",
     },
     {
         "fixture": "app_router",
@@ -58,7 +59,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-011"},
-        "desc": "Next.js RSC static payload correctly classified"
+        "desc": "Next.js RSC static payload correctly classified",
     },
     {
         "fixture": "good_business",
@@ -66,7 +67,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-001-GPTBot", "F-002", "F-003b", "F-004"},
-        "desc": "Clean production site produces 0 high/crit defects"
+        "desc": "Clean production site produces 0 high/crit defects",
     },
     {
         "fixture": "good_structured",
@@ -74,7 +75,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-003", "F-004", "F-005"},
-        "desc": "Valid JSON-LD @graph with sameAs authority"
+        "desc": "Valid JSON-LD @graph with sameAs authority",
     },
     {
         "fixture": "bad_structured",
@@ -82,7 +83,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-003", "F-012"},
         "expected_absences": set(),
-        "desc": "Syntax error & missing sameAs flagged"
+        "desc": "Syntax error & missing sameAs flagged",
     },
     {
         "fixture": "strong_aeo",
@@ -90,7 +91,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-015", "F-007"},
-        "desc": "High atomic fact density & tabular quotability"
+        "desc": "High atomic fact density & tabular quotability",
     },
     {
         "fixture": "weak_aeo",
@@ -98,7 +99,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-006"},
         "expected_absences": set(),
-        "desc": "Vague promotional fluff flagged for low fact density"
+        "desc": "Vague promotional fluff flagged for low fact density",
     },
     {
         "fixture": "stale_article",
@@ -106,7 +107,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-009"},
         "expected_absences": set(),
-        "desc": "Stale 2021 temporal decay flagged"
+        "desc": "Stale 2021 temporal decay flagged",
     },
     {
         "fixture": "current_article",
@@ -114,7 +115,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-009"},
-        "desc": "2026 timestamps + author byline verified fresh"
+        "desc": "2026 timestamps + author byline verified fresh",
     },
     {
         "fixture": "strong_engagement",
@@ -122,7 +123,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-019", "F-010"},
-        "desc": "High readability + clear above-the-fold hero CTA"
+        "desc": "High readability + clear above-the-fold hero CTA",
     },
     {
         "fixture": "weak_engagement",
@@ -130,7 +131,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-019"},
         "expected_absences": set(),
-        "desc": "Wall of text / missing CTA flagged for bounce risk"
+        "desc": "Wall of text / missing CTA flagged for bounce risk",
     },
     {
         "fixture": "documentation",
@@ -138,7 +139,7 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": set(),
         "expected_absences": {"F-019"},
-        "desc": "Technical API docs layout accurately scored"
+        "desc": "Technical API docs layout accurately scored",
     },
     {
         "fixture": "navigation_noise",
@@ -146,9 +147,10 @@ BENCHMARK_SPECS = [
         "robots": "User-agent: *\nAllow: /\n",
         "expected_findings": {"F-019"},
         "expected_absences": set(),
-        "desc": "Bloated menu DOM vs low content ratio detected"
-    }
+        "desc": "Bloated menu DOM vs low content ratio detected",
+    },
 ]
+
 
 def run_evals(return_dict: bool = False):
     print("╔═══════════════════════════════════════════════════════════════════════════════════════════════╗")
@@ -156,7 +158,9 @@ def run_evals(return_dict: bool = False):
     print("║       Adobe University Hackathon 2026 (Round 3 CRP) — 16 Golden Fixtures Test Matrix          ║")
     print("╚═══════════════════════════════════════════════════════════════════════════════════════════════╝\n")
 
-    print(f"{'#':<3} {'Fixture Name':<20} {'Category':<20} {'ACPI':<6} {'CRS':<6} {'Schema':<8} {'Latency':<9} {'Status':<6}")
+    print(
+        f"{'#':<3} {'Fixture Name':<20} {'Category':<20} {'ACPI':<6} {'CRS':<6} {'Schema':<8} {'Latency':<9} {'Status':<6}"
+    )
     print("─" * 95)
 
     passed_fixtures = 0
@@ -177,25 +181,25 @@ def run_evals(return_dict: bool = False):
         html_content = fixture_file.read_text(encoding="utf-8")
         robots_text = spec["robots"]
 
-        def fake_fetch(url, **kwargs):
+        def fake_fetch(url, *, _robots=robots_text, _html=html_content, **kwargs):
             if url.endswith("/robots.txt"):
                 return {
                     "status": 200,
                     "headers": {"content-type": "text/plain"},
-                    "body": robots_text.encode(),
-                    "html": robots_text,
+                    "body": _robots.encode(),
+                    "html": _robots,
                     "url": url,
                     "error": None,
-                    "error_code": None
+                    "error_code": None,
                 }
             return {
                 "status": 200,
                 "headers": {"content-type": "text/html; charset=utf-8"},
-                "body": html_content.encode(),
-                "html": html_content,
+                "body": _html.encode(),
+                "html": _html,
                 "url": url,
                 "error": None,
-                "error_code": None
+                "error_code": None,
             }
 
         start_t = time.perf_counter()
@@ -236,20 +240,24 @@ def run_evals(return_dict: bool = False):
         crs = report["metrics"]["crs_score"]
         schema_status = "PASS" if is_schema_valid else "FAIL"
 
-        print(f"{idx:<3} {spec['fixture']:<20} {spec['category']:<20} {acpi:<6.1f} {crs:<6.1f} {schema_status:<8} {elapsed_ms:>6.2f}ms   {status}")
+        print(
+            f"{idx:<3} {spec['fixture']:<20} {spec['category']:<20} {acpi:<6.1f} {crs:<6.1f} {schema_status:<8} {elapsed_ms:>6.2f}ms   {status}"
+        )
 
-        benchmark_details.append({
-            "fixture": spec["fixture"],
-            "category": spec["category"],
-            "passed": fixture_passed,
-            "acpi_score": acpi,
-            "crs_score": crs,
-            "schema_valid": is_schema_valid,
-            "latency_ms": round(elapsed_ms, 2),
-            "tp": tp,
-            "fp": fp,
-            "fn": fn
-        })
+        benchmark_details.append(
+            {
+                "fixture": spec["fixture"],
+                "category": spec["category"],
+                "passed": fixture_passed,
+                "acpi_score": acpi,
+                "crs_score": crs,
+                "schema_valid": is_schema_valid,
+                "latency_ms": round(elapsed_ms, 2),
+                "tp": tp,
+                "fp": fp,
+                "fn": fn,
+            }
+        )
 
     total_fixtures = len(BENCHMARK_SPECS)
     pass_rate = (passed_fixtures / total_fixtures) * 100 if total_fixtures > 0 else 0
@@ -288,13 +296,14 @@ def run_evals(return_dict: bool = False):
         "avg_latency_ms": round(avg_latency, 2),
         "total_time_ms": round(total_time, 2),
         "schema_failures": schema_failures,
-        "fixtures": benchmark_details
+        "fixtures": benchmark_details,
     }
 
     if return_dict:
         return summary_result
 
     return 0 if passed_fixtures == total_fixtures else 1
+
 
 if __name__ == "__main__":
     sys.exit(run_evals())

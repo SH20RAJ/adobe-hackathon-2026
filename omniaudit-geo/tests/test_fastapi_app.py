@@ -16,6 +16,7 @@ sys.path.insert(0, str(WEBAPP_DIR))
 
 from main import app
 
+
 class TestFastAPIApp(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -60,7 +61,7 @@ class TestFastAPIApp(unittest.TestCase):
                 "html": "<html><h1>Test Heading</h1><p>Test paragraph content for audit.</p></html>",
                 "url": url,
                 "error": None,
-                "error_code": None
+                "error_code": None,
             }
 
         with patch("audit_runner.safe_fetch", side_effect=fake_fetch):
@@ -135,6 +136,7 @@ class TestFastAPIApp(unittest.TestCase):
         self.assertIn("og:title", res_root.text)
         self.assertIn("canonical", res_root.text)
         self.assertIn("application/ld+json", res_root.text)
+
     def test_docs_portal_and_api(self):
         # /docs portal HTML
         res_docs = self.client.get("/docs")
@@ -164,6 +166,7 @@ class TestFastAPIApp(unittest.TestCase):
 
     def test_audit_guard_direct(self):
         from audit_guard import check_rate_limit, execute_guarded_audit
+
         # Verify rate limiting behavior
         ip = "198.51.100.42"
         allowed, retry = check_rate_limit(ip)
@@ -175,6 +178,7 @@ class TestFastAPIApp(unittest.TestCase):
         self.assertIn("error", res)
         self.assertEqual(res["error_code"], "ssrf_blocked")
         self.assertEqual(res["status_code"], 400)
+
 
 if __name__ == "__main__":
     unittest.main()

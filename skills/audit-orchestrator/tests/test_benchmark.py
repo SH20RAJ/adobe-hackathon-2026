@@ -3,7 +3,6 @@ import sys
 import unittest
 from unittest.mock import patch
 
-
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 FIXTURES = pathlib.Path(__file__).parent / "fixtures" / "benchmark"
 sys.path.insert(0, str(SCRIPT_DIR))

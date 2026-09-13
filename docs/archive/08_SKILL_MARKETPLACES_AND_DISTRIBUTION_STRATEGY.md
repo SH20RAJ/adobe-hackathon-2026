@@ -83,6 +83,7 @@ To maximize industry impact, adoption, and win #1 place in Adobe Hackathon Round
   from langchain.tools import tool
   from skills.audit_orchestrator.scripts.audit_runner import run_full_audit
 
+
   @tool
   def audit_website_ai_readiness(url: str) -> str:
       """Audits a website for AI discoverability (GEO/AEO) and on-site visitor retention."""

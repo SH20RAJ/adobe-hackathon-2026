@@ -13,14 +13,12 @@ Shared by both the FastAPI control plane (/docs route) and Gradio 6 UI.
 from __future__ import annotations
 
 import json
-import os
-import re
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
-DOCS_REGISTRY: List[Dict[str, Any]] = [
+DOCS_REGISTRY: list[dict[str, Any]] = [
     # -------------------------------------------------------------
     # 1. Canonical Engineering Guides
     # -------------------------------------------------------------
@@ -128,7 +126,6 @@ DOCS_REGISTRY: List[Dict[str, Any]] = [
         "rel_path": "docs/README.md",
         "description": "Central routing table and navigation index for the entire documentation suite.",
     },
-
     # -------------------------------------------------------------
     # 2. Specialist Skill Specifications (SKILL.md)
     # -------------------------------------------------------------
@@ -180,7 +177,6 @@ DOCS_REGISTRY: List[Dict[str, Any]] = [
         "rel_path": "skills/on-site-engagement-audit/SKILL.md",
         "description": "Above-the-fold hero clarity, Flesch/ARI reading ease, and conversion-oriented CTA paths.",
     },
-
     # -------------------------------------------------------------
     # 3. Root Protocols & Community
     # -------------------------------------------------------------
@@ -232,7 +228,6 @@ DOCS_REGISTRY: List[Dict[str, Any]] = [
         "rel_path": "marketplace.json",
         "description": "Official agentskills.io marketplace manifest defining skills and entrypoint.",
     },
-
     # -------------------------------------------------------------
     # 4. Historical Archive
     # -------------------------------------------------------------
@@ -271,12 +266,12 @@ DOCS_REGISTRY: List[Dict[str, Any]] = [
 ]
 
 
-def get_docs_catalog() -> List[Dict[str, Any]]:
+def get_docs_catalog() -> list[dict[str, Any]]:
     """Returns metadata for all available documentation items."""
     return DOCS_REGISTRY
 
 
-def get_doc_by_id(doc_id: str) -> Optional[Dict[str, Any]]:
+def get_doc_by_id(doc_id: str) -> dict[str, Any] | None:
     """Fetches a document by its unique ID and loads its content from disk."""
     for item in DOCS_REGISTRY:
         if item["id"] == doc_id:
@@ -305,7 +300,7 @@ def get_doc_by_id(doc_id: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def search_docs(query: str) -> List[Dict[str, Any]]:
+def search_docs(query: str) -> list[dict[str, Any]]:
     """Searches documentation titles, descriptions, and file content."""
     clean_q = query.strip().lower()
     if not clean_q:
@@ -347,15 +342,17 @@ def build_documentation_portal_html(initial_doc_id: str = "getting-started") -> 
     for item in DOCS_REGISTRY:
         doc = get_doc_by_id(item["id"])
         if doc:
-            docs_payload.append({
-                "id": doc["id"],
-                "title": doc["title"],
-                "icon": doc["icon"],
-                "category": doc["category"],
-                "description": doc["description"],
-                "rel_path": doc["rel_path"],
-                "content": doc.get("content", ""),
-            })
+            docs_payload.append(
+                {
+                    "id": doc["id"],
+                    "title": doc["title"],
+                    "icon": doc["icon"],
+                    "category": doc["category"],
+                    "description": doc["description"],
+                    "rel_path": doc["rel_path"],
+                    "content": doc.get("content", ""),
+                }
+            )
 
     docs_json = json.dumps(docs_payload).replace("</script>", "<\\/script>")
 

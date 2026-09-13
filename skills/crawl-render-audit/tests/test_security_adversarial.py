@@ -10,9 +10,7 @@ import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-SCRIPT_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "scripts")
-)
+SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
 if SCRIPT_DIR not in sys.path:
     sys.path.insert(0, SCRIPT_DIR)
 
@@ -119,9 +117,7 @@ class TestSecurityAdversarial(unittest.TestCase):
 
     @patch("socket.getaddrinfo")
     def test_reject_dns_resolving_to_private_ip(self, mock_getaddrinfo):
-        mock_getaddrinfo.return_value = [
-            (2, 1, 6, "", ("10.0.0.1", 80))
-        ]
+        mock_getaddrinfo.return_value = [(2, 1, 6, "", ("10.0.0.1", 80))]
         res = safe_fetch("http://malicious-public-domain.com")
         self.assertEqual(res["error_code"], "fetch_blocked")
         self.assertIn("non-public address", res["error"])
@@ -131,7 +127,7 @@ class TestSecurityAdversarial(unittest.TestCase):
         # First request resolves to public IP, returns redirect to 127.0.0.1
         mock_getaddrinfo.side_effect = [
             [(2, 1, 6, "", ("93.184.216.34", 80))],  # First host resolution ok
-            [(2, 1, 6, "", ("127.0.0.1", 80))],       # Redirect target fails
+            [(2, 1, 6, "", ("127.0.0.1", 80))],  # Redirect target fails
         ]
         mock_resp = MagicMock()
         mock_resp.getcode.return_value = 302

@@ -31,6 +31,7 @@ python3 cli.py <command> [options]
 | `benchmark` | Run 16 Golden Benchmarks with latency telemetry. | `omni benchmark` |
 | `verify` | Run the unified 6-gate automated verification loop. | `omni verify --ci` |
 | `package` | Build and sandbox-verify the submission ZIP package. | `omni package` |
+| `lint` | Run Ruff linter and code formatting checks across codebase. | `omni lint --fix` |
 
 ---
 
@@ -164,6 +165,19 @@ Assembles the official `omniaudit-geo-marketplace.zip` submission archive, enfor
 ```bash
 omni package
 ```
+
+---
+
+### 8. Code Quality & Linting (`lint`)
+
+Executes Astral Ruff linter and code formatting checks across the entire codebase:
+
+```bash
+omni lint [--fix]
+```
+
+**Options:**
+* `--fix`: Automatically resolve fixable linting issues and reformat Python files according to standard formatting rules.
 
 ---
 

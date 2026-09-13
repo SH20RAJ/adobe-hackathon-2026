@@ -3,11 +3,9 @@ import pathlib
 import sys
 import unittest
 
-
 SCRIPT_DIR = pathlib.Path(__file__).resolve().parents[1] / "scripts"
 sys.path.insert(0, str(SCRIPT_DIR))
 from crawl_inspector import detect_hydration_gap
-
 
 FIXTURES = pathlib.Path(__file__).parent / "fixtures"
 

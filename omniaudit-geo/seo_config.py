@@ -146,7 +146,7 @@ NOSCRIPT_SEMANTIC_BODY = """
   <div style="background: #0b0f19; color: #f8fafc; font-family: sans-serif; padding: 2rem; max-width: 800px; margin: 0 auto;">
     <h1>OmniAudit-GEO — Enterprise Brand AI-Readiness & GEO Engine</h1>
     <p>OmniAudit-GEO is an open-standard Agent Skill Marketplace compliant with the <code>agentskills.io</code> specification and Anthropic Model Context Protocol (MCP). It equips AI assistants with tools to diagnose why web properties are ignored or distorted by AI search engines (Perplexity, ChatGPT Search, Claude, Google AI Overviews) and why referred visitors bounce.</p>
-    
+
     <h2>Core Skills in Marketplace:</h2>
     <ul>
       <li><strong>crawl-render-audit:</strong> Analyzes robots.txt AI policies and detects client-side JavaScript hydration gaps.</li>

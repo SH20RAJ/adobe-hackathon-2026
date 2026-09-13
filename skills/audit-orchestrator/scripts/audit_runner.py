@@ -5,28 +5,26 @@ Conforms strictly to the Adobe University Hackathon Round 3 JSON Schema.
 Zero external dependencies (uses Python standard library).
 """
 
-import sys
-import os
 import json
+import os
 import re
-import urllib.request
+import sys
 import urllib.error
 import urllib.parse
+import urllib.request
 from datetime import datetime, timezone
 from html.parser import HTMLParser
-from typing import Optional
 
 ORCHESTRATOR_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ORCHESTRATOR_SCRIPT_DIR not in sys.path:
     sys.path.insert(0, ORCHESTRATOR_SCRIPT_DIR)
 from scoring import compute_scores
 
-CRAWL_SCRIPT_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "crawl-render-audit", "scripts")
-)
+CRAWL_SCRIPT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "crawl-render-audit", "scripts"))
 if CRAWL_SCRIPT_DIR not in sys.path:
     sys.path.insert(0, CRAWL_SCRIPT_DIR)
 from crawl_inspector import detect_hydration_gap, robots_response_findings
+
 from safe_fetch import (
     DEFAULT_MAX_RESPONSE_BYTES,
     DEFAULT_MAX_ROBOTS_BYTES,
@@ -36,10 +34,23 @@ from safe_fetch import (
 
 USER_AGENT = "Mozilla/5.0 (compatible; BrandAIAuditBot/1.0; +https://agentskills.io)"
 
+
 class HTMLContentExtractor(HTMLParser):
     _VOID_TAGS = {
-        "area", "base", "br", "col", "embed", "hr", "img", "input",
-        "link", "meta", "param", "source", "track", "wbr",
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
     }
 
     def __init__(self):
@@ -80,23 +91,14 @@ class HTMLContentExtractor(HTMLParser):
         self.current_tag = tag
         attr_dict = dict(attrs)
         style = attr_dict.get("style", "").replace(" ", "").lower()
-        aria_hidden = (
-            attr_dict.get("aria-hidden", "").lower() == "true"
-            and tag not in {"i", "svg"}
-        )
-        is_hidden = (
-            "hidden" in attr_dict
-            or aria_hidden
-            or "display:none" in style
-            or "visibility:hidden" in style
-        )
+        aria_hidden = attr_dict.get("aria-hidden", "").lower() == "true" and tag not in {"i", "svg"}
+        is_hidden = "hidden" in attr_dict or aria_hidden or "display:none" in style or "visibility:hidden" in style
         if tag in self._VOID_TAGS:
             is_hidden = False
         if is_hidden:
             self._hidden_depth += 1
             tokens = " ".join(
-                attr_dict.get(name, "")
-                for name in ("id", "class", "role", "aria-label", "title")
+                attr_dict.get(name, "") for name in ("id", "class", "role", "aria-label", "title")
             ).lower()
             is_interface = (
                 self._hidden_interface_depth > 0
@@ -104,8 +106,17 @@ class HTMLContentExtractor(HTMLParser):
                 or any(
                     marker in tokens
                     for marker in (
-                        "nav", "menu", "mobile", "modal", "dialog", "drawer",
-                        "accordion", "tab-panel", "tabpanel", "cookie", "banner",
+                        "nav",
+                        "menu",
+                        "mobile",
+                        "modal",
+                        "dialog",
+                        "drawer",
+                        "accordion",
+                        "tab-panel",
+                        "tabpanel",
+                        "cookie",
+                        "banner",
                     )
                 )
             )
@@ -114,20 +125,22 @@ class HTMLContentExtractor(HTMLParser):
         else:
             is_interface = False
         if tag not in self._VOID_TAGS:
-            self._element_stack.append({
-                "tag": tag,
-                "is_hidden": is_hidden,
-                "is_interface": is_interface,
-                "is_nav": (tag == "nav"),
-                "region": tag if tag in self._region_depths else None,
-            })
+            self._element_stack.append(
+                {
+                    "tag": tag,
+                    "is_hidden": is_hidden,
+                    "is_interface": is_interface,
+                    "is_nav": (tag == "nav"),
+                    "region": tag if tag in self._region_depths else None,
+                }
+            )
         if tag == "nav":
             self._navigation_depth += 1
         if tag in self._region_depths:
             self._region_depths[tag] += 1
         if tag == "article":
             self.has_article_region = True
-        
+
         if tag == "script":
             self.in_script = True
             self.script_type = attr_dict.get("type", "").lower()
@@ -138,45 +151,53 @@ class HTMLContentExtractor(HTMLParser):
             if name and content:
                 self.meta_tags[name] = content
         elif tag == "img":
-            self.images.append({
-                "src": attr_dict.get("src", ""),
-                "alt": attr_dict.get("alt", ""),
-                "has_alt": bool(attr_dict.get("alt", "").strip())
-            })
+            self.images.append(
+                {
+                    "src": attr_dict.get("src", ""),
+                    "alt": attr_dict.get("alt", ""),
+                    "has_alt": bool(attr_dict.get("alt", "").strip()),
+                }
+            )
         elif tag == "a":
             self._block_tag = None
             href = attr_dict.get("href", "")
             if href:
                 self.links.append(href)
-            self.action_stacks.append({
-                "tag": "a",
-                "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
-                "href": href,
-                "region": self.current_region(),
-                "hidden": self._hidden_depth > 0,
-            })
+            self.action_stacks.append(
+                {
+                    "tag": "a",
+                    "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
+                    "href": href,
+                    "region": self.current_region(),
+                    "hidden": self._hidden_depth > 0,
+                }
+            )
         elif tag == "button":
-            self.action_stacks.append({
-                "tag": "button",
-                "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
-                "href": "",
-                "region": self.current_region(),
-                "hidden": self._hidden_depth > 0,
-            })
+            self.action_stacks.append(
+                {
+                    "tag": "button",
+                    "label": attr_dict.get("aria-label") or attr_dict.get("title") or "",
+                    "href": "",
+                    "region": self.current_region(),
+                    "hidden": self._hidden_depth > 0,
+                }
+            )
             if self.form_stacks:
                 button_type = (attr_dict.get("type") or "submit").lower()
                 if button_type == "submit":
                     self.form_stacks[-1]["submit_controls"] += 1
         elif tag == "form":
-            self.form_stacks.append({
-                "action": attr_dict.get("action", ""),
-                "method": (attr_dict.get("method") or "get").lower(),
-                "controls": 0,
-                "submit_controls": 0,
-                "labels": 0,
-                "region": self.current_region(),
-                "hidden": self._hidden_depth > 0,
-            })
+            self.form_stacks.append(
+                {
+                    "action": attr_dict.get("action", ""),
+                    "method": (attr_dict.get("method") or "get").lower(),
+                    "controls": 0,
+                    "submit_controls": 0,
+                    "labels": 0,
+                    "region": self.current_region(),
+                    "hidden": self._hidden_depth > 0,
+                }
+            )
         elif tag in {"input", "select", "textarea"} and self.form_stacks:
             current_form = self.form_stacks[-1]
             current_form["controls"] += 1
@@ -236,8 +257,7 @@ class HTMLContentExtractor(HTMLParser):
             if action_idx is not None:
                 action = self.action_stacks.pop(action_idx)
                 action["label"] = " ".join(
-                    part for part in [action["label"], " ".join(action.pop("text", []))]
-                    if part
+                    part for part in [action["label"], " ".join(action.pop("text", []))] if part
                 ).strip()
                 self.action_candidates.append(action)
         if tag == "form" and self.form_stacks:
@@ -277,10 +297,7 @@ class HTMLContentExtractor(HTMLParser):
     def handle_data(self, data):
         if self.in_script:
             self.script_buffer.append(data)
-        elif (
-            self.current_tag not in ["style", "noscript", "svg", "template"]
-            and self._hidden_depth == 0
-        ):
+        elif self.current_tag not in ["style", "noscript", "svg", "template"] and self._hidden_depth == 0:
             cleaned = data.strip()
             if cleaned:
                 for action in self.action_stacks:
@@ -302,6 +319,7 @@ class HTMLContentExtractor(HTMLParser):
             else:
                 self.hidden_interface_words += word_count
 
+
 def fetch_url(url, timeout=10):
     result = safe_fetch(
         url,
@@ -311,11 +329,12 @@ def fetch_url(url, timeout=10):
     )
     return result
 
+
 def audit_crawl_render(base_url, html, headers):
     findings = []
     parsed_url = urllib.parse.urlparse(base_url)
     robots_url = f"{parsed_url.scheme}://{parsed_url.netloc}/robots.txt"
-    
+
     # 1. Inspect robots.txt for AI bots
     robots_res = safe_fetch(
         robots_url,
@@ -328,24 +347,27 @@ def audit_crawl_render(base_url, html, headers):
     # 2. Inspect X-Robots-Tag headers
     x_robots = headers.get("X-Robots-Tag", headers.get("x-robots-tag", ""))
     if "noindex" in x_robots.lower() or "noai" in x_robots.lower():
-        findings.append({
-            "id": "F-002",
-            "title": "HTTP Header X-Robots-Tag Restricts AI Indexing",
-            "severity": "critical",
-            "category": "crawlability_headers",
-            "evidence": f"Server response included header 'X-Robots-Tag: {x_robots}'.",
-            "suggested_action": {
-                "summary": "Remove noindex / noai directives from public response headers.",
-                "priority": "critical",
-                "implementation_code": "# Remove 'X-Robots-Tag: noindex' from web server configuration (Nginx / Cloudflare / Apache)"
+        findings.append(
+            {
+                "id": "F-002",
+                "title": "HTTP Header X-Robots-Tag Restricts AI Indexing",
+                "severity": "critical",
+                "category": "crawlability_headers",
+                "evidence": f"Server response included header 'X-Robots-Tag: {x_robots}'.",
+                "suggested_action": {
+                    "summary": "Remove noindex / noai directives from public response headers.",
+                    "priority": "critical",
+                    "implementation_code": "# Remove 'X-Robots-Tag: noindex' from web server configuration (Nginx / Cloudflare / Apache)",
+                },
             }
-        })
+        )
 
     hydration_finding = detect_hydration_gap(base_url, html)
     if hydration_finding:
         findings.append(hydration_finding)
-        
+
     return findings
+
 
 def audit_structured_data(base_url, parsed_content):
     findings = []
@@ -377,30 +399,43 @@ def audit_structured_data(base_url, parsed_content):
             malformed_blocks.append(index)
 
     if malformed_blocks:
-        findings.append({
-            "id": "F-003",
-            "title": "Syntax Error in Embedded JSON-LD Script Block",
-            "severity": "high",
-            "category": "structured_data_syntax",
-            "evidence": json.dumps({
-                "json_ld_blocks": len(json_lds),
-                "malformed_block_indexes": malformed_blocks,
-                "parsed_node_count": len(parsed_schemas),
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Fix JSON syntax in each malformed JSON-LD script so machines can parse the entity graph.",
-                "priority": "high",
-                "implementation_code": "{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"Brand Name\"\n}"
+        findings.append(
+            {
+                "id": "F-003",
+                "title": "Syntax Error in Embedded JSON-LD Script Block",
+                "severity": "high",
+                "category": "structured_data_syntax",
+                "evidence": json.dumps(
+                    {
+                        "json_ld_blocks": len(json_lds),
+                        "malformed_block_indexes": malformed_blocks,
+                        "parsed_node_count": len(parsed_schemas),
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Fix JSON syntax in each malformed JSON-LD script so machines can parse the entity graph.",
+                    "priority": "high",
+                    "implementation_code": '{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "Brand Name"\n}',
+                },
             }
-        })
+        )
 
     recognized_types = {
-        "Organization", "WebSite", "WebPage", "Article",
-        "Product", "Person", "LocalBusiness", "EducationalOrganization",
+        "Organization",
+        "WebSite",
+        "WebPage",
+        "Article",
+        "Product",
+        "Person",
+        "LocalBusiness",
+        "EducationalOrganization",
         "CollegeOrUniversity",
     }
     organization_types = {
-        "Organization", "LocalBusiness", "EducationalOrganization",
+        "Organization",
+        "LocalBusiness",
+        "EducationalOrganization",
         "CollegeOrUniversity",
     }
     entity_fields = {
@@ -431,6 +466,7 @@ def audit_structured_data(base_url, parsed_content):
         node_id = schema.get("@id")
         if isinstance(node_id, str) and node_id:
             ids.append(node_id)
+
         def collect_id_references(value):
             if isinstance(value, dict):
                 if isinstance(value.get("@id"), str):
@@ -447,24 +483,32 @@ def audit_structured_data(base_url, parsed_content):
 
         recognized_node_types = [item for item in node_types if item in recognized_types]
         if recognized_node_types:
-            present = sorted({
-                field for field in {
-                    field for entity_type in recognized_node_types
+            present = sorted(
+                {
+                    field
+                    for field in {
+                        field for entity_type in recognized_node_types for field in entity_fields[entity_type]
+                    }
+                    if schema.get(field)
+                }
+            )
+            missing = sorted(
+                {
+                    field
+                    for entity_type in recognized_node_types
                     for field in entity_fields[entity_type]
-                } if schema.get(field)
-            })
-            missing = sorted({
-                field for entity_type in recognized_node_types
-                for field in entity_fields[entity_type]
-                if not schema.get(field)
-            })
-            entity_summaries.append({
-                "node_index": node_index,
-                "types": recognized_node_types,
-                "id": node_id,
-                "fields_present": present,
-                "fields_missing": missing,
-            })
+                    if not schema.get(field)
+                }
+            )
+            entity_summaries.append(
+                {
+                    "node_index": node_index,
+                    "types": recognized_node_types,
+                    "id": node_id,
+                    "fields_present": present,
+                    "fields_missing": missing,
+                }
+            )
         same_as = schema.get("sameAs")
         if same_as:
             values = same_as if isinstance(same_as, list) else [same_as]
@@ -504,93 +548,114 @@ def audit_structured_data(base_url, parsed_content):
             missing_core_types = ["Organization"]
             title = "Missing Organization Identity in Schema.org JSON-LD"
             summary = "Add an Organization or recognized organization subtype with explicit name and URL."
-            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
+            implementation_code = f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{urllib.parse.urlparse(base_url).netloc}",\n  "url": "{base_url}"\n}}\n</script>'
         else:
             missing_core_types = ["WebSite"]
             title = "Incomplete Structured Identity: WebSite Entity Missing"
             summary = "Add a WebSite JSON-LD entity alongside the existing organization identity."
-            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"WebSite\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
+            implementation_code = f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "WebSite",\n  "name": "{urllib.parse.urlparse(base_url).netloc}",\n  "url": "{base_url}"\n}}\n</script>'
         if not parsed_schemas:
-            implementation_code = f"<script type=\"application/ld+json\">\n{{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"Organization\",\n  \"name\": \"{urllib.parse.urlparse(base_url).netloc}\",\n  \"url\": \"{base_url}\"\n}}\n</script>"
-        findings.append({
-            "id": "F-004",
-            "title": title,
-            "severity": "high",
-            "category": "structured_data_entity",
-            "evidence": json.dumps({
-                **entity_evidence,
-                "missing_core_types": missing_core_types,
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": summary,
-                "priority": "high",
-                "implementation_code": implementation_code
+            implementation_code = f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{urllib.parse.urlparse(base_url).netloc}",\n  "url": "{base_url}"\n}}\n</script>'
+        findings.append(
+            {
+                "id": "F-004",
+                "title": title,
+                "severity": "high",
+                "category": "structured_data_entity",
+                "evidence": json.dumps(
+                    {
+                        **entity_evidence,
+                        "missing_core_types": missing_core_types,
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": summary,
+                    "priority": "high",
+                    "implementation_code": implementation_code,
+                },
             }
-        })
+        )
 
     if parsed_schemas and not has_same_as:
         has_strong_identity = any(
-            "name" not in s["fields_missing"] and "url" not in s["fields_missing"]
-            for s in entity_summaries
+            "name" not in s["fields_missing"] and "url" not in s["fields_missing"] for s in entity_summaries
         )
         severity = "low" if has_strong_identity else "medium"
-        findings.append({
-            "id": "F-005",
-            "title": "Missing sameAs Entity Corroboration Links",
-            "severity": severity,
-            "category": "structured_data_corroboration",
-            "evidence": json.dumps({
-                **entity_evidence,
-                "sameAs_status": "missing",
-                "has_strong_identity": has_strong_identity,
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Publish authoritative sameAs URIs (Wikidata, Wikipedia, LinkedIn, Crunchbase) to eliminate entity ambiguity in AI knowledge graphs.",
-                "priority": severity,
-                "implementation_code": "\"sameAs\": [\n  \"https://www.wikidata.org/wiki/QXXXXX\",\n  \"https://www.crunchbase.com/organization/...\"\n]"
+        findings.append(
+            {
+                "id": "F-005",
+                "title": "Missing sameAs Entity Corroboration Links",
+                "severity": severity,
+                "category": "structured_data_corroboration",
+                "evidence": json.dumps(
+                    {
+                        **entity_evidence,
+                        "sameAs_status": "missing",
+                        "has_strong_identity": has_strong_identity,
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Publish authoritative sameAs URIs (Wikidata, Wikipedia, LinkedIn, Crunchbase) to eliminate entity ambiguity in AI knowledge graphs.",
+                    "priority": severity,
+                    "implementation_code": '"sameAs": [\n  "https://www.wikidata.org/wiki/QXXXXX",\n  "https://www.crunchbase.com/organization/..."\n]',
+                },
             }
-        })
+        )
 
     if malformed_same_as:
-        findings.append({
-            "id": "F-013",
-            "title": "Malformed sameAs Entity References",
-            "severity": "low",
-            "category": "structured_data_corroboration",
-            "evidence": json.dumps({
-                **entity_evidence,
-                "sameAs_status": "malformed_values_present",
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Replace malformed sameAs values with complete external HTTP or HTTPS entity URLs.",
-                "priority": "low",
-                "implementation_code": "\"sameAs\": [\"https://www.wikidata.org/entity/Q...\"]",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-013",
+                "title": "Malformed sameAs Entity References",
+                "severity": "low",
+                "category": "structured_data_corroboration",
+                "evidence": json.dumps(
+                    {
+                        **entity_evidence,
+                        "sameAs_status": "malformed_values_present",
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Replace malformed sameAs values with complete external HTTP or HTTPS entity URLs.",
+                    "priority": "low",
+                    "implementation_code": '"sameAs": ["https://www.wikidata.org/entity/Q..."]',
+                },
+            }
+        )
 
     incomplete_identity = [
-        summary for summary in entity_summaries
+        summary
+        for summary in entity_summaries
         if "Organization" in summary["types"]
         and ("name" in summary["fields_missing"] or "url" in summary["fields_missing"])
     ]
     if incomplete_identity:
-        findings.append({
-            "id": "F-012",
-            "title": "Incomplete Organization Identity Signals",
-            "severity": "medium",
-            "category": "structured_data_entity",
-            "evidence": json.dumps({
-                **entity_evidence,
-                "incomplete_identity_nodes": incomplete_identity,
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add the missing Organization name and URL properties so machine-readable identity is explicit.",
-                "priority": "medium",
-                "implementation_code": "\"name\": \"Brand Name\",\n\"url\": \"https://example.com\""
-            },
-        })
+        findings.append(
+            {
+                "id": "F-012",
+                "title": "Incomplete Organization Identity Signals",
+                "severity": "medium",
+                "category": "structured_data_entity",
+                "evidence": json.dumps(
+                    {
+                        **entity_evidence,
+                        "incomplete_identity_nodes": incomplete_identity,
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Add the missing Organization name and URL properties so machine-readable identity is explicit.",
+                    "priority": "medium",
+                    "implementation_code": '"name": "Brand Name",\n"url": "https://example.com"',
+                },
+            }
+        )
 
     return findings
+
 
 def audit_aeo_quotability(parsed_content):
     findings = []
@@ -599,32 +664,30 @@ def audit_aeo_quotability(parsed_content):
     headings = [heading for heading in parsed_content.headings if heading["text"].strip()]
     heading_levels = [int(heading["level"][1]) for heading in headings]
     skipped_heading_jumps = sum(
-        1 for previous, current in zip(heading_levels, heading_levels[1:])
-        if current - previous > 1
+        1 for previous, current in zip(heading_levels, heading_levels[1:]) if current - previous > 1
     )
-    substantive_blocks = [
-        block for block in parsed_content.aeo_blocks
-        if len(block["text"].split()) >= 8
-    ]
-    descriptive_headings = sum(
-        1 for heading in headings if heading["level"] in {"h2", "h3"}
-    )
+    substantive_blocks = [block for block in parsed_content.aeo_blocks if len(block["text"].split()) >= 8]
+    descriptive_headings = sum(1 for heading in headings if heading["level"] in {"h2", "h3"})
     answer_paragraphs = sum(
-        1 for block in parsed_content.aeo_blocks
-        if block["tag"] in {"p", "blockquote", "dd"}
-        and len(block["text"].split()) >= 8
+        1
+        for block in parsed_content.aeo_blocks
+        if block["tag"] in {"p", "blockquote", "dd"} and len(block["text"].split()) >= 8
     )
     direct_answer_blocks = min(descriptive_headings, answer_paragraphs)
 
-    factual_signal_count = len(re.findall(
-        r"\b(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
-        r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))\b",
-        full_text,
-        re.IGNORECASE,
-    ))
+    factual_signal_count = len(
+        re.findall(
+            r"\b(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
+            r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))\b",
+            full_text,
+            re.IGNORECASE,
+        )
+    )
     informative_images = [
-        image for image in parsed_content.images
-        if image["src"] and not re.search(
+        image
+        for image in parsed_content.images
+        if image["src"]
+        and not re.search(
             r"(?:icon|logo|avatar|sprite|spacer|pixel|tracking|favicon)",
             image["src"],
             re.IGNORECASE,
@@ -636,12 +699,13 @@ def audit_aeo_quotability(parsed_content):
     answer_score = min(20, direct_answer_blocks * 5)
     factual_score = min(15, factual_signal_count * 2)
     list_table_score = min(10, (parsed_content.list_blocks + parsed_content.table_blocks) * 5)
-    image_score = 10 if not informative_images else round(
-        10 * (len(informative_images) - len(missing_alt)) / len(informative_images), 1
+    image_score = (
+        10
+        if not informative_images
+        else round(10 * (len(informative_images) - len(missing_alt)) / len(informative_images), 1)
     )
     quotability_score = round(
-        meaningful_heading_score + block_score + answer_score + factual_score
-        + list_table_score + image_score
+        meaningful_heading_score + block_score + answer_score + factual_score + list_table_score + image_score
     )
     evidence = {
         "visible_words": len(words),
@@ -674,90 +738,100 @@ def audit_aeo_quotability(parsed_content):
 
     # Facts that appear to depend on meaningful images should have text alternatives.
     if missing_alt and len(missing_alt) / max(len(informative_images), 1) > 0.3:
-        findings.append({
-            "id": "F-006",
-            "title": "Facts Trapped in Non-Text Graphical Assets",
-            "severity": "medium",
-            "category": "aeo_non_text_facts",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add descriptive alt text to informative images so diagrams, specifications, and product details also exist as extractable text.",
-                "priority": "medium",
-                "implementation_code": "<img src=\"product-specs.png\" alt=\"Detailed technical specification table showing bandwidth, storage, and pricing tiers.\">"
+        findings.append(
+            {
+                "id": "F-006",
+                "title": "Facts Trapped in Non-Text Graphical Assets",
+                "severity": "medium",
+                "category": "aeo_non_text_facts",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Add descriptive alt text to informative images so diagrams, specifications, and product details also exist as extractable text.",
+                    "priority": "medium",
+                    "implementation_code": '<img src="product-specs.png" alt="Detailed technical specification table showing bandwidth, storage, and pricing tiers.">',
+                },
             }
-        })
+        )
 
     h1_count = evidence["h1_count"]
     if h1_count == 0:
-        findings.append({
-            "id": "F-007",
-            "title": "Missing Primary H1 Heading for Topic Framing",
-            "severity": "medium",
-            "category": "aeo_heading_structure",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add one clear H1 headline defining the page's core entity or subject.",
-                "priority": "medium",
-                "implementation_code": "<h1>Enterprise AI Discoverability Platform</h1>"
+        findings.append(
+            {
+                "id": "F-007",
+                "title": "Missing Primary H1 Heading for Topic Framing",
+                "severity": "medium",
+                "category": "aeo_heading_structure",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Add one clear H1 headline defining the page's core entity or subject.",
+                    "priority": "medium",
+                    "implementation_code": "<h1>Enterprise AI Discoverability Platform</h1>",
+                },
             }
-        })
+        )
     if h1_count > 1:
-        findings.append({
-            "id": "F-014",
-            "title": "Multiple Competing H1 Headings",
-            "severity": "medium",
-            "category": "aeo_heading_structure",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Keep one primary H1 and convert secondary page topics to descriptive H2 headings.",
-                "priority": "medium",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-014",
+                "title": "Multiple Competing H1 Headings",
+                "severity": "medium",
+                "category": "aeo_heading_structure",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Keep one primary H1 and convert secondary page topics to descriptive H2 headings.",
+                    "priority": "medium",
+                },
+            }
+        )
 
     if evidence["visible_words"] >= 40 and quotability_score < 35:
-        findings.append({
-            "id": "F-015",
-            "title": "Low Machine-Readable Quotability Signals",
-            "severity": "medium",
-            "category": "aeo_quotability",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add descriptive section headings followed by concise answer paragraphs, factual lists, or tables for the page's key topics.",
-                "priority": "medium",
-                "implementation_code": "<h2>Pricing</h2>\n<p>The Pro plan costs $49 per month and includes...</p>",
-            },
-        })
-    if (
-        parsed_content.hidden_content_words >= 20
-        and parsed_content.hidden_interface_words == 0
-    ):
-        findings.append({
-            "id": "F-016",
-            "title": "Important Content Appears Hidden in Initial HTML",
-            "severity": "medium",
-            "category": "aeo_content_extractability",
-            "evidence": json.dumps(evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Expose essential facts in visible HTML instead of relying on hidden panels or state-dependent content.",
-                "priority": "medium",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-015",
+                "title": "Low Machine-Readable Quotability Signals",
+                "severity": "medium",
+                "category": "aeo_quotability",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Add descriptive section headings followed by concise answer paragraphs, factual lists, or tables for the page's key topics.",
+                    "priority": "medium",
+                    "implementation_code": "<h2>Pricing</h2>\n<p>The Pro plan costs $49 per month and includes...</p>",
+                },
+            }
+        )
+    if parsed_content.hidden_content_words >= 20 and parsed_content.hidden_interface_words == 0:
+        findings.append(
+            {
+                "id": "F-016",
+                "title": "Important Content Appears Hidden in Initial HTML",
+                "severity": "medium",
+                "category": "aeo_content_extractability",
+                "evidence": json.dumps(evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Expose essential facts in visible HTML instead of relying on hidden panels or state-dependent content.",
+                    "priority": "medium",
+                },
+            }
+        )
 
     # 3. Proactive recommendation: Missing llms.txt standard
-    findings.append({
-        "id": "F-008",
-        "title": "Proactive Opportunity: Publish an llms.txt Manifest",
-        "severity": "low",
-        "category": "aeo_proactive_enhancement",
-        "evidence": "Site does not yet provide a standardized /llms.txt summary for LLM context ingestion.",
-        "suggested_action": {
-            "summary": "Deploy an /llms.txt file at the domain root containing an atomic markdown summary of products, docs, and APIs.",
-            "priority": "low",
-            "implementation_code": "# Title: Brand Summary\n> High-density summary for LLM ingestion.\n\n## Products & Capabilities\n- Feature A: Direct atomic definition."
+    findings.append(
+        {
+            "id": "F-008",
+            "title": "Proactive Opportunity: Publish an llms.txt Manifest",
+            "severity": "low",
+            "category": "aeo_proactive_enhancement",
+            "evidence": "Site does not yet provide a standardized /llms.txt summary for LLM context ingestion.",
+            "suggested_action": {
+                "summary": "Deploy an /llms.txt file at the domain root containing an atomic markdown summary of products, docs, and APIs.",
+                "priority": "low",
+                "implementation_code": "# Title: Brand Summary\n> High-density summary for LLM ingestion.\n\n## Products & Capabilities\n- Feature A: Direct atomic definition.",
+            },
         }
-    })
+    )
 
     return findings
+
 
 def audit_freshness_trust(parsed_content, full_html, base_url=""):
     findings = []
@@ -784,11 +858,13 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
     def add_date(value, source, field):
         parsed = parse_date(value)
         if parsed:
-            date_values.append({
-                "date": parsed.isoformat(),
-                "source": source,
-                "field": field,
-            })
+            date_values.append(
+                {
+                    "date": parsed.isoformat(),
+                    "source": source,
+                    "field": field,
+                }
+            )
 
     def scan_json_dates(value, source="article_jsonld"):
         if isinstance(value, dict):
@@ -833,17 +909,13 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
             add_date(value, "visible_text", "labelled_date")
 
     copyright_years = [
-        int(value) for value in re.findall(
-            r"(?:copyright|©|\&copy;)\s*(\d{4})", full_html, re.IGNORECASE
-        )
+        int(value)
+        for value in re.findall(r"(?:copyright|©|\&copy;)\s*(\d{4})", full_html, re.IGNORECASE)
         if 2000 <= int(value) <= today.year + 1
     ]
     meaningful_dates = [item for item in date_values if item["date"] <= today.isoformat()]
     latest = max(meaningful_dates, key=lambda item: item["date"]) if meaningful_dates else None
-    age_days = (
-        (today - datetime.fromisoformat(latest["date"]).date()).days
-        if latest else None
-    )
+    age_days = (today - datetime.fromisoformat(latest["date"]).date()).days if latest else None
     freshness_status = "UNKNOWN"
     if latest:
         freshness_status = "CURRENT_SIGNAL" if age_days <= 365 else "AGED_SIGNAL"
@@ -870,18 +942,20 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
         "date_signal_count": len(meaningful_dates),
     }
     if freshness_status == "STALE_SIGNAL":
-        findings.append({
-            "id": "F-009",
-            "title": "Aged Explicit Content Date Signal",
-            "severity": "medium",
-            "category": "freshness_temporal_signals",
-            "evidence": json.dumps(freshness_evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add or maintain an explicit dateModified value when the page content is materially updated.",
-                "priority": "medium",
-                "implementation_code": "<meta property=\"article:modified_time\" content=\"2026-09-07T00:00:00Z\">",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-009",
+                "title": "Aged Explicit Content Date Signal",
+                "severity": "medium",
+                "category": "freshness_temporal_signals",
+                "evidence": json.dumps(freshness_evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Add or maintain an explicit dateModified value when the page content is materially updated.",
+                    "priority": "medium",
+                    "implementation_code": '<meta property="article:modified_time" content="2026-09-07T00:00:00Z">',
+                },
+            }
+        )
 
     lower_text = " ".join(parsed_content.text_chunks).lower()
     external_links = []
@@ -891,17 +965,18 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
             if urllib.parse.urlparse(href).netloc.lower() != page_host:
                 external_links.append(href)
     reference_links = [
-        href for href in external_links
+        href
+        for href in external_links
         if not re.search(r"(facebook|twitter|x\.com|instagram|youtube|privacy|terms|cookie)", href, re.IGNORECASE)
     ]
-    references_section = bool(re.search(
-        r"\b(references|sources|citations|bibliography)\b", lower_text
-    ))
-    citation_blocks = len(re.findall(
-        r"\[(?:\d{1,3})\]|\b(?:source|citation|according to)\s*[:\-]",
-        lower_text,
-        re.IGNORECASE,
-    ))
+    references_section = bool(re.search(r"\b(references|sources|citations|bibliography)\b", lower_text))
+    citation_blocks = len(
+        re.findall(
+            r"\[(?:\d{1,3})\]|\b(?:source|citation|according to)\s*[:\-]",
+            lower_text,
+            re.IGNORECASE,
+        )
+    )
     author_signal = bool(
         parsed_content.meta_tags.get("author")
         or re.search(r"\b(?:by|author)\s+[A-Z][A-Za-z .'-]{2,}", " ".join(parsed_content.text_chunks))
@@ -916,24 +991,30 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
             continue
     same_as_signal = any('"sameAs"' in raw for raw in parsed_content.json_ld_blocks)
     contact_signal = bool(re.search(r"\b(contact|about us|address|phone|email)\b", lower_text))
-    trust_signal_count = sum([
-        bool(reference_links),
-        references_section,
-        citation_blocks > 0,
-        author_signal,
-        organization_signal,
-        same_as_signal,
-        contact_signal,
-    ])
-    corroboration_factual_count = len(re.findall(
-        r"(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
-        r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))",
-        lower_text,
-        re.IGNORECASE,
-    ))
+    trust_signal_count = sum(
+        [
+            bool(reference_links),
+            references_section,
+            citation_blocks > 0,
+            author_signal,
+            organization_signal,
+            same_as_signal,
+            contact_signal,
+        ]
+    )
+    corroboration_factual_count = len(
+        re.findall(
+            r"(?:20\d{2}|[$€£]\s?\d+(?:[.,]\d+)?|\d+(?:[.,]\d+)?%|"
+            r"\d+(?:[.,]\d+)?\s?(?:GB|MB|kg|km|hours?|days?|users?))",
+            lower_text,
+            re.IGNORECASE,
+        )
+    )
     corroboration_status = (
-        "SUPPORTED" if trust_signal_count >= 3 or reference_links else
-        "LIMITED" if corroboration_factual_count >= 3
+        "SUPPORTED"
+        if trust_signal_count >= 3 or reference_links
+        else "LIMITED"
+        if corroboration_factual_count >= 3
         else "UNKNOWN"
     )
     corroboration_evidence = {
@@ -948,20 +1029,23 @@ def audit_freshness_trust(parsed_content, full_html, base_url=""):
         "corroboration_status": corroboration_status,
     }
     if corroboration_status == "LIMITED":
-        findings.append({
-            "id": "F-018",
-            "title": "Limited Corroboration and Trust Signals",
-            "severity": "medium",
-            "category": "freshness_corroboration",
-            "evidence": json.dumps(corroboration_evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Associate important factual claims with visible sources, author information, or a references section without implying that links prove factual accuracy.",
-                "priority": "medium",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-018",
+                "title": "Limited Corroboration and Trust Signals",
+                "severity": "medium",
+                "category": "freshness_corroboration",
+                "evidence": json.dumps(corroboration_evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Associate important factual claims with visible sources, author information, or a references section without implying that links prove factual accuracy.",
+                    "priority": "medium",
+                },
+            }
+        )
     return findings
 
-def infer_page_type(url: str = "", html: str = "", parsed_content: Optional[HTMLContentExtractor] = None) -> str:
+
+def infer_page_type(url: str = "", html: str = "", parsed_content: HTMLContentExtractor | None = None) -> str:
     """
     Infers the high-level functional archetype of the page:
     - 'documentation': Developer docs, API references, technical specifications, guides
@@ -992,7 +1076,9 @@ def infer_page_type(url: str = "", html: str = "", parsed_content: Optional[HTML
             if any(t in block_lower for t in ('"localbusiness"', '"restaurant"', '"store"')):
                 return "local_business"
 
-        h1_text = " ".join(h["text"] for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1").lower()
+        h1_text = " ".join(
+            h["text"] for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1"
+        ).lower()
         if any(term in h1_text for term in ("documentation", "api reference", "developer guide", "quickstart")):
             return "documentation"
 
@@ -1006,6 +1092,7 @@ def infer_page_type(url: str = "", html: str = "", parsed_content: Optional[HTML
 
     return "marketing"
 
+
 def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
     findings = []
     text_chunks = parsed_content.text_chunks
@@ -1013,9 +1100,23 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
     words = full_text.split()
     page_type = infer_page_type(url, html, parsed_content)
     strong_terms = (
-        "contact", "demo", "get started", "sign up", "signup", "register",
-        "trial", "buy", "purchase", "pricing", "book", "schedule", "download",
-        "subscribe", "apply", "request", "talk to sales",
+        "contact",
+        "demo",
+        "get started",
+        "sign up",
+        "signup",
+        "register",
+        "trial",
+        "buy",
+        "purchase",
+        "pricing",
+        "book",
+        "schedule",
+        "download",
+        "subscribe",
+        "apply",
+        "request",
+        "talk to sales",
     )
     weak_terms = ("click here", "learn more", "submit", "go", "continue", "more")
     categories = {
@@ -1033,11 +1134,7 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
     for candidate in parsed_content.action_candidates:
         label = re.sub(r"\s+", " ", candidate.get("label", "")).strip()
         href = candidate.get("href", "").strip().lower()
-        if (
-            candidate.get("hidden")
-            or not label
-            or href in {"#", "javascript:void(0)", "javascript:void(0);"}
-        ):
+        if candidate.get("hidden") or not label or href in {"#", "javascript:void(0)", "javascript:void(0);"}:
             continue
         if candidate["region"] == "nav":
             ignored_navigation += 1
@@ -1048,34 +1145,31 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
         if re.search(r"(facebook|twitter|x\.com|instagram|youtube|linkedin)", href):
             continue
         normalized = label.lower()
-        strength = "strong" if any(term in normalized for term in strong_terms) else (
-            "weak" if any(term == normalized for term in weak_terms) else "neutral"
+        strength = (
+            "strong"
+            if any(term in normalized for term in strong_terms)
+            else ("weak" if any(term == normalized for term in weak_terms) else "neutral")
         )
         if strength != "neutral":
-            meaningful.append({
-                "label": label,
-                "kind": candidate["tag"],
-                "strength": strength,
-                "category": next(
-                    (name for name, terms in categories.items()
-                     if any(term in normalized for term in terms)),
-                    "other",
-                ),
-            })
-    forms = [
-        form for form in parsed_content.forms
-        if form["controls"] > 0 and form["submit_controls"] > 0
-    ]
+            meaningful.append(
+                {
+                    "label": label,
+                    "kind": candidate["tag"],
+                    "strength": strength,
+                    "category": next(
+                        (name for name, terms in categories.items() if any(term in normalized for term in terms)),
+                        "other",
+                    ),
+                }
+            )
+    forms = [form for form in parsed_content.forms if form["controls"] > 0 and form["submit_controls"] > 0]
     strong_ctas = [item for item in meaningful if item["strength"] == "strong"]
     weak_ctas = [item for item in meaningful if item["strength"] == "weak"]
     action_categories = sorted({item["category"] for item in strong_ctas})
     contact_or_conversion_path = bool(strong_ctas or forms)
     engagement_score = min(
         100,
-        len(strong_ctas) * 25
-        + len(forms) * 20
-        + len(action_categories) * 10
-        + len(weak_ctas) * 5,
+        len(strong_ctas) * 25 + len(forms) * 20 + len(action_categories) * 10 + len(weak_ctas) * 5,
     )
     engagement_evidence = {
         "cta_count": len(meaningful),
@@ -1093,17 +1187,19 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
         "page_type": page_type,
     }
     if weak_ctas and not strong_ctas and not forms:
-        findings.append({
-            "id": "F-019",
-            "title": "Vague On-Site Engagement Actions",
-            "severity": "low",
-            "category": "engagement_actionability",
-            "evidence": json.dumps(engagement_evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Replace vague labels such as 'Click here' or 'More' with specific actions that describe the visitor's next useful step.",
-                "priority": "low",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-019",
+                "title": "Vague On-Site Engagement Actions",
+                "severity": "low",
+                "category": "engagement_actionability",
+                "evidence": json.dumps(engagement_evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Replace vague labels such as 'Click here' or 'More' with specific actions that describe the visitor's next useful step.",
+                    "priority": "low",
+                },
+            }
+        )
     elif (
         len(words) >= 40
         and page_type not in ("documentation", "article")
@@ -1111,18 +1207,20 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
         and not contact_or_conversion_path
         and not strong_ctas
     ):
-        findings.append({
-            "id": "F-019",
-            "title": "Weak or Missing Clear On-Site Engagement Path",
-            "severity": "medium",
-            "category": "engagement_actionability",
-            "evidence": json.dumps(engagement_evidence, sort_keys=True),
-            "suggested_action": {
-                "summary": "Add one clear primary action matching the page purpose, such as contacting sales, viewing pricing, starting a trial, or downloading a resource.",
-                "priority": "medium",
-                "implementation_code": "<a href=\"/contact\" class=\"primary-cta\">Contact sales</a>",
-            },
-        })
+        findings.append(
+            {
+                "id": "F-019",
+                "title": "Weak or Missing Clear On-Site Engagement Path",
+                "severity": "medium",
+                "category": "engagement_actionability",
+                "evidence": json.dumps(engagement_evidence, sort_keys=True),
+                "suggested_action": {
+                    "summary": "Add one clear primary action matching the page purpose, such as contacting sales, viewing pricing, starting a trial, or downloading a resource.",
+                    "priority": "medium",
+                    "implementation_code": '<a href="/contact" class="primary-cta">Contact sales</a>',
+                },
+            }
+        )
 
     # Hero / Above-the-fold value prop orientation (evidence-based)
     h1_headings = [h for h in parsed_content.headings if h.get("tag") == "h1" or h.get("level") == "h1"]
@@ -1130,30 +1228,38 @@ def audit_on_site_engagement(parsed_content, url: str = "", html: str = ""):
     h1_text = h1_headings[0]["text"].strip() if has_h1 else ""
     first_100_words = " ".join(words[:100]).strip()
     meta_desc = parsed_content.meta_tags.get("description", "").strip()
-    is_generic_h1 = h1_text.lower() in ("information", "home", "welcome", "index", "page", "title", "about") or (len(h1_text) < 5)
+    is_generic_h1 = h1_text.lower() in ("information", "home", "welcome", "index", "page", "title", "about") or (
+        len(h1_text) < 5
+    )
 
     if page_type in ("documentation", "article") and has_h1 and not is_generic_h1:
         pass  # Well-oriented by specific topic H1
     elif is_generic_h1 or (len(words) > 30 and len(first_100_words) < 80 and len(meta_desc) < 30):
-        findings.append({
-            "id": "F-010",
-            "title": "Weak Above-The-Fold Value Proposition Orientation",
-            "severity": "medium",
-            "category": "engagement_orientation",
-            "evidence": json.dumps({
-                "has_h1": has_h1,
-                "h1_text": h1_text,
-                "is_generic_h1": is_generic_h1,
-                "hero_text_length": len(first_100_words),
-                "page_type": page_type,
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Strengthen hero section headline and introductory value proposition so first-time visitors orient within 5 seconds of reading.",
-                "priority": "medium",
-                "implementation_code": "<section class=\"hero\">\n  <h1>Autonomous Brand Intelligence</h1>\n  <p>Audit and optimize your website for AI discoverability and customer retention in real-time.</p>\n</section>"
+        findings.append(
+            {
+                "id": "F-010",
+                "title": "Weak Above-The-Fold Value Proposition Orientation",
+                "severity": "medium",
+                "category": "engagement_orientation",
+                "evidence": json.dumps(
+                    {
+                        "has_h1": has_h1,
+                        "h1_text": h1_text,
+                        "is_generic_h1": is_generic_h1,
+                        "hero_text_length": len(first_100_words),
+                        "page_type": page_type,
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Strengthen hero section headline and introductory value proposition so first-time visitors orient within 5 seconds of reading.",
+                    "priority": "medium",
+                    "implementation_code": '<section class="hero">\n  <h1>Autonomous Brand Intelligence</h1>\n  <p>Audit and optimize your website for AI discoverability and customer retention in real-time.</p>\n</section>',
+                },
             }
-        })
+        )
     return findings
+
 
 def generate_proactive_recommendations(target_url, parsed_content, findings):
     """
@@ -1165,55 +1271,68 @@ def generate_proactive_recommendations(target_url, parsed_content, findings):
     parsed_url = urllib.parse.urlparse(target_url)
     domain = parsed_url.netloc or "example.com"
     brand_name = domain.split(".")[0].capitalize()
-    words = parsed_content.get_visible_words() if hasattr(parsed_content, "get_visible_words") else parsed_content.text_chunks
+    words = (
+        parsed_content.get_visible_words()
+        if hasattr(parsed_content, "get_visible_words")
+        else parsed_content.text_chunks
+    )
     word_count = len(words)
 
     # 1. Proactive llms.txt context manifest for content-rich sites
     if word_count >= 100:
-        recs.append({
-            "id": "PROACTIVE-001",
-            "area": "ai_context_ingestion",
-            "priority": "medium",
-            "recommendation": f"Deploy a standardized /llms.txt context manifest at {domain}.",
-            "expected_impact": "Permits frontier LLM agents (ChatGPT, Claude, Cursor) to ingest canonical brand facts in under 1,000 tokens without web scraping overhead.",
-            "implementation_code": f"# /{domain}/llms.txt\n# Title: {brand_name} AI Context Manifest\n> Canonical overview of verified organizational facts and capabilities.\n\n- [Core Offerings](/docs): Technical capabilities and specifications\n- [Verified Identity](/about): Founding details and organizational attributes"
-        })
+        recs.append(
+            {
+                "id": "PROACTIVE-001",
+                "area": "ai_context_ingestion",
+                "priority": "medium",
+                "recommendation": f"Deploy a standardized /llms.txt context manifest at {domain}.",
+                "expected_impact": "Permits frontier LLM agents (ChatGPT, Claude, Cursor) to ingest canonical brand facts in under 1,000 tokens without web scraping overhead.",
+                "implementation_code": f"# /{domain}/llms.txt\n# Title: {brand_name} AI Context Manifest\n> Canonical overview of verified organizational facts and capabilities.\n\n- [Core Offerings](/docs): Technical capabilities and specifications\n- [Verified Identity](/about): Founding details and organizational attributes",
+            }
+        )
 
     # 2. External Knowledge Graph Triples & Disambiguation (if Organization exists but lacks sameAs)
     has_same_as = any('"sameas"' in block.lower() for block in parsed_content.json_ld_blocks)
     if not has_same_as:
-        recs.append({
-            "id": "PROACTIVE-002",
-            "area": "entity_corroboration",
-            "priority": "high",
-            "recommendation": f"Publish authoritative sameAs Wikidata and industry registry entity triples for {brand_name}.",
-            "expected_impact": "Establishes persistent subject-predicate-object ground truth across knowledge graphs, shielding the brand from LLM hallucinations.",
-            "implementation_code": f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{brand_name}",\n  "url": "https://{domain}",\n  "sameAs": [\n    "https://www.wikidata.org/wiki/QXXXXX",\n    "https://en.wikipedia.org/wiki/{brand_name}",\n    "https://www.linkedin.com/company/{domain.split(".")[0]}",\n    "https://www.crunchbase.com/organization/{domain.split(".")[0]}"\n  ]\n}}\n</script>'
-        })
+        recs.append(
+            {
+                "id": "PROACTIVE-002",
+                "area": "entity_corroboration",
+                "priority": "high",
+                "recommendation": f"Publish authoritative sameAs Wikidata and industry registry entity triples for {brand_name}.",
+                "expected_impact": "Establishes persistent subject-predicate-object ground truth across knowledge graphs, shielding the brand from LLM hallucinations.",
+                "implementation_code": f'<script type="application/ld+json">\n{{\n  "@context": "https://schema.org",\n  "@type": "Organization",\n  "name": "{brand_name}",\n  "url": "https://{domain}",\n  "sameAs": [\n    "https://www.wikidata.org/wiki/QXXXXX",\n    "https://en.wikipedia.org/wiki/{brand_name}",\n    "https://www.linkedin.com/company/{domain.split(".")[0]}",\n    "https://www.crunchbase.com/organization/{domain.split(".")[0]}"\n  ]\n}}\n</script>',
+            }
+        )
 
     # 3. AI Deep-Link Orientation Anchors (for subpages)
     if parsed_url.path and parsed_url.path.strip("/") != "":
-        recs.append({
-            "id": "PROACTIVE-003",
-            "area": "visitor_retention",
-            "priority": "medium",
-            "recommendation": "Equip deep sub-pages with contextual breadcrumb trails and parent-topic orientation anchors.",
-            "expected_impact": "Accommodates generative AI search referrals where users land directly on deep sub-pages without seeing the homepage.",
-            "implementation_code": '<nav aria-label="Breadcrumb" class="context-anchor">\n  <ol>\n    <li><a href="/">Home</a></li>\n    <li><a href="/section">Category</a></li>\n    <li aria-current="page">Current Page</li>\n  </ol>\n</nav>'
-        })
+        recs.append(
+            {
+                "id": "PROACTIVE-003",
+                "area": "visitor_retention",
+                "priority": "medium",
+                "recommendation": "Equip deep sub-pages with contextual breadcrumb trails and parent-topic orientation anchors.",
+                "expected_impact": "Accommodates generative AI search referrals where users land directly on deep sub-pages without seeing the homepage.",
+                "implementation_code": '<nav aria-label="Breadcrumb" class="context-anchor">\n  <ol>\n    <li><a href="/">Home</a></li>\n    <li><a href="/section">Category</a></li>\n    <li aria-current="page">Current Page</li>\n  </ol>\n</nav>',
+            }
+        )
 
     # 4. Semantic Answer Callouts for High-Citation Quotability
     if parsed_content.aeo_blocks or word_count >= 150:
-        recs.append({
-            "id": "PROACTIVE-004",
-            "area": "answer_engine_quotability",
-            "priority": "medium",
-            "recommendation": "Encase key conclusions, metrics, and definitions in semantic <figure> or <aside> callouts.",
-            "expected_impact": "Significantly boosts the extraction probability for Perplexity citations and Google AI Overviews soundbites.",
-            "implementation_code": f'<figure class="key-takeaway">\n  <blockquote>{brand_name} delivers verified solutions engineered for high-reliability operational environments.</blockquote>\n  <figcaption>— Key Architectural Summary</figcaption>\n</figure>'
-        })
+        recs.append(
+            {
+                "id": "PROACTIVE-004",
+                "area": "answer_engine_quotability",
+                "priority": "medium",
+                "recommendation": "Encase key conclusions, metrics, and definitions in semantic <figure> or <aside> callouts.",
+                "expected_impact": "Significantly boosts the extraction probability for Perplexity citations and Google AI Overviews soundbites.",
+                "implementation_code": f'<figure class="key-takeaway">\n  <blockquote>{brand_name} delivers verified solutions engineered for high-reliability operational environments.</blockquote>\n  <figcaption>— Key Architectural Summary</figcaption>\n</figure>',
+            }
+        )
 
     return recs
+
 
 def enrich_findings_actions(findings):
     """
@@ -1234,23 +1353,28 @@ def enrich_findings_actions(findings):
         "authority_corroboration": "Add verifiable author schema with ISNI/ORCID identifiers to establish highest E-E-A-T and AI trust corroboration.",
         "engagement_orientation": "A/B test hero value propositions against 5-second customer comprehension tests to minimize AI referral bounce rates.",
         "engagement_readability": "Target Flesch-Kincaid grade levels 8-10 for executive-level clarity without sacrificing technical precision.",
-        "engagement_action_clarity": "Ensure primary CTA has explicit directional verbs (e.g. 'Audit Your Brand Now') rather than generic labels like 'Click Here'."
+        "engagement_action_clarity": "Ensure primary CTA has explicit directional verbs (e.g. 'Audit Your Brand Now') rather than generic labels like 'Click Here'.",
     }
-    
+
     for f in findings:
         act = f.get("suggested_action")
         if isinstance(act, dict) and "proactive_enhancement" not in act:
             cat = f.get("category", "")
             enhancement = proactive_guidance_map.get(
                 cat,
-                "Regularly audit DOM changes using automated CI gates to prevent regressions in AI discoverability and user orientation."
+                "Regularly audit DOM changes using automated CI gates to prevent regressions in AI discoverability and user orientation.",
             )
             act["proactive_enhancement"] = enhancement
+
 
 def calculate_metrics(findings, parsed_content=None, target_url=""):
     measurements = None
     if parsed_content:
-        words = parsed_content.get_visible_words() if hasattr(parsed_content, "get_visible_words") else parsed_content.text_chunks
+        words = (
+            parsed_content.get_visible_words()
+            if hasattr(parsed_content, "get_visible_words")
+            else parsed_content.text_chunks
+        )
         strong_ctas = sum(1 for c in parsed_content.action_candidates if not c.get("hidden"))
         measurements = {
             "words_count": len(words),
@@ -1265,10 +1389,8 @@ def calculate_metrics(findings, parsed_content=None, target_url=""):
             "form_count": len(parsed_content.forms),
         }
     score_data = compute_scores(findings, measurements)
-    return {
-        "acpi_score": score_data["acpi_score"],
-        "crs_score": score_data["crs_score"]
-    }
+    return {"acpi_score": score_data["acpi_score"], "crs_score": score_data["crs_score"]}
+
 
 def run_full_audit(target_url):
     if not target_url.startswith("http://") and not target_url.startswith("https://"):
@@ -1282,17 +1404,19 @@ def run_full_audit(target_url):
     all_findings = []
 
     if fetch_result["error"]:
-        all_findings.append({
-            "id": "F-000",
-            "title": "Target Website Inaccessible or Connection Failed",
-            "severity": "critical",
-            "category": "crawlability_network",
-            "evidence": f"Failed to fetch {target_url}: {fetch_result['error']}",
-            "suggested_action": {
-                "summary": "Ensure DNS, SSL certificate, and web server are operational.",
-                "priority": "critical"
+        all_findings.append(
+            {
+                "id": "F-000",
+                "title": "Target Website Inaccessible or Connection Failed",
+                "severity": "critical",
+                "category": "crawlability_network",
+                "evidence": f"Failed to fetch {target_url}: {fetch_result['error']}",
+                "suggested_action": {
+                    "summary": "Ensure DNS, SSL certificate, and web server are operational.",
+                    "priority": "critical",
+                },
             }
-        })
+        )
         parsed_content = HTMLContentExtractor()
     else:
         # Step 2: Parse HTML AST
@@ -1328,17 +1452,19 @@ def run_full_audit(target_url):
             "critical": severity_counts["critical"],
             "high": severity_counts["high"],
             "medium": severity_counts["medium"],
-            "low": severity_counts["low"]
+            "low": severity_counts["low"],
         },
         "metrics": metrics,
         "findings": all_findings,
-        "proactive_recommendations": proactive_recs
+        "proactive_recommendations": proactive_recs,
     }
 
     return report
 
+
 def main():
     import argparse
+
     parser = argparse.ArgumentParser(description="OmniAudit-GEO Master Audit Runner")
     parser.add_argument("--url", required=True, help="Target website URL to audit")
     parser.add_argument("--output", default=None, help="Path to write JSON output")
@@ -1353,6 +1479,7 @@ def main():
         print(f"Audit report saved to {args.output}")
     else:
         print(output_json)
+
 
 if __name__ == "__main__":
     main()

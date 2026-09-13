@@ -25,8 +25,7 @@ class TestScoringInvariance(unittest.TestCase):
     def test_score_bounds_floored(self):
         # Flood with critical findings
         severe_findings = [
-            {"id": f"F-{i}", "severity": "critical", "category": "crawlability_ai_permissions"}
-            for i in range(20)
+            {"id": f"F-{i}", "severity": "critical", "category": "crawlability_ai_permissions"} for i in range(20)
         ]
         res = compute_scores(severe_findings)
         self.assertGreaterEqual(res["acpi_score"], 5.0)

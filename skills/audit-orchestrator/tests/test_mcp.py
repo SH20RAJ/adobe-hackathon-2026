@@ -5,15 +5,13 @@ Exercises protocol lifecycle, all 7 tool calls, schema conformity,
 and error handling (SSRF, missing params, invalid types, unknown tools).
 """
 
+import json
 import os
 import sys
-import json
 import unittest
 from unittest.mock import patch
 
-SCRIPTS_DIR = os.path.abspath(
-    os.path.join(os.path.dirname(__file__), "..", "scripts")
-)
+SCRIPTS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "scripts"))
 if SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, SCRIPTS_DIR)
 
@@ -51,6 +49,7 @@ SAMPLE_HTML = """<!DOCTYPE html>
     </footer>
 </body>
 </html>"""
+
 
 def mock_safe_fetch(url, **kwargs):
     if "127.0.0.1" in url or "localhost" in url or "169.254" in url:
@@ -115,12 +114,14 @@ class TestMCPServer(unittest.TestCase):
         self.assertEqual(res["error"]["code"], -32601)
 
     def test_unknown_tool_call(self):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 100,
-            "method": "tools/call",
-            "params": {"name": "fake_tool", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 100,
+                "method": "tools/call",
+                "params": {"name": "fake_tool", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertEqual(res["error"]["code"], -32601)
 
@@ -132,42 +133,39 @@ class TestMCPServer(unittest.TestCase):
     # Deep Parameter Validation Tests
     # -------------------------------------------------------------
     def test_missing_params_object(self):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 101,
-            "method": "tools/call"
-        })
+        req = json.dumps({"jsonrpc": "2.0", "id": 101, "method": "tools/call"})
         res = handle_json_rpc(req)
         self.assertEqual(res["error"]["code"], -32602)
 
     def test_missing_url_parameter(self):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 102,
-            "method": "tools/call",
-            "params": {"name": "audit_website", "arguments": {}}
-        })
+        req = json.dumps(
+            {"jsonrpc": "2.0", "id": 102, "method": "tools/call", "params": {"name": "audit_website", "arguments": {}}}
+        )
         res = handle_json_rpc(req)
         self.assertEqual(res["error"]["code"], -32602)
         self.assertIn("url", res["error"]["message"])
 
     def test_non_string_url_parameter(self):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 103,
-            "method": "tools/call",
-            "params": {"name": "audit_website", "arguments": {"url": 12345}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 103,
+                "method": "tools/call",
+                "params": {"name": "audit_website", "arguments": {"url": 12345}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertEqual(res["error"]["code"], -32602)
 
     def test_empty_string_url_parameter(self):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 104,
-            "method": "tools/call",
-            "params": {"name": "audit_website", "arguments": {"url": "   "}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 104,
+                "method": "tools/call",
+                "params": {"name": "audit_website", "arguments": {"url": "   "}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertEqual(res["error"]["code"], -32602)
 
@@ -176,12 +174,14 @@ class TestMCPServer(unittest.TestCase):
     # -------------------------------------------------------------
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_audit_website_master(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 200,
-            "method": "tools/call",
-            "params": {"name": "audit_website", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 200,
+                "method": "tools/call",
+                "params": {"name": "audit_website", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -197,12 +197,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_audit_brand_ai_readiness_alias(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 201,
-            "method": "tools/call",
-            "params": {"name": "audit_brand_ai_readiness", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 201,
+                "method": "tools/call",
+                "params": {"name": "audit_brand_ai_readiness", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -211,12 +213,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_inspect_robots_and_rendering(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 202,
-            "method": "tools/call",
-            "params": {"name": "inspect_robots_and_rendering", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 202,
+                "method": "tools/call",
+                "params": {"name": "inspect_robots_and_rendering", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -228,12 +232,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_inspect_structured_data(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 203,
-            "method": "tools/call",
-            "params": {"name": "inspect_structured_data", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 203,
+                "method": "tools/call",
+                "params": {"name": "inspect_structured_data", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -242,12 +248,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_inspect_aeo_quotability(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 204,
-            "method": "tools/call",
-            "params": {"name": "inspect_aeo_quotability", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 204,
+                "method": "tools/call",
+                "params": {"name": "inspect_aeo_quotability", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -256,12 +264,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_inspect_freshness_trust(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 205,
-            "method": "tools/call",
-            "params": {"name": "inspect_freshness_trust", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 205,
+                "method": "tools/call",
+                "params": {"name": "inspect_freshness_trust", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -270,12 +280,14 @@ class TestMCPServer(unittest.TestCase):
 
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_call_inspect_on_site_retention(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 206,
-            "method": "tools/call",
-            "params": {"name": "inspect_on_site_retention", "arguments": {"url": "https://example.test"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 206,
+                "method": "tools/call",
+                "params": {"name": "inspect_on_site_retention", "arguments": {"url": "https://example.test"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])
@@ -287,12 +299,14 @@ class TestMCPServer(unittest.TestCase):
     # -------------------------------------------------------------
     @patch("audit_runner.safe_fetch", side_effect=mock_safe_fetch)
     def test_ssrf_blocked_private_ip(self, mock_fetch):
-        req = json.dumps({
-            "jsonrpc": "2.0",
-            "id": 300,
-            "method": "tools/call",
-            "params": {"name": "inspect_robots_and_rendering", "arguments": {"url": "http://127.0.0.1"}}
-        })
+        req = json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": 300,
+                "method": "tools/call",
+                "params": {"name": "inspect_robots_and_rendering", "arguments": {"url": "http://127.0.0.1"}},
+            }
+        )
         res = handle_json_rpc(req)
         self.assertNotIn("error", res)
         content = json.loads(res["result"]["content"][0]["text"])

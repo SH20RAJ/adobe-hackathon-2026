@@ -22,6 +22,7 @@ for p in [
         sys.path.insert(0, p)
 
 from gradio_ui import create_gradio_app
+
 from seo_config import SEO_HEAD_HTML
 
 demo = create_gradio_app()

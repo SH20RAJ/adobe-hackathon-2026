@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Standalone adapter for the audit runner's shared JSON-LD analyzer."""
-import sys
+
 import json
+import sys
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parents[2]
@@ -24,23 +25,29 @@ def validate_schema(url):
         require_html=True,
     )
     if result["error"]:
-        return [{
-            "id": "F-SCHEMA-02",
-            "title": "Structured Data Page Could Not Be Fetched",
-            "severity": "medium",
-            "evidence": json.dumps({
-                "url": url,
-                "status": "FETCH_ERROR",
-                "error_code": result.get("error_code") or "fetch_failed",
-            }, sort_keys=True),
-            "suggested_action": {
-                "summary": "Make the target page reachable over HTTP or HTTPS before auditing its structured data.",
-                "priority": "medium",
-            },
-        }]
+        return [
+            {
+                "id": "F-SCHEMA-02",
+                "title": "Structured Data Page Could Not Be Fetched",
+                "severity": "medium",
+                "evidence": json.dumps(
+                    {
+                        "url": url,
+                        "status": "FETCH_ERROR",
+                        "error_code": result.get("error_code") or "fetch_failed",
+                    },
+                    sort_keys=True,
+                ),
+                "suggested_action": {
+                    "summary": "Make the target page reachable over HTTP or HTTPS before auditing its structured data.",
+                    "priority": "medium",
+                },
+            }
+        ]
     parsed_content = HTMLContentExtractor()
     parsed_content.feed(result["html"])
     return audit_structured_data(url, parsed_content)
+
 
 if __name__ == "__main__":
     target = sys.argv[1] if len(sys.argv) > 1 else "https://example.com"

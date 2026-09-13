@@ -13,11 +13,11 @@ from __future__ import annotations
 
 import os
 import sys
-import time
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from pathlib import Path
-from typing import Dict, Any, Tuple, Optional, List
+from typing import Any
 
 # Ensure sibling directories are on sys.path
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -30,19 +30,19 @@ for p in [str(ORCHESTRATOR_SCRIPTS), str(CRAWL_SCRIPTS), str(ROOT_SCRIPTS), str(
     if p not in sys.path:
         sys.path.insert(0, p)
 
-from safe_fetch import normalize_url, FetchValidationError
 from audit_runner import (
-    run_full_audit,
-    fetch_url,
     HTMLContentExtractor,
-    audit_crawl_render,
-    audit_structured_data,
     audit_aeo_quotability,
+    audit_crawl_render,
     audit_freshness_trust,
     audit_on_site_engagement,
+    audit_structured_data,
     enrich_findings_actions,
+    fetch_url,
+    run_full_audit,
 )
 from mcp_server import handle_json_rpc
+from safe_fetch import FetchValidationError, normalize_url
 
 # ---------------------------------------------------------------------------
 # Configuration & Guards
@@ -54,12 +54,12 @@ MAX_CONCURRENT_AUDITS = int(os.environ.get("OMNIAUDIT_MAX_CONCURRENT_AUDITS", 5)
 AUDIT_TIMEOUT_SECONDS = float(os.environ.get("OMNIAUDIT_AUDIT_TIMEOUT", 15.0))
 
 _rate_limit_lock = threading.Lock()
-_rate_limit_store: Dict[str, Dict[str, Any]] = {}
+_rate_limit_store: dict[str, dict[str, Any]] = {}
 _audit_semaphore = threading.BoundedSemaphore(MAX_CONCURRENT_AUDITS)
 _executor = ThreadPoolExecutor(max_workers=MAX_CONCURRENT_AUDITS + 2, thread_name_prefix="audit-worker")
 
 
-def check_rate_limit(client_ip: str) -> Tuple[bool, Optional[int]]:
+def check_rate_limit(client_ip: str) -> tuple[bool, int | None]:
     """
     Thread-safe rate limit verification for an IP address.
     Returns (is_allowed, retry_after_seconds).
@@ -85,7 +85,7 @@ def check_rate_limit(client_ip: str) -> Tuple[bool, Optional[int]]:
         return True, None
 
 
-def execute_guarded_audit(url: str, client_ip: str = "local") -> Dict[str, Any]:
+def execute_guarded_audit(url: str, client_ip: str = "local") -> dict[str, Any]:
     """
     Executes a complete website audit through the unified security guard layer.
     Enforces rate limiting, SSRF protection, concurrency control, and timeout bounds.
@@ -148,14 +148,21 @@ def execute_guarded_audit(url: str, client_ip: str = "local") -> Dict[str, Any]:
         _audit_semaphore.release()
 
 
-def execute_guarded_specialist_audit(skill_name: str, url: str, client_ip: str = "local") -> Tuple[str, List[Dict[str, Any]], Dict[str, Any]]:
+def execute_guarded_specialist_audit(
+    skill_name: str, url: str, client_ip: str = "local"
+) -> tuple[str, list[dict[str, Any]], dict[str, Any]]:
     """
     Executes an individual specialist audit skill through the unified security guard layer.
     """
     # 1. Rate limiting check
     allowed, retry_after = check_rate_limit(client_ip)
     if not allowed:
-        err = {"error": "Rate limit exceeded", "error_code": "rate_limit_exceeded", "status_code": 429, "retry_after": retry_after}
+        err = {
+            "error": "Rate limit exceeded",
+            "error_code": "rate_limit_exceeded",
+            "status_code": 429,
+            "retry_after": retry_after,
+        }
         return f"Rate limit exceeded (retry in {retry_after}s)", [], err
 
     # 2. Input validation & anti-SSRF
@@ -176,6 +183,7 @@ def execute_guarded_specialist_audit(skill_name: str, url: str, client_ip: str =
         return "Server busy: concurrent audit limit reached.", [], err
 
     try:
+
         def _run_specialist():
             fetch_res = fetch_url(clean_url)
             if fetch_res.get("error"):
@@ -215,7 +223,9 @@ def execute_guarded_specialist_audit(skill_name: str, url: str, client_ip: str =
                 "total_findings": len(findings),
                 "findings": findings,
             }
-            summary = f"### {skill_name}\n**Diagnostic Scope:** {desc}\n\n**Total Diagnostic Findings:** `{len(findings)}`"
+            summary = (
+                f"### {skill_name}\n**Diagnostic Scope:** {desc}\n\n**Total Diagnostic Findings:** `{len(findings)}`"
+            )
             return summary, findings, meta
 
         future = _executor.submit(_run_specialist)
@@ -230,7 +240,7 @@ def execute_guarded_specialist_audit(skill_name: str, url: str, client_ip: str =
         _audit_semaphore.release()
 
 
-def execute_guarded_mcp(request_data: Dict[str, Any], client_ip: str = "local") -> Dict[str, Any]:
+def execute_guarded_mcp(request_data: dict[str, Any], client_ip: str = "local") -> dict[str, Any]:
     """
     Executes a Model Context Protocol (MCP) JSON-RPC request through the security guard layer.
     """

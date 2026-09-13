@@ -12,6 +12,7 @@
   <a href="https://gradio.app/"><img src="https://img.shields.io/badge/Frontend-Gradio%206-FF7C00?style=flat-square&logo=gradio&logoColor=white" alt="Gradio" /></a>
   <a href="https://agentskills.io"><img src="https://img.shields.io/badge/Spec-agentskills.io-8B5CF6?style=flat-square" alt="agentskills.io" /></a>
   <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/Protocol-Anthropic%20MCP-D97706?style=flat-square" alt="MCP" /></a>
+  <a href="https://github.com/astral-sh/ruff"><img src="https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json" alt="Ruff" /></a>
 </p>
 
 > **Adobe University Hackathon 2026 (CRP) — Round 3 Official Team Submission**<br>
@@ -129,6 +130,8 @@ omni mcp --test          # Run internal MCP protocol self-test
 omni benchmark           # Run 16 Golden Benchmarks with latency telemetry
 omni verify --ci         # Run the unified 6-gate verification loop
 omni package             # Rebuild and sandbox-verify omniaudit-geo-marketplace.zip
+omni lint                # Run enterprise Ruff linter & formatting checks
+omni lint --fix          # Auto-format and resolve fixable style issues
 ```
 
 ---
@@ -151,6 +154,8 @@ OmniAudit-GEO natively implements the Anthropic MCP specification (`protocolVers
   }
 }
 ```
+
+
 
 ---
 

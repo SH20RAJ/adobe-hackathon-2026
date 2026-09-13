@@ -8,16 +8,15 @@ safe_fetch, and MCP server as the CLI and skills marketplace.
 
 from __future__ import annotations
 
-import sys
-import os
-import time
 import json
+import os
+import sys
+import time
 from pathlib import Path
-from typing import Optional
 
-from fastapi import FastAPI, Request, Response, Query, HTTPException, status
+from fastapi import FastAPI, HTTPException, Query, Request, Response, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
 # Add repository root and skill directories to sys.path to ensure unified source of truth
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -31,29 +30,28 @@ for p in [str(OMNIAUDIT_DIR), str(ORCHESTRATOR_SCRIPTS), str(CRAWL_SCRIPTS), str
     if p not in sys.path:
         sys.path.insert(0, p)
 
+from eval_benchmarks import run_evals
+from schema_validator import validate_report
+
+from audit_guard import check_rate_limit, execute_guarded_audit, execute_guarded_mcp
 from audit_runner import (
-    run_full_audit,
-    fetch_url,
     HTMLContentExtractor,
-    audit_crawl_render,
-    audit_structured_data,
     audit_aeo_quotability,
+    audit_crawl_render,
     audit_freshness_trust,
     audit_on_site_engagement,
+    audit_structured_data,
     enrich_findings_actions,
+    fetch_url,
 )
-from safe_fetch import normalize_url, FetchValidationError
-from mcp_server import handle_json_rpc, MCP_TOOLS
-from schema_validator import validate_report
-from eval_benchmarks import run_evals
-from seo_config import SEO_HEAD_HTML, NOSCRIPT_SEMANTIC_BODY, SEO_TITLE, SEO_DESCRIPTION
-from audit_guard import check_rate_limit, execute_guarded_audit, execute_guarded_mcp
 from docs_manager import (
-    get_docs_catalog,
-    get_doc_by_id,
-    search_docs,
     build_documentation_portal_html,
+    get_doc_by_id,
+    get_docs_catalog,
 )
+from mcp_server import MCP_TOOLS
+from safe_fetch import normalize_url
+from seo_config import NOSCRIPT_SEMANTIC_BODY, SEO_HEAD_HTML
 
 app = FastAPI(
     title="OmniAudit-GEO — Brand AI-Readiness & GEO Engine",
@@ -92,7 +90,9 @@ PUBLIC_DIR = Path(__file__).resolve().parent / "public"
 async def security_and_rate_limit_middleware(request: Request, call_next):
     # 1. Unified Rate Limiter for /api/ routes
     if request.url.path.startswith("/api/"):
-        client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
+        client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+            request.client.host if request.client else "unknown"
+        )
         allowed, retry_after = check_rate_limit(client_ip)
         if not allowed:
             return JSONResponse(
@@ -120,9 +120,11 @@ async def security_and_rate_limit_middleware(request: Request, call_next):
 
     return response
 
+
 # -------------------------------------------------------------
 # REST API Endpoints
 # -------------------------------------------------------------
+
 
 @app.get("/api/health")
 async def health_check():
@@ -135,8 +137,11 @@ async def health_check():
         "schema": "draft-07",
     }
 
+
 @app.get("/api/audit")
-async def audit_endpoint(request: Request, url: str = Query(..., description="Target website URL to audit (e.g. 'https://adobe.com')")):
+async def audit_endpoint(
+    request: Request, url: str = Query(..., description="Target website URL to audit (e.g. 'https://adobe.com')")
+):
     """
     Executes the canonical brand AI-readiness and visitor engagement audit.
     Guarded against abuse, concurrency spikes, SSRF, and timeouts.
@@ -145,10 +150,16 @@ async def audit_endpoint(request: Request, url: str = Query(..., description="Ta
     if not url or not url.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"error": "Bad Request", "error_code": "missing_url", "message": "Query parameter 'url' is required."},
+            detail={
+                "error": "Bad Request",
+                "error_code": "missing_url",
+                "message": "Query parameter 'url' is required.",
+            },
         )
 
-    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+        request.client.host if request.client else "unknown"
+    )
     start_time = time.perf_counter()
     report = execute_guarded_audit(url, client_ip=client_ip)
     elapsed = time.perf_counter() - start_time
@@ -172,6 +183,7 @@ async def audit_endpoint(request: Request, url: str = Query(..., description="Ta
 
     return report
 
+
 @app.get("/api/audit/robots")
 async def audit_robots_endpoint(url: str = Query(...)):
     """Specialist diagnostic: Crawl & robots.txt AI bot permissions."""
@@ -181,7 +193,13 @@ async def audit_robots_endpoint(url: str = Query(...)):
         return {"site": clean_url, "error": fetch_res["error"], "findings": []}
     findings = audit_crawl_render(clean_url, fetch_res.get("html", ""), fetch_res.get("headers", {}))
     enrich_findings_actions(findings)
-    return {"site": clean_url, "tool": "inspect_robots_and_rendering", "total_findings": len(findings), "findings": findings}
+    return {
+        "site": clean_url,
+        "tool": "inspect_robots_and_rendering",
+        "total_findings": len(findings),
+        "findings": findings,
+    }
+
 
 @app.get("/api/audit/structured")
 async def audit_structured_endpoint(url: str = Query(...)):
@@ -196,6 +214,7 @@ async def audit_structured_endpoint(url: str = Query(...)):
     enrich_findings_actions(findings)
     return {"site": clean_url, "tool": "inspect_structured_data", "total_findings": len(findings), "findings": findings}
 
+
 @app.get("/api/audit/aeo")
 async def audit_aeo_endpoint(url: str = Query(...)):
     """Specialist diagnostic: AEO Quotability, fact density, and non-text assets."""
@@ -208,6 +227,7 @@ async def audit_aeo_endpoint(url: str = Query(...)):
     findings = audit_aeo_quotability(extractor)
     enrich_findings_actions(findings)
     return {"site": clean_url, "tool": "inspect_aeo_quotability", "total_findings": len(findings), "findings": findings}
+
 
 @app.get("/api/audit/freshness")
 async def audit_freshness_endpoint(url: str = Query(...)):
@@ -223,6 +243,7 @@ async def audit_freshness_endpoint(url: str = Query(...)):
     enrich_findings_actions(findings)
     return {"site": clean_url, "tool": "inspect_freshness_trust", "total_findings": len(findings), "findings": findings}
 
+
 @app.get("/api/audit/engagement")
 async def audit_engagement_endpoint(url: str = Query(...)):
     """Specialist diagnostic: On-site retention, hero clarity, and CTA specificity."""
@@ -234,11 +255,18 @@ async def audit_engagement_endpoint(url: str = Query(...)):
     extractor.feed(fetch_res.get("html", ""))
     findings = audit_on_site_engagement(extractor)
     enrich_findings_actions(findings)
-    return {"site": clean_url, "tool": "inspect_on_site_retention", "total_findings": len(findings), "findings": findings}
+    return {
+        "site": clean_url,
+        "tool": "inspect_on_site_retention",
+        "total_findings": len(findings),
+        "findings": findings,
+    }
+
 
 # -------------------------------------------------------------
 # Anthropic Model Context Protocol (MCP) Endpoints
 # -------------------------------------------------------------
+
 
 @app.get("/mcp")
 @app.get("/api/mcp")
@@ -252,6 +280,7 @@ async def mcp_info_endpoint():
         "endpoint": "/mcp",
         "tools": MCP_TOOLS,
     }
+
 
 @app.post("/mcp")
 @app.post("/api/mcp")
@@ -270,15 +299,19 @@ async def mcp_rpc_endpoint(request: Request):
             "id": None,
             "error": {"code": -32700, "message": f"Parse error: {str(exc)}"},
         }
-    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (request.client.host if request.client else "unknown")
+    client_ip = request.headers.get("x-forwarded-for", "").split(",")[0].strip() or (
+        request.client.host if request.client else "unknown"
+    )
     rpc_response = execute_guarded_mcp(req_obj, client_ip=client_ip)
     return rpc_response
+
 
 @app.get("/api/benchmarks")
 async def benchmarks_endpoint():
     """Runs the 16 Golden Fixtures benchmark harness and returns statistical metrics."""
     results = run_evals(return_dict=True)
     return results
+
 
 # -------------------------------------------------------------
 # Web Navigation & Redirect Handlers (Frontend is Pure Gradio)
@@ -336,37 +369,46 @@ REDIRECT_HTML_CONTENT = f"""<!DOCTYPE html>
 </html>
 """
 
+
 @app.get("/audit", response_class=HTMLResponse)
-async def serve_audit(request: Request, url: Optional[str] = None):
+async def serve_audit(request: Request, url: str | None = None):
     return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
+
 
 @app.get("/benchmarks", response_class=HTMLResponse)
 async def serve_benchmarks(request: Request):
     return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
+
 @app.get("/marketplace", response_class=HTMLResponse)
 async def serve_marketplace(request: Request):
     return HTMLResponse(content=REDIRECT_HTML_CONTENT, status_code=200)
 
+
 @app.get("/docs", response_class=HTMLResponse)
-async def serve_docs(request: Request, doc: Optional[str] = None):
+async def serve_docs(request: Request, doc: str | None = None):
     """Serves the rich, interactive standalone documentation website."""
     initial_slug = doc.strip() if doc and doc.strip() else "getting-started"
     html = build_documentation_portal_html(initial_doc_id=initial_slug)
     return HTMLResponse(content=html, status_code=200)
+
 
 @app.get("/api/docs/list")
 async def api_docs_list():
     """Returns catalog of all available documentation files and metadata."""
     return get_docs_catalog()
 
+
 @app.get("/api/docs/content")
-async def api_docs_content(doc: str = Query(..., description="Document ID slug (e.g. 'getting-started', 'architecture')")):
+async def api_docs_content(
+    doc: str = Query(..., description="Document ID slug (e.g. 'getting-started', 'architecture')"),
+):
     """Returns raw markdown content and metadata for requested document."""
     data = get_doc_by_id(doc.strip())
     if not data:
         raise HTTPException(status_code=404, detail={"error": "Not Found", "message": f"Document '{doc}' not found."})
     return data
+
 
 # Public static root files (favicons, logos, manifests, SEO robots & sitemaps)
 @app.get("/favicon.ico")
@@ -374,40 +416,48 @@ async def serve_favicon():
     f = PUBLIC_DIR / "favicon.ico"
     return FileResponse(f) if f.is_file() else Response(status_code=404)
 
+
 @app.get("/favicon.svg")
 async def serve_favicon_svg():
     f = PUBLIC_DIR / "favicon.svg"
     return FileResponse(f, media_type="image/svg+xml") if f.is_file() else Response(status_code=404)
+
 
 @app.get("/logo.svg")
 async def serve_logo():
     f = PUBLIC_DIR / "logo.svg"
     return FileResponse(f, media_type="image/svg+xml") if f.is_file() else Response(status_code=404)
 
+
 @app.get("/og-image.png")
 async def serve_og():
     f = PUBLIC_DIR / "og-image.png"
     return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
+
 
 @app.get("/manifest.json")
 async def serve_manifest():
     f = PUBLIC_DIR / "manifest.json"
     return FileResponse(f, media_type="application/json") if f.is_file() else Response(status_code=404)
 
+
 @app.get("/robots.txt", response_class=FileResponse)
 async def serve_robots():
     f = PUBLIC_DIR / "robots.txt"
     return FileResponse(f, media_type="text/plain; charset=utf-8") if f.is_file() else Response(status_code=404)
+
 
 @app.get("/sitemap.xml", response_class=FileResponse)
 async def serve_sitemap():
     f = PUBLIC_DIR / "sitemap.xml"
     return FileResponse(f, media_type="application/xml; charset=utf-8") if f.is_file() else Response(status_code=404)
 
+
 @app.get("/llms.txt", response_class=FileResponse)
 async def serve_llms():
     f = PUBLIC_DIR / "llms.txt"
     return FileResponse(f, media_type="text/markdown; charset=utf-8") if f.is_file() else Response(status_code=404)
+
 
 @app.get("/apple-touch-icon.png")
 @app.get("/apple-touch-icon-precomposed.png")
@@ -415,15 +465,18 @@ async def serve_apple_touch_icon():
     f = PUBLIC_DIR / "apple-touch-icon.png"
     return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
 
+
 @app.get("/icon-192.png")
 async def serve_icon_192():
     f = PUBLIC_DIR / "icon-192.png"
     return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
 
+
 @app.get("/icon-512.png")
 async def serve_icon_512():
     f = PUBLIC_DIR / "icon-512.png"
     return FileResponse(f, media_type="image/png") if f.is_file() else Response(status_code=404)
+
 
 # -------------------------------------------------------------
 # Pure Gradio Frontend Mounting (Root / and Standalone)
@@ -442,6 +495,7 @@ app = gr.mount_gradio_app(
 
 if __name__ == "__main__":
     import uvicorn
+
     port = int(os.environ.get("PORT", 8000))
     print(f"🚀 Starting OmniAudit-GEO FastAPI Server on http://localhost:{port}")
     uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)

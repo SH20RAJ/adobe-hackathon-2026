@@ -20,7 +20,7 @@ Invariants:
 - Proactive recommendations have zero penalty impact.
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 ACPI_WEIGHTS = {
     "crawlability": 0.30,
@@ -99,15 +99,15 @@ CATEGORY_MAX_DEDUCTION = {
 
 
 def compute_scores(
-    findings: List[Dict[str, Any]],
-    measurements: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
+    findings: list[dict[str, Any]],
+    measurements: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """
     Computes bounded, explainable ACPI and CRS scores.
     Derives baseline component scores from empirical AST/DOM measurements,
     and applies calibrated deductions with root-cause capping to prevent penalty accumulation.
     """
-    component_deductions: Dict[str, float] = {
+    component_deductions: dict[str, float] = {
         "crawlability": 0.0,
         "renderability": 0.0,
         "entity_clarity": 0.0,
@@ -120,7 +120,7 @@ def compute_scores(
     }
 
     # Group deductions by root cause to prevent duplicate double-penalties
-    seen_causes: Dict[str, float] = {}
+    seen_causes: dict[str, float] = {}
 
     for f in findings:
         severity = str(f.get("severity", "medium")).lower()
@@ -159,7 +159,7 @@ def compute_scores(
         component_deductions[component] += effective_ded
 
     # Derive baseline component scores from empirical measurements if provided
-    base_scores: Dict[str, float] = {
+    base_scores: dict[str, float] = {
         "crawlability": 100.0,
         "renderability": 100.0,
         "entity_clarity": 100.0,
@@ -185,7 +185,7 @@ def compute_scores(
         # Quotability: factual density, direct Q&A blocks, table accessibility
         facts_count = measurements.get("facts_count", 0)
         words_count = max(1, measurements.get("words_count", 1))
-        fact_density = (facts_count / (words_count / 100.0))
+        fact_density = facts_count / (words_count / 100.0)
         base_quotability = 70.0 + min(20.0, fact_density * 4.0)
         if measurements.get("faq_pairs", 0) > 0:
             base_quotability += min(10.0, measurements.get("faq_pairs") * 5.0)
@@ -206,7 +206,7 @@ def compute_scores(
         base_scores["actionability"] = min(100.0, base_action)
 
     # Compute capped component scores
-    component_scores: Dict[str, float] = {}
+    component_scores: dict[str, float] = {}
     for comp, ded in component_deductions.items():
         base_val = base_scores.get(comp, 100.0)
         max_cap = CATEGORY_MAX_DEDUCTION.get(comp, 60.0)
@@ -214,17 +214,11 @@ def compute_scores(
         component_scores[comp] = round(max(0.0, base_val - capped_ded), 1)
 
     # Compute composite ACPI
-    acpi_raw = sum(
-        component_scores[comp] * weight
-        for comp, weight in ACPI_WEIGHTS.items()
-    )
+    acpi_raw = sum(component_scores[comp] * weight for comp, weight in ACPI_WEIGHTS.items())
     acpi_score = round(max(5.0, min(100.0, acpi_raw)), 1)
 
     # Compute composite CRS
-    crs_raw = sum(
-        component_scores[comp] * weight
-        for comp, weight in CRS_WEIGHTS.items()
-    )
+    crs_raw = sum(component_scores[comp] * weight for comp, weight in CRS_WEIGHTS.items())
     crs_score = round(max(10.0, min(100.0, crs_raw)), 1)
 
     return {
