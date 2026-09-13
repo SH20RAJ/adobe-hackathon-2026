@@ -113,26 +113,37 @@ Together, the team maintains the final provider-neutral, read-only marketplace s
 
 ---
 
+## 📖 Complete Usage & Integration Guide
+For end-to-end setup, CLI commands, agent configurations (Claude Desktop, Cursor, Gemini/Antigravity, Windsurf, Cline), and cloud deployment steps, see the dedicated **[Master Usage Guide (docs/USAGE_GUIDE.md)](./docs/USAGE_GUIDE.md)**.
+
+---
+
 ## 🏗️ Architecture at a Glance
 
 ```
 adobe-hackathon-2026/
+├── cli.py                              <- Unified Command-Line Interface (Master & Specialist Audits, MCP, UI)
+├── app.py                              <- Standalone Gradio Web UI Launcher (Zero build step)
 ├── marketplace.json                    <- Top-level agentskills.io Marketplace Manifest
 ├── README.md                           <- Documentation & Quickstart (This file)
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory
 ├── Dockerfile                          <- Production Containerfile (Python 3.12 slim, non-root)
+├── docker-compose.yml                  <- Docker Compose definition with healthcheck probe
 ├── .github/workflows/verify.yml        <- 6-Gate Automated Verification CI Workflow
-├── .github/workflows/publish-container.yml <- GHCR Linux AMD64 Container Publisher
+├── .github/workflows/publish-container.yml <- Hardened GHCR Publisher with Render Auto-Deploy Verification
 ├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane & MCP Server
-│   ├── main.py                         <- FastAPI App, REST API & JSON-RPC 2.0 MCP Server
+│   ├── main.py                         <- FastAPI App, REST API, Rate Limiting & JSON-RPC 2.0 MCP Server
 │   ├── gradio_ui.py                    <- Enterprise Gradio 6 Frontend Application
-│   ├── public/                         <- Brand Assets & Favicons
+│   ├── audit_guard.py                  <- Guarded execution layer (SSRF, rate limits, concurrency, timeouts)
+│   ├── seo_config.py                   <- SEO, OpenGraph, JSON-LD, and Twitter Card specifications
+│   ├── public/                         <- Brand Assets, Favicons, llms.txt, robots.txt, sitemap.xml
 │   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Gradio
-│   └── tests/                          <- TestClient test suite for API & MCP endpoints
-├── docs/                               <- Master Architecture, Pitch & Defense Guides
+│   └── tests/                          <- TestClient test suite for API, Guard & MCP endpoints
+├── docs/                               <- Master Architecture, Pitch, Defense & Usage Guides
+│   ├── USAGE_GUIDE.md                  <- Complete Installation, CLI, MCP & Deployment Guide
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Engine
 │   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria & Golden Benchmarks
-│   ├── JUDGE_DEFENSE.md                <- 14 Comprehensive Jury & Technical Defense Answers
+│   ├── JUDGE_DEFENSE.md                <- 15 Comprehensive Jury & Technical Defense Answers
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Choices
 │   ├── PITCH.md                        <- Executive Presentation & Demo Script
 │   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
@@ -153,27 +164,53 @@ adobe-hackathon-2026/
 
 ---
 
-## ⚡ Quickstart: Run & Verify
+## ⚡ Quickstart: Install, Run & Verify
 
-### 1. Single Final Submission Check:
+### 1. Unified Command-Line Interface (`cli.py`):
+OmniAudit-GEO includes a unified, colorized CLI tool that shares the canonical Python AST engine directly from `skills/`:
+
+```bash
+# Immediate site audit (standard library only, zero pip dependencies!):
+python3 cli.py --url https://example.com
+
+# Formatted output (JSON or GitHub Markdown):
+python3 cli.py audit --url https://example.com --format json
+python3 cli.py audit --url https://example.com --format markdown --output report.md
+
+# Run individual specialist skill audits:
+python3 cli.py specialist crawl --url https://example.com
+python3 cli.py specialist structured --url https://example.com
+python3 cli.py specialist aeo --url https://example.com
+python3 cli.py specialist freshness --url https://example.com
+python3 cli.py specialist engagement --url https://example.com
+
+# Launch local web control plane or run tests:
+python3 cli.py serve --port 8000
+python3 cli.py mcp --test
+python3 cli.py benchmark
+python3 cli.py verify --ci
+python3 cli.py package
+```
+
+### 2. Single Final Submission Check:
 ```bash
 python3 scripts/final_check.py
 ```
 > Runs the complete 6-gate verification runner in strict CI mode, verifies the unzipped package inside an isolated sandbox, and outputs `FINAL SUBMISSION: PASS`.
 
-### 2. Unified 6-Gate Master Verification Loop:
+### 3. Unified 6-Gate Master Verification Loop:
 ```bash
 python3 scripts/verify.py --ci
 ```
-> Runs 164 unit and benchmark tests across 6 gates: Hostile SSRF Defense, Specialist unit tests, 16 Golden Benchmarks matrix, Recursive Schema integrity, FastAPI control plane tests, and Marketplace package sandbox verification.
+> Runs **167 unit and benchmark tests across 6 gates** (100% pass rate): Hostile SSRF Defense, Specialist unit tests, 16 Golden Benchmarks matrix, Recursive Schema integrity, FastAPI control plane tests, and Marketplace package sandbox verification.
 
-### 3. Standalone 16 Golden Benchmarks Evaluation Harness:
+### 4. Standalone 16 Golden Benchmarks Evaluation Harness:
 ```bash
 python3 scripts/eval_benchmarks.py
 ```
-> Evaluates all 16 Golden Benchmarks against labeled ground truth fixtures with benchmark precision/recall (100.0% on fixture suite) and sub-millisecond local engine execution latency (~0.5ms/site local AST execution; real-world audit latency depends on network target response time).
+> Evaluates all 16 Golden Benchmarks against labeled ground truth fixtures with benchmark precision/recall (100.0% on fixture suite) and sub-millisecond local engine execution latency (~0.47ms/site local AST execution; real-world audit latency depends on network target response time).
 
-### 4. Run Frontend & Web Control Plane Locally:
+### 5. Run Frontend & Web Control Plane Locally:
 
 **Option A: Standalone Gradio Interface (Port 7860):**
 ```bash
@@ -183,27 +220,26 @@ python3 app.py
 
 **Option B: Full FastAPI Control Plane + Mounted Gradio UI (Port 8000):**
 ```bash
-uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
+python3 cli.py serve --port 8000
 ```
 - Interactive Gradio UI: `http://localhost:8000/`
-- Audit Console: `http://localhost:8000/audit?url=https://adobe.com`
-- Benchmarks Table: `http://localhost:8000/benchmarks`
+- Guarded Audit API: `http://localhost:8000/api/audit?url=https://example.com`
 - MCP JSON-RPC Endpoint: `http://localhost:8000/api/mcp`
-- Interactive OpenAPI Docs: `http://localhost:8000/docs`
+- Interactive OpenAPI Docs: `http://localhost:8000/api/docs`
 
-### 5. Model Context Protocol (MCP) Integration:
+### 6. Model Context Protocol (MCP) Integration:
 - **Instant IDE Remote Connection (Cursor, Claude Desktop, Antigravity):**
   ```text
-  URL: http://localhost:8000/api/mcp
+  URL: https://omniaudit-geo.onrender.com/api/mcp
   ```
 - **Air-Gapped Python MCP Server (Stdio):**
   ```bash
-  python3 skills/audit-orchestrator/scripts/mcp_server.py
+  python3 cli.py mcp
   # Self-test all 7 tools:
-  python3 skills/audit-orchestrator/scripts/mcp_server.py --test
+  python3 cli.py mcp --test
   ```
 
-### 6. Container Deployment (Docker, GHCR & DigitalOcean App Platform):
+### 7. Container Deployment (Docker, GHCR & DigitalOcean App Platform):
 - **Container Registry:** `ghcr.io/sh20raj/omniaudit-geo`
 - **Run Pre-built OCI Image:**
   ```bash

@@ -14,6 +14,8 @@
 
 ```
 adobe-hackathon-2026/
+├── cli.py                              <- Unified Command-Line Interface (Audits, MCP, UI, Benchmark)
+├── app.py                              <- Standalone Gradio Web UI Launcher (Port 7860)
 ├── marketplace.json                    <- Official Round 3 Marketplace Manifest
 ├── README.md                           <- Root Project Documentation
 ├── AGENTS.md                           <- Workspace Agent Protocol & Memory (This file)
@@ -34,21 +36,28 @@ adobe-hackathon-2026/
 │       ├── security-review/            <- SSRF and ReDoS security reviewer
 │       └── eval-harness/               <- 16 Golden Benchmarks evaluator
 ├── scripts/
-│   └── verify.py                       <- Unified 6-gate automated verification runner
+│   ├── verify.py                       <- Unified 6-gate automated verification runner
+│   ├── final_check.py                  <- Pre-submission validation pass gate
+│   ├── eval_benchmarks.py              <- 16 Golden Benchmarks evaluation harness
+│   └── package_submission.py           <- Clean zip packager and sandbox validator
 ├── context/                            <- Challenge PDFs & Handouts
 │   ├── 6a8ffdf33590a_round3-handout-updated.pdf
 │   └── Certificate of Participation - Shaswat Raj.pdf
 ├── docs/                               <- Comprehensive Research, Strategy & Architecture Docs
+│   ├── USAGE_GUIDE.md                  <- Complete Installation, CLI, MCP & Deployment Guide
 │   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Models
 │   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria & Golden Benchmarks
 │   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Justification
 │   ├── PITCH.md                        <- Executive Presentation & Pitch Deck
 │   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
+│   ├── JUDGE_DEFENSE.md                <- 15 Comprehensive Panel Defense Answers
 │   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md
 ├── omniaudit-geo-marketplace.zip       <- Official Submittable Archive (≤ 50 MB, agentskills.io compliant)
 ├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane, Gradio 6 UI & MCP Server
 │   ├── main.py                         <- FastAPI REST API & JSON-RPC 2.0 MCP Server
 │   ├── gradio_ui.py                    <- Enterprise Gradio 6 Frontend Application
+│   ├── audit_guard.py                  <- Unified Execution Guard (SSRF, Rate Limiter, Semaphore)
+│   ├── seo_config.py                   <- SEO, OpenGraph, JSON-LD and Twitter Card Metadata
 │   ├── public/                         <- Brand Assets & Favicons
 │   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Gradio
 │   └── tests/                          <- TestClient test suite for API & MCP endpoints
@@ -65,24 +74,31 @@ adobe-hackathon-2026/
 
 ## ⚡ Agent Execution & Verification Commands
 
-### 1. Unified 6-Gate Verification Loop (Pre-commit / Pre-PR):
+### 1. Unified CLI Site Audit (Zero Dependency, Immediate):
 ```bash
-python3 scripts/verify.py
+python3 cli.py --url "https://example.com"
 ```
 
-### 2. Run Complete Site Audit via Master Orchestrator:
+### 2. Unified 6-Gate Verification Loop (Pre-commit / Pre-PR):
+```bash
+python3 scripts/verify.py --ci
+```
+
+### 3. Run Complete Site Audit via Master Orchestrator:
 ```bash
 python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
 ```
 
-### 3. Save Audit Report to JSON File:
+### 4. Save Audit Report to JSON File:
 ```bash
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
+python3 cli.py audit --url "https://example.com" --format json --output "report.json"
 ```
 
-### 4. Run Golden Benchmark Eval Suite:
+### 5. Run Golden Benchmark Eval Suite:
 ```bash
 python3 -m unittest skills/audit-orchestrator/tests/test_benchmark.py
+# Or via unified CLI:
+python3 cli.py benchmark
 ```
 
 ---
