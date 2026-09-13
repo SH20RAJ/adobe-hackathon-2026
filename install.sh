@@ -164,4 +164,4 @@ if [ "$PATH_WARNING" = true ]; then
   echo -e "  ${BOLD}export PATH=\"\$HOME/.local/bin:\$PATH\"${RESET}\n"
 fi
 
-echo -e "Detailed guide: ${CYAN}docs/USAGE_GUIDE.md${RESET}\n"
+echo -e "Detailed documentation: ${CYAN}docs/README.md${RESET}\n"

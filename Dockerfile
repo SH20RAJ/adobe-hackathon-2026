@@ -26,6 +26,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY marketplace.json ./marketplace.json
 COPY README.md ./README.md
 COPY app.py ./app.py
+COPY cli.py ./cli.py
 COPY skills/ ./skills/
 COPY scripts/ ./scripts/
 COPY omniaudit-geo/ ./omniaudit-geo/
