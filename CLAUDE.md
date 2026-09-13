@@ -1,114 +1,68 @@
-# CLAUDE.md — Agent Operations & Codebase Guide for OmniAudit-GEO
+# CLAUDE.md — Operational Protocol for Claude Code
 
-## Project Overview
-**OmniAudit-GEO** (`brand-ai-readiness-audit`) is the winning submission for the **Adobe University Hackathon 2026 (Round 3 CRP)**.
-It is an autonomous website audit system compliant with the `agentskills.io` marketplace specification that evaluates:
-1. **AI Citation Probability Index (ACPI, 0–100)**: Crawlability, hydration gaps, Schema.org entity disambiguation, atomic fact quotability, and freshness corroboration.
-2. **Cognitive Retention Score (CRS, 0–100)**: Above-the-fold value proposition clarity, reading ease, and intent continuity.
+This guide provides operational boundaries and command references for **Claude Code** working within **OmniAudit-GEO**.
 
 ---
 
-## ⚡ Core Operational Commands
+## ⚡ Primary Verification Commands
 
-### Verification Loop (Run before any PR/commit):
+Before completing any task or proposing commits:
+
 ```bash
-python3 scripts/verify.py
-```
+# 1. 6-Gate verification loop (Strict CI mode)
+python3 scripts/verify.py --ci
 
-### Python Audit Test Suites:
-```bash
-# Run orchestrator and benchmark tests
-python3 -m unittest discover -s skills/audit-orchestrator/tests
+# 2. Mandatory pre-submission final pass check
+python3 scripts/final_check.py
 
-# Run crawler and safe_fetch tests
-python3 -m unittest discover -s skills/crawl-render-audit/tests
-```
-
-### Run Master Audit Runner:
-```bash
-# Basic CLI run
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
-
-# Output to JSON
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com" --output "report.json"
-```
-
-### Web Control Plane & MCP Server (`omniaudit-geo`):
-```bash
-# Run local FastAPI server
-uvicorn main:app --app-dir omniaudit-geo --reload --port 8000
-
-# Run FastAPI test suite
-python3 -m unittest discover -s omniaudit-geo/tests -v
+# 3. Benchmark accuracy check (16 Golden Fixtures)
+python3 cli.py benchmark
 ```
 
 ---
 
-## 🏛️ Architecture & System Boundaries
+## 🏛️ Repository Architecture & Boundaries
 
-```
+```text
 adobe-hackathon-2026/
-├── marketplace.json                    <- Official agentskills.io marketplace manifest
-├── AGENTS.md                           <- Workspace Agent Protocol for Antigravity AI
-├── CLAUDE.md                           <- Operational Guide for Claude Code (This file)
-├── docs/                               <- Architecture, Acceptance Criteria, and Pitch Docs
-│   ├── ARCHITECTURE.md                 <- Master system architecture & scoring models
-│   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria (AC) & Golden Benchmarks
-│   ├── JUDGE_DEFENSE.md                <- 14 Comprehensive Jury & Technical Defense Answers
-│   ├── PITCH.md                        <- Executive Presentation & Jury Deck
-│   └── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Q&A Defense
-├── scripts/
-│   ├── verify.py                       <- Unified 6-gate verification runner (--ci)
-│   ├── final_check.py                  <- Single mandatory pre-submission pass gate
-│   ├── eval_benchmarks.py              <- 16 Golden Benchmarks evaluation harness
-│   └── package_submission.py           <- Clean zip packager and sandbox validator
-├── skills/                             <- Deterministic Python Audit Skills (agentskills.io)
-│   ├── audit-orchestrator/             <- [ENTRYPOINT] Master dispatcher & schema validator
-│   ├── crawl-render-audit/             <- Robots.txt AI permissions & hydration gaps
-│   ├── structured-entity-audit/        <- Schema.org JSON-LD & sameAs entity graphs
-│   ├── aeo-quotability-audit/          <- LLM quotability & atomic fact density
-│   ├── freshness-corroboration-audit/  <- Temporal freshness & trust corroboration
-│   └── on-site-engagement-audit/       <- Value prop clarity, readability & bounce risk
-└── omniaudit-geo/                      <- Pure Python FastAPI Web Control Plane & MCP Server
-    ├── main.py                         <- FastAPI app, REST API & JSON-RPC 2.0 MCP server
-    ├── gradio_ui.py                    <- Enterprise Gradio 6 frontend application
-    ├── public/                         <- Brand assets & favicons
-    └── tests/                          <- TestClient test suite for API & MCP endpoints
+├── marketplace.json        <- Official agentskills.io marketplace manifest
+├── cli.py                  <- Unified CLI entrypoint (shares skills/ logic directly)
+├── app.py                  <- Standalone Gradio 6 UI launcher (Port 7860)
+├── skills/                 <- 6 Deterministic Python Skills (agentskills.io)
+│   ├── audit-orchestrator/ <- [ENTRYPOINT] Dispatcher, scorer & schema validator
+│   ├── crawl-render-audit/ <- robots.txt AI permissions & JS hydration gaps
+│   ├── structured-entity-audit/ <- Schema.org JSON-LD & sameAs entity graphs
+│   ├── aeo-quotability-audit/   <- Atomic fact density & quotability signals
+│   ├── freshness-corroboration-audit/ <- Temporal decay & publisher trust signals
+│   └── on-site-engagement-audit/      <- Above-the-fold value prop, reading ease & CTAs
+├── omniaudit-geo/          <- Pure Python FastAPI Control Plane & Gradio 6 UI
+├── scripts/                <- Verification, benchmark, and packaging utilities
+└── docs/                   <- Canonical Documentation Hub (docs/README.md)
 ```
 
 ---
 
-## 🔒 Security & Guardrails (Mandatory)
+## 🔒 Code Style & Engineering Standards
 
-1. **Read-Only Crawling:** All HTTP fetches must use `GET` or `HEAD`. Never emit mutating requests (`POST`, `PUT`, `DELETE`).
-2. **SSRF Protection:** All network requests must pass through `safe_fetch.py` which blocks:
-   - Loopback (`127.0.0.0/8`, `localhost`, `::1`)
-   - Link-local cloud metadata (`169.254.169.254`)
-   - RFC 1918 private subnets (`10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`)
-3. **Zero External LLM Dependency:** The core audit engine uses Python standard library DOM/AST heuristics (`html.parser`, `re`, `json`, `math`, `urllib`). No paid API keys required.
-4. **Offline Capability:** All unit tests must run offline using fixtures without making external HTTP requests.
-
----
-
-## 📐 Code Style & Conventions
-
-### Python (Audit Engine)
-- Use standard library modules whenever possible.
-- Pure functions and immutable data structures for findings and scores.
-- Typed dataclasses / dictionaries matching `audit_schema.json`.
-- Strict error handling: never swallow exceptions with bare `except: pass`; use explicit status `"unknown"` and provide descriptive reasons.
-
-### TypeScript / React (Web App)
-- Follow **Adobe Spectrum** and **React Aria** design principles: Clean, high-contrast, accessible, minimal noise.
-- Tailwind CSS / Vanilla CSS with curated color tokens (Slate dark mode + Spectrum accents).
-- No console logs in production components.
+* **Language Stack:** Pure Python 3.10+.
+* **Core Engine (`skills/`):** Python standard library only (`urllib`, `html.parser`, `re`, `json`, `math`). Do not add external pip dependencies to the core audit engine.
+* **Web Control Plane (`omniaudit-geo/`):** FastAPI + Gradio 6. Zero React, zero npm, zero JS build step.
+* **Read-Only Crawling:** Use HTTP `GET` and `HEAD` only. Never issue mutating HTTP requests.
+* **SSRF Guard:** All target URL fetches must route through `safe_fetch.py`. Never fetch private IP subnets or loopback.
+* **Error Handling:** Never swallow exceptions with bare `except: pass`. Emit `status: "unknown"` with an actionable `failure_reason`.
 
 ---
 
-## 🤖 Subagent Delegation Protocol
+## 🧭 Canonical Documentation Reference
 
-When tackling complex tasks in this repository, delegate to specialized subagents:
-- **Architect:** Reviewing changes against `docs/ARCHITECTURE.md` and `marketplace.json` schema.
-- **TDD Guide:** Ensuring test fixtures are written in `tests/fixtures/` before modifying heuristics.
-- **Security Reviewer:** Checking any new network or parsing logic for SSRF, ReDoS, or injection.
-- **Code Reviewer:** Reviewing git diffs against acceptance criteria in `docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`.
+Do not maintain duplicate technical specifications in agent instructions. Refer to canonical docs:
+
+* **System Architecture:** [`docs/architecture.md`](docs/architecture.md)
+* **Marketplace Packaging:** [`docs/marketplace.md`](docs/marketplace.md)
+* **Specialist Skills Logic:** [`docs/skills.md`](docs/skills.md)
+* **CLI Reference:** [`docs/cli.md`](docs/cli.md)
+* **REST API:** [`docs/api.md`](docs/api.md)
+* **Model Context Protocol:** [`docs/mcp.md`](docs/mcp.md)
+* **Security Model:** [`docs/security.md`](docs/security.md)
+* **Testing & Quality Gates:** [`docs/testing.md`](docs/testing.md)
+* **Jury Defense & Pitch:** [`docs/judging.md`](docs/judging.md)

@@ -1,21 +1,22 @@
 # Cursor Rules for OmniAudit-GEO (`brand-ai-readiness-audit`)
 
 ## Architecture Principles
-1. **Zero External API Dependencies:** The core Python audit engine must run 100% offline using the Python standard library (`urllib.request`, `html.parser`, `re`, `json`, `math`).
-2. **SSRF Protection:** All URL fetches must route through `skills/crawl-render-audit/scripts/safe_fetch.py`. Never fetch private subnets or loopback.
+1. **Zero External API Dependencies:** The core Python audit engine must run 100% offline using Python standard library (`urllib.request`, `html.parser`, `re`, `json`, `math`).
+2. **SSRF Protection:** All URL fetches must route through `skills/crawl-render-audit/scripts/safe_fetch.py`. Never fetch private subnets, loopback, or cloud metadata.
 3. **Read-Only Crawling:** Use only `GET` or `HEAD`. Never mutate state via HTTP.
-4. **High-Contrast Design System:** The Gradio 6 / FastAPI web app in `omniaudit-geo` must adhere to clean design principles: high contrast cards, responsive layout, and clear diagnostic evidence disclosure.
+4. **Design System:** The Gradio 6 / FastAPI web app in `omniaudit-geo` uses a clean, accessible design system with high-contrast finding cards and expandable evidence disclosure.
 
-## Core Verification Command
+## Core Verification Commands
 Before finishing any task, run:
 ```bash
-python3 scripts/verify.py
+python3 scripts/verify.py --ci
+python3 scripts/final_check.py
 ```
 
-## Relevant Files
-- Root marketplace manifest: `marketplace.json`
-- Submittable archive: `omniaudit-geo-marketplace.zip`
-- Python audit orchestrator: `skills/audit-orchestrator/scripts/audit_runner.py`
-- Test suites: `skills/audit-orchestrator/tests` and `skills/crawl-render-audit/tests`
-- Web app: `omniaudit-geo/main.py` and `omniaudit-geo/gradio_ui.py`
-- Acceptance criteria: `docs/ACCEPTANCE_CRITERIA_AND_EVALS.md`
+## Canonical References
+- Marketplace manifest: `marketplace.json`
+- Architecture guide: `docs/architecture.md`
+- Skills catalog: `docs/skills.md`
+- CLI reference: `docs/cli.md`
+- API documentation: `docs/api.md`
+- Testing guide: `docs/testing.md`

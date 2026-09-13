@@ -1,112 +1,64 @@
-# AGENTS.md — Workspace Agent Guidance & Execution Protocol
+# AGENTS.md — Repository-Wide AI Agent Operating Contract
 
-## Project Identity & Mission
-* **Project Name:** OmniAudit-GEO (`brand-ai-readiness-audit`)
+This document defines the execution protocol, invariants, and boundaries for all autonomous AI coding agents (Antigravity AI, Claude Code, Cursor, Windsurf) operating in this repository.
+
+---
+
+## 🏛️ Project Identity & Mission
+
+* **Project:** OmniAudit-GEO (`brand-ai-readiness-audit`)
 * **Context:** Adobe University Hackathon 2026 (Campus Recruitment Program) — Round 3
-* **Engineering Team:**
-  * **Shaswat Raj** ([@sh20raj](https://github.com/sh20raj)) — product/showcase/marketplace foundation
-  * **Prithvi** ([@chikolavosaki-sys](https://github.com/chikolavosaki-sys)) — audit-engine hardening, security, and generalization
-* **Objective:** Win #1 place by building the most modular, high-performance, and standard-compliant Agent Skill Marketplace (`agentskills.io` spec) for auditing website AI Discoverability and On-site Visitor Engagement.
+* **Standard:** `agentskills.io` Agent Skill Marketplace Standard
+* **Core Goal:** Audit websites across two interconnected axes:
+  1. **Off-site AI Discoverability (GEO/AEO):** Machine crawler accessibility, Schema.org entities, and atomic fact quotability (ACPI: 0–100).
+  2. **On-site Visitor Retention (CRS):** Above-the-fold value proposition clarity, reading ease, and conversion orientation (CRS: 0–100).
 
 ---
 
-## 🏛️ Repository Structure & Conventions
+## 🔒 Mandatory Invariants for Agent Modifications
 
-```
-adobe-hackathon-2026/
-├── cli.py                              <- Unified Command-Line Interface (Audits, MCP, UI, Benchmark)
-├── app.py                              <- Standalone Gradio Web UI Launcher (Port 7860)
-├── marketplace.json                    <- Official Round 3 Marketplace Manifest
-├── README.md                           <- Root Project Documentation
-├── AGENTS.md                           <- Workspace Agent Protocol & Memory (This file)
-├── CLAUDE.md                           <- Claude Code Agent Operational Protocol
-├── .cursorrules                        <- Cursor IDE Operational Protocol
-├── .agents/                            <- Workspace-level Antigravity Agent Customizations
-│   ├── rules/                          <- Always-on and contextual quality rules
-│   │   ├── coding-style.md             <- Python stdlib & TypeScript standards
-│   │   ├── testing.md                  <- 100% pass rate & offline fixture rules
-│   │   ├── security.md                 <- SSRF protection & read-only invariants
-│   │   ├── git-workflow.md             <- Conventional commits protocol
-│   │   ├── agents.md                   <- Subagent persona delegation protocol
-│   │   └── performance.md              <- Sub-second local DOM parsing standards
-│   └── skills/                         <- Workspace skills
-│       ├── brand-ai-auditor/           <- Brand AI Readiness audit runner
-│       ├── tdd-workflow/               <- Red-Green-Refactor test cycle
-│       ├── verification-loop/          <- 6-Gate automated verification runner
-│       ├── security-review/            <- SSRF and ReDoS security reviewer
-│       └── eval-harness/               <- 16 Golden Benchmarks evaluator
-├── scripts/
-│   ├── verify.py                       <- Unified 6-gate automated verification runner
-│   ├── final_check.py                  <- Pre-submission validation pass gate
-│   ├── eval_benchmarks.py              <- 16 Golden Benchmarks evaluation harness
-│   └── package_submission.py           <- Clean zip packager and sandbox validator
-├── context/                            <- Challenge PDFs & Handouts
-│   ├── 6a8ffdf33590a_round3-handout-updated.pdf
-│   └── Certificate of Participation - Shaswat Raj.pdf
-├── docs/                               <- Comprehensive Research, Strategy & Architecture Docs
-│   ├── USAGE_GUIDE.md                  <- Complete Installation, CLI, MCP & Deployment Guide
-│   ├── ARCHITECTURE.md                 <- Master System Architecture & Scoring Models
-│   ├── ACCEPTANCE_CRITERIA_AND_EVALS.md<- Formal Acceptance Criteria & Golden Benchmarks
-│   ├── TECH_STACK_JUSTIFICATION.md     <- Industry Demand & Tech Stack Justification
-│   ├── PITCH.md                        <- Executive Presentation & Pitch Deck
-│   ├── INTERVIEW_QA_AND_DEFENSE.md     <- Jury Defense & 100/100 Model Q&A
-│   ├── JUDGE_DEFENSE.md                <- 15 Comprehensive Panel Defense Answers
-│   └── 08_SKILL_MARKETPLACES_AND_DISTRIBUTION_STRATEGY.md
-├── omniaudit-geo-marketplace.zip       <- Official Submittable Archive (≤ 50 MB, agentskills.io compliant)
-├── omniaudit-geo/                      <- Pure Python FastAPI Control Plane, Gradio 6 UI & MCP Server
-│   ├── main.py                         <- FastAPI REST API & JSON-RPC 2.0 MCP Server
-│   ├── gradio_ui.py                    <- Enterprise Gradio 6 Frontend Application
-│   ├── audit_guard.py                  <- Unified Execution Guard (SSRF, Rate Limiter, Semaphore)
-│   ├── seo_config.py                   <- SEO, OpenGraph, JSON-LD and Twitter Card Metadata
-│   ├── public/                         <- Brand Assets & Favicons
-│   ├── requirements.txt                <- FastAPI, Uvicorn, Pydantic, HTTPX, Gradio
-│   └── tests/                          <- TestClient test suite for API & MCP endpoints
-└── skills/                             <- The Submittable Marketplace Skills
-    ├── audit-orchestrator/             <- [ENTRYPOINT] Master Dispatcher & Aggregator
-    ├── crawl-render-audit/             <- robots.txt AI Bot Permissions & Hydration Gaps
-    ├── structured-entity-audit/        <- Schema.org JSON-LD & Entity Disambiguation (sameAs)
-    ├── aeo-quotability-audit/          <- LLM Quotability, Atomic Facts & Non-Text Data
-    ├── freshness-corroboration-audit/  <- Temporal Signals & Trust Verification
-    └── on-site-engagement-audit/       <- Value Prop Clarity, Readability & Bounce Risk
-```
+1. **Strict Read-Only Operations:** All crawler and fetch requests must use HTTP `GET` or `HEAD`. Never emit mutating requests (`POST`, `PUT`, `DELETE`).
+2. **Zero External API Dependencies:** The core AST and scoring engine in `skills/` must execute 100% offline using the Python standard library (`urllib`, `html.parser`, `re`, `json`, `math`). No cloud LLM API calls are permitted for core audits.
+3. **Single Source of Truth:** Core diagnostic logic lives strictly in `skills/**/scripts/`. Adapters (`cli.py`, `omniaudit-geo/main.py`, `omniaudit-geo/gradio_ui.py`) must import and invoke canonical scripts directly without duplicating logic.
+4. **`agentskills.io` Directory Integrity:** Never break the layout of `skills/<skill-id>/` (`SKILL.md`, `scripts/`, `references/`, `tests/`).
+5. **Output Schema Compliance:** All final reports emitted by `audit-orchestrator` must validate against `skills/audit-orchestrator/references/audit_schema.json`.
+6. **Marketplace Submission Boundary:** Never pollute `omniaudit-geo-marketplace.zip` with repository tooling, docs, or web adapters. The ZIP must only contain `marketplace.json`, `README.md`, and `skills/` ($\le 50$ MB).
 
 ---
 
-## ⚡ Agent Execution & Verification Commands
+## ⚡ Agent Operational Commands
 
-### 1. Unified CLI Site Audit (Zero Dependency, Immediate):
 ```bash
-python3 cli.py --url "https://example.com"
-```
-
-### 2. Unified 6-Gate Verification Loop (Pre-commit / Pre-PR):
-```bash
+# 1. Run full 6-gate verification loop (Mandatory before PR/commit)
 python3 scripts/verify.py --ci
-```
 
-### 3. Run Complete Site Audit via Master Orchestrator:
-```bash
-python3 skills/audit-orchestrator/scripts/audit_runner.py --url "https://example.com"
-```
+# 2. Run single pre-submission pass gate
+python3 scripts/final_check.py
 
-### 4. Save Audit Report to JSON File:
-```bash
-python3 cli.py audit --url "https://example.com" --format json --output "report.json"
-```
+# 3. Run full site audit via unified CLI
+python3 cli.py --url "https://example.com"
 
-### 5. Run Golden Benchmark Eval Suite:
-```bash
-python3 -m unittest skills/audit-orchestrator/tests/test_benchmark.py
-# Or via unified CLI:
+# 4. Run isolated 16 Golden Benchmarks evaluation harness
 python3 cli.py benchmark
+
+# 5. Rebuild and sandbox-verify the submission archive
+python3 cli.py package
 ```
 
 ---
 
-## 🔒 Rules & Guardrails for Agent Modifications
+## 🧭 Canonical Documentation Links for Agents
 
-1. **Strict Read-Only & Sandbox Compliance:** No scripts may make mutating HTTP requests (`POST`, `PUT`, `DELETE`). All crawls must use `GET`/`HEAD`.
-2. **Zero External API Dependencies:** The core AST and DOM parsing must remain 100% executable offline using Python standard library modules (`urllib`, `html.parser`, `re`, `json`, `math`).
-3. **`agentskills.io` Compliance:** Every skill in `skills/` must have a valid `SKILL.md` with YAML frontmatter, deterministic numbered steps, and clean separation between `scripts/` and `references/`.
-4. **Output Schema Integrity:** The final JSON emitted by `audit-orchestrator` must strictly satisfy `references/audit_schema.json` with required fields `site`, `audited_at`, `summary`, and `findings`.
-5. **Memory & Context Maintenance:** Whenever new features, benchmarks, or documentation are added, update `AGENTS.md`, `README.md`, and `docs/README.md` to keep the context permanently synchronized.
+When reasoning about system components, **always read the canonical documentation** rather than relying on cached memory:
+
+* **Architecture & Scoring Math:** [`docs/architecture.md`](docs/architecture.md)
+* **Marketplace Spec & Submission Boundary:** [`docs/marketplace.md`](docs/marketplace.md)
+* **Specialist Skills Heuristics:** [`docs/skills.md`](docs/skills.md)
+* **CLI Reference & Options:** [`docs/cli.md`](docs/cli.md)
+* **REST API & Guardrails:** [`docs/api.md`](docs/api.md)
+* **Model Context Protocol (MCP):** [`docs/mcp.md`](docs/mcp.md)
+* **Security & Anti-SSRF Defenses:** [`docs/security.md`](docs/security.md)
+* **Testing & Quality Gates:** [`docs/testing.md`](docs/testing.md)
+* **16 Golden Benchmarks Matrix:** [`docs/benchmarking.md`](docs/benchmarking.md)
+* **Deployment & Container Specs:** [`docs/deployment.md`](docs/deployment.md)
+* **Judge Defense & FAQ:** [`docs/judging.md`](docs/judging.md)

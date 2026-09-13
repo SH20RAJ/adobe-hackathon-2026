@@ -23,7 +23,7 @@ This project and everyone participating in it is governed by the [OmniAudit-GEO 
 ## Development Setup
 
 ### Prerequisites
-* Python 3.12+
+* Python 3.10+
 * Git
 * Optional: Docker (for containerized testing)
 
